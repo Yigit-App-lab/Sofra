@@ -49,7 +49,12 @@ export default function Tarifler() {
         setOffset(0);
         loadCatalogue(true, selectedCategory);
       }
-    }, [state.dietPreference, selectedCategory])
+    }, [
+      state.dietPreference,
+      state.glutenFree,
+      state.lactoseFree,
+      selectedCategory
+    ])
   );
 
   useEffect(() => {
@@ -60,7 +65,12 @@ export default function Tarifler() {
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [q]);
+  }, [
+    q,
+    state.dietPreference,
+    state.glutenFree,
+    state.lactoseFree
+  ]);
 
   async function loadCategories() {
     try {
@@ -88,6 +98,8 @@ export default function Tarifler() {
         offset: nextOffset,
         category,
         diet: state.dietPreference,
+        glutenFree: state.glutenFree,
+        lactoseFree: state.lactoseFree,
       });
 
       setRecipes(prev =>
@@ -114,7 +126,9 @@ export default function Tarifler() {
       const data = await searchRecipes(
         query,
         50,
-        state.dietPreference
+        state.dietPreference,
+        state.glutenFree,
+        state.lactoseFree
       );
 
       setRecipes(data.recipes || []);
@@ -238,18 +252,23 @@ export default function Tarifler() {
           style={{
             alignSelf: 'flex-start',
             marginBottom: space.m,
-            borderRadius: 999,
-            paddingHorizontal: 12,
-            paddingVertical: 6,
+            borderRadius: 8,
+            paddingHorizontal: 14,
+            paddingVertical: 8,
             backgroundColor:
               state.dietPreference === 'vegan'
-                ? '#22C55E'
+                ? '#16A34A'
                 : '#FACC15',
+            borderWidth: 1,
+            borderColor:
+              state.dietPreference === 'vegan'
+                ? '#15803D'
+                : '#CA8A04',
           }}
         >
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: '800',
               color:
                 state.dietPreference === 'vegan'
@@ -258,8 +277,58 @@ export default function Tarifler() {
             }}
           >
             {state.dietPreference === 'vegan'
-              ? 'VEGAN FİLTRESİ AKTİF'
-              : 'VEJETARYEN FİLTRESİ AKTİF'}
+              ? '✓ Vegan filtresi aktif'
+              : '✓ Vejetaryen filtresi aktif'}
+          </Text>
+        </View>
+      ) : null}
+
+      {state.glutenFree ? (
+        <View
+          style={{
+            alignSelf: 'flex-start',
+            marginBottom: space.s,
+            borderRadius: 8,
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            backgroundColor: '#60A5FA',
+            borderWidth: 1,
+            borderColor: '#2563EB',
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: '800',
+              color: '#FFFFFF',
+            }}
+          >
+            ✓ Glutensiz filtresi aktif
+          </Text>
+        </View>
+      ) : null}
+
+      {state.lactoseFree ? (
+        <View
+          style={{
+            alignSelf: 'flex-start',
+            marginBottom: space.m,
+            borderRadius: 8,
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            backgroundColor: '#C084FC',
+            borderWidth: 1,
+            borderColor: '#9333EA',
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: '800',
+              color: '#FFFFFF',
+            }}
+          >
+            ✓ Laktozsuz filtresi aktif
           </Text>
         </View>
       ) : null}

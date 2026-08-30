@@ -1,6 +1,12 @@
 export const API_URL = "http://129.121.89.248:8000";
 
-export async function searchRecipes(query, limit = 30, diet = null) {
+export async function searchRecipes(
+  query,
+  limit = 30,
+  diet = null,
+  glutenFree = false,
+  lactoseFree = false
+) {
   const params = new URLSearchParams({
     q: query,
     limit: String(limit),
@@ -8,6 +14,14 @@ export async function searchRecipes(query, limit = 30, diet = null) {
 
   if (diet && diet !== "standard") {
     params.set("diet", diet);
+  }
+
+  if (glutenFree) {
+    params.set("gluten_free", "true");
+  }
+
+  if (lactoseFree) {
+    params.set("lactose_free", "true");
   }
 
   const response = await fetch(
@@ -58,6 +72,8 @@ export async function getRecipes({
   offset = 0,
   category = null,
   diet = null,
+  glutenFree = false,
+  lactoseFree = false,
 } = {}) {
   const params = new URLSearchParams({
     limit: String(limit),
@@ -70,6 +86,14 @@ export async function getRecipes({
 
   if (diet && diet !== "standard") {
     params.set("diet", diet);
+  }
+
+  if (glutenFree) {
+    params.set("gluten_free", "true");
+  }
+
+  if (lactoseFree) {
+    params.set("lactose_free", "true");
   }
 
   const response = await fetch(`${API_URL}/recipes?${params.toString()}`);

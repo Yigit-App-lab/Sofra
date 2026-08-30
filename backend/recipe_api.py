@@ -198,7 +198,9 @@ def home():
 def search_recipes(
     q: str = Query(min_length=1),
     limit: int = Query(default=20, ge=1, le=100),
-    diet: str | None = None
+    diet: str | None = None,
+    gluten_free: bool = False,
+    lactose_free: bool = False
 ):
     db = get_db()
 
@@ -210,6 +212,40 @@ def search_recipes(
             diet_sql = " AND r.is_vegan = 1"
         elif diet == "vegetarian":
             diet_sql = " AND r.is_vegetarian = 1"
+
+        if gluten_free:
+            diet_sql += """
+            AND NOT EXISTS (
+                SELECT 1
+                FROM recipe_ingredients ri2
+                JOIN ingredients i2 ON i2.id = ri2.ingredient_id
+                LEFT JOIN ingredient_aliases ia2
+                  ON ia2.alias_normalized = i2.name_normalized
+                LEFT JOIN kiler_canonical_map kcm2
+                  ON kcm2.canonical_id = ia2.canonical_id
+                LEFT JOIN kiler_ingredients ki2
+                  ON ki2.id = kcm2.kiler_id
+                WHERE ri2.recipe_id = r.id
+                  AND ki2.contains_gluten = 1
+            )
+            """
+
+        if lactose_free:
+            diet_sql += """
+            AND NOT EXISTS (
+                SELECT 1
+                FROM recipe_ingredients ri3
+                JOIN ingredients i3 ON i3.id = ri3.ingredient_id
+                LEFT JOIN ingredient_aliases ia3
+                  ON ia3.alias_normalized = i3.name_normalized
+                LEFT JOIN kiler_canonical_map kcm3
+                  ON kcm3.canonical_id = ia3.canonical_id
+                LEFT JOIN kiler_ingredients ki3
+                  ON ki3.id = kcm3.kiler_id
+                WHERE ri3.recipe_id = r.id
+                  AND ki3.contains_lactose = 1
+            )
+            """
 
         rows = db.execute(f"""
             SELECT
@@ -362,7 +398,9 @@ def list_recipes(
     limit: int = Query(default=30, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     category: str | None = None,
-    diet: str | None = None
+    diet: str | None = None,
+    gluten_free: bool = False,
+    lactose_free: bool = False
 ):
     db = get_db()
 
@@ -378,6 +416,40 @@ def list_recipes(
             where.append("is_vegan = 1")
         elif diet == "vegetarian":
             where.append("is_vegetarian = 1")
+
+        if gluten_free:
+            where.append("""
+                NOT EXISTS (
+                    SELECT 1
+                    FROM recipe_ingredients ri2
+                    JOIN ingredients i2 ON i2.id = ri2.ingredient_id
+                    LEFT JOIN ingredient_aliases ia2
+                      ON ia2.alias_normalized = i2.name_normalized
+                    LEFT JOIN kiler_canonical_map kcm2
+                      ON kcm2.canonical_id = ia2.canonical_id
+                    LEFT JOIN kiler_ingredients ki2
+                      ON ki2.id = kcm2.kiler_id
+                    WHERE ri2.recipe_id = recipes.id
+                      AND ki2.contains_gluten = 1
+                )
+            """)
+
+        if lactose_free:
+            where.append("""
+                NOT EXISTS (
+                    SELECT 1
+                    FROM recipe_ingredients ri3
+                    JOIN ingredients i3 ON i3.id = ri3.ingredient_id
+                    LEFT JOIN ingredient_aliases ia3
+                      ON ia3.alias_normalized = i3.name_normalized
+                    LEFT JOIN kiler_canonical_map kcm3
+                      ON kcm3.canonical_id = ia3.canonical_id
+                    LEFT JOIN kiler_ingredients ki3
+                      ON ki3.id = kcm3.kiler_id
+                    WHERE ri3.recipe_id = recipes.id
+                      AND ki3.contains_lactose = 1
+                )
+            """)
 
         where_sql = ""
         if where:

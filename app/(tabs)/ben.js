@@ -155,6 +155,40 @@ export default function Ben() {
         onChange={(v) => set('dietPreference', v)}
       />
 
+      <View style={{ height:space.m }} />
+
+      <Choice
+        options={[
+          {
+            value:false,
+            label:t.code === 'en' ? 'Gluten' : 'Gluten'
+          },
+          {
+            value:true,
+            label:t.code === 'en' ? 'Gluten-free' : 'Glutensiz'
+          },
+        ]}
+        value={Boolean(state.glutenFree)}
+        onChange={(v) => set('glutenFree', v)}
+      />
+
+      <View style={{ height:space.s }} />
+
+      <Choice
+        options={[
+          {
+            value:false,
+            label:t.code === 'en' ? 'Lactose' : 'Laktoz'
+          },
+          {
+            value:true,
+            label:t.code === 'en' ? 'Lactose-free' : 'Laktozsuz'
+          },
+        ]}
+        value={Boolean(state.lactoseFree)}
+        onChange={(v) => set('lactoseFree', v)}
+      />
+
       <View style={{ height:space.l }} />
       <Body dim size={12}>{t('language')}</Body>
       <View style={{ height:space.s }} />

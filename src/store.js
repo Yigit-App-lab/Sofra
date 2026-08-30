@@ -20,6 +20,8 @@ const initial = {
   maxPerPortion: 120,
   meatless: false,
   dietPreference: 'standard',
+  glutenFree: false,
+  lactoseFree: false,
   skill: 1,
   // A plausible Turkish store cupboard, so the first launch is not an empty screen.
   pantry: {
