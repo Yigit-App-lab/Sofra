@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Sofra",
+    "slug": "sofra-app",
+    "version": "0.1.0",
+    "scheme": "sofra",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": [
+              "tr",
+              "en"
+            ],
+            "android": [
+              "tr",
+              "en"
+            ]
+          }
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yberktas.sofra",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    }
+  }
+}

@@ -1,0 +1,1852 @@
+{
+ "langs": [
+  "tr",
+  "en"
+ ],
+ "items": [
+  {
+   "id": "domates",
+   "names": {
+    "tr": "Domates",
+    "en": "Tomato"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 60.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "sera",
+   "season": {
+    "start": 7,
+    "end": 10
+   }
+  },
+  {
+   "id": "salatalik",
+   "names": {
+    "tr": "Salatalık",
+    "en": "Cucumber"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 30.0,
+   "priceMonth": 8,
+   "source": "hal",
+   "cls": "sera",
+   "season": {
+    "start": 6,
+    "end": 9
+   }
+  },
+  {
+   "id": "patlican",
+   "names": {
+    "tr": "Patlıcan",
+    "en": "Aubergine"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 40.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "sera",
+   "season": {
+    "start": 6,
+    "end": 9
+   }
+  },
+  {
+   "id": "biber_dolmalik",
+   "names": {
+    "tr": "Dolmalık biber",
+    "en": "Bell pepper"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 50.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "sera",
+   "season": {
+    "start": 6,
+    "end": 10
+   }
+  },
+  {
+   "id": "biber_sivri",
+   "names": {
+    "tr": "Sivri biber",
+    "en": "Long green pepper"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 70.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "sera",
+   "season": {
+    "start": 6,
+    "end": 10
+   }
+  },
+  {
+   "id": "biber_aci",
+   "names": {
+    "tr": "Acı biber",
+    "en": "Chilli pepper"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 80.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "sera",
+   "season": {
+    "start": 6,
+    "end": 10
+   }
+  },
+  {
+   "id": "biber_kirmizi",
+   "names": {
+    "tr": "Kırmızı salçalık biber",
+    "en": "Red pepper (for salça)"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 40.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 8,
+    "end": 9
+   }
+  },
+  {
+   "id": "kabak",
+   "names": {
+    "tr": "Kabak",
+    "en": "Courgette"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 20.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "sera",
+   "season": {
+    "start": 6,
+    "end": 9
+   }
+  },
+  {
+   "id": "taze_fasulye",
+   "names": {
+    "tr": "Taze fasulye",
+    "en": "Green beans"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 45.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 6,
+    "end": 9
+   }
+  },
+  {
+   "id": "bamya",
+   "names": {
+    "tr": "Bamya",
+    "en": "Okra"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 180.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 7,
+    "end": 9
+   }
+  },
+  {
+   "id": "semizotu",
+   "names": {
+    "tr": "Semizotu",
+    "en": "Purslane"
+   },
+   "kind": "yesillik",
+   "unit": "demet",
+   "price": 20.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 5,
+    "end": 8
+   }
+  },
+  {
+   "id": "bakla_taze",
+   "names": {
+    "tr": "Taze bakla",
+    "en": "Fresh broad beans"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 60.0,
+   "priceMonth": 5,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 4,
+    "end": 6
+   }
+  },
+  {
+   "id": "enginar",
+   "names": {
+    "tr": "Enginar",
+    "en": "Artichoke"
+   },
+   "kind": "sebze",
+   "unit": "adet",
+   "price": 25.0,
+   "priceMonth": 5,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 4,
+    "end": 6
+   }
+  },
+  {
+   "id": "bezelye_taze",
+   "names": {
+    "tr": "Taze bezelye",
+    "en": "Fresh peas"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 90.0,
+   "priceMonth": 5,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 4,
+    "end": 6
+   }
+  },
+  {
+   "id": "borulce_taze",
+   "names": {
+    "tr": "Taze börülce",
+    "en": "Fresh black-eyed peas"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 70.0,
+   "priceMonth": 9,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 8,
+    "end": 9
+   }
+  },
+  {
+   "id": "barbunya_taze",
+   "names": {
+    "tr": "Taze barbunya",
+    "en": "Fresh borlotti beans"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 75.0,
+   "priceMonth": 9,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 8,
+    "end": 9
+   }
+  },
+  {
+   "id": "misir",
+   "names": {
+    "tr": "Mısır",
+    "en": "Sweetcorn"
+   },
+   "kind": "sebze",
+   "unit": "adet",
+   "price": 15.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 8,
+    "end": 9
+   }
+  },
+  {
+   "id": "ispanak",
+   "names": {
+    "tr": "Ispanak",
+    "en": "Spinach"
+   },
+   "kind": "yesillik",
+   "unit": "kg",
+   "price": 55.0,
+   "priceMonth": 1,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 10,
+    "end": 4
+   }
+  },
+  {
+   "id": "pazi",
+   "names": {
+    "tr": "Pazı",
+    "en": "Chard"
+   },
+   "kind": "yesillik",
+   "unit": "demet",
+   "price": 30.0,
+   "priceMonth": 11,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 9,
+    "end": 4
+   }
+  },
+  {
+   "id": "pirasa",
+   "names": {
+    "tr": "Pırasa",
+    "en": "Leek"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 40.0,
+   "priceMonth": 1,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 11,
+    "end": 3
+   }
+  },
+  {
+   "id": "kereviz",
+   "names": {
+    "tr": "Kereviz",
+    "en": "Celeriac"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 60.0,
+   "priceMonth": 1,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 11,
+    "end": 3
+   }
+  },
+  {
+   "id": "lahana_beyaz",
+   "names": {
+    "tr": "Beyaz lahana",
+    "en": "White cabbage"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 30.0,
+   "priceMonth": 1,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 10,
+    "end": 3
+   }
+  },
+  {
+   "id": "karalahana",
+   "names": {
+    "tr": "Karalahana",
+    "en": "Black kale"
+   },
+   "kind": "yesillik",
+   "unit": "kg",
+   "price": 35.0,
+   "priceMonth": 12,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 11,
+    "end": 2
+   }
+  },
+  {
+   "id": "bruksel",
+   "names": {
+    "tr": "Brüksel lahanası",
+    "en": "Brussels sprouts"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 90.0,
+   "priceMonth": 12,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 11,
+    "end": 2
+   }
+  },
+  {
+   "id": "karnabahar",
+   "names": {
+    "tr": "Karnabahar",
+    "en": "Cauliflower"
+   },
+   "kind": "sebze",
+   "unit": "adet",
+   "price": 50.0,
+   "priceMonth": 1,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 10,
+    "end": 3
+   }
+  },
+  {
+   "id": "brokoli",
+   "names": {
+    "tr": "Brokoli",
+    "en": "Broccoli"
+   },
+   "kind": "sebze",
+   "unit": "adet",
+   "price": 70.0,
+   "priceMonth": 1,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 10,
+    "end": 3
+   }
+  },
+  {
+   "id": "balkabagi",
+   "names": {
+    "tr": "Balkabağı",
+    "en": "Winter squash"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 35.0,
+   "priceMonth": 11,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 10,
+    "end": 2
+   }
+  },
+  {
+   "id": "pancar",
+   "names": {
+    "tr": "Pancar",
+    "en": "Beetroot"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 40.0,
+   "priceMonth": 11,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 10,
+    "end": 3
+   }
+  },
+  {
+   "id": "turp_kirmizi",
+   "names": {
+    "tr": "Kırmızı turp",
+    "en": "Radish"
+   },
+   "kind": "sebze",
+   "unit": "demet",
+   "price": 25.0,
+   "priceMonth": 3,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 10,
+    "end": 4
+   }
+  },
+  {
+   "id": "marul",
+   "names": {
+    "tr": "Marul",
+    "en": "Lettuce"
+   },
+   "kind": "yesillik",
+   "unit": "adet",
+   "price": 40.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "sera",
+   "season": {
+    "start": 10,
+    "end": 5
+   }
+  },
+  {
+   "id": "kivircik",
+   "names": {
+    "tr": "Kıvırcık",
+    "en": "Curly lettuce"
+   },
+   "kind": "yesillik",
+   "unit": "adet",
+   "price": 35.0,
+   "priceMonth": 11,
+   "source": "tahmin",
+   "cls": "sera",
+   "season": {
+    "start": 10,
+    "end": 5
+   }
+  },
+  {
+   "id": "taze_sogan",
+   "names": {
+    "tr": "Taze soğan",
+    "en": "Spring onion"
+   },
+   "kind": "yesillik",
+   "unit": "demet",
+   "price": 20.0,
+   "priceMonth": 4,
+   "source": "tahmin",
+   "cls": "depo",
+   "season": {
+    "start": 3,
+    "end": 6
+   }
+  },
+  {
+   "id": "taze_sarimsak",
+   "names": {
+    "tr": "Taze sarımsak",
+    "en": "Fresh garlic"
+   },
+   "kind": "yesillik",
+   "unit": "demet",
+   "price": 25.0,
+   "priceMonth": 5,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 4,
+    "end": 6
+   }
+  },
+  {
+   "id": "mantar",
+   "names": {
+    "tr": "Mantar",
+    "en": "Mushrooms"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 140.0,
+   "priceMonth": 8,
+   "source": "hal",
+   "cls": "depo",
+   "season": {
+    "start": 9,
+    "end": 11
+   }
+  },
+  {
+   "id": "sogan",
+   "names": {
+    "tr": "Soğan",
+    "en": "Onion"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 50.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "depo",
+   "season": {
+    "start": 8,
+    "end": 10
+   }
+  },
+  {
+   "id": "patates",
+   "names": {
+    "tr": "Patates",
+    "en": "Potato"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 50.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "depo",
+   "season": {
+    "start": 9,
+    "end": 11
+   }
+  },
+  {
+   "id": "havuc",
+   "names": {
+    "tr": "Havuç",
+    "en": "Carrot"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 70.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "depo",
+   "season": {
+    "start": 8,
+    "end": 11
+   }
+  },
+  {
+   "id": "sarimsak",
+   "names": {
+    "tr": "Sarımsak",
+    "en": "Garlic"
+   },
+   "kind": "sebze",
+   "unit": "kg",
+   "price": 200.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "depo",
+   "season": {
+    "start": 7,
+    "end": 9
+   }
+  },
+  {
+   "id": "maydanoz",
+   "names": {
+    "tr": "Maydanoz",
+    "en": "Parsley"
+   },
+   "kind": "yesillik",
+   "unit": "demet",
+   "price": 15.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "depo",
+   "season": {
+    "start": 4,
+    "end": 10
+   }
+  },
+  {
+   "id": "dereotu",
+   "names": {
+    "tr": "Dereotu",
+    "en": "Dill"
+   },
+   "kind": "yesillik",
+   "unit": "demet",
+   "price": 15.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "depo",
+   "season": {
+    "start": 4,
+    "end": 10
+   }
+  },
+  {
+   "id": "nane_taze",
+   "names": {
+    "tr": "Taze nane",
+    "en": "Fresh mint"
+   },
+   "kind": "yesillik",
+   "unit": "demet",
+   "price": 20.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "depo",
+   "season": {
+    "start": 5,
+    "end": 9
+   }
+  },
+  {
+   "id": "roka",
+   "names": {
+    "tr": "Roka",
+    "en": "Rocket"
+   },
+   "kind": "yesillik",
+   "unit": "demet",
+   "price": 20.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "depo",
+   "season": {
+    "start": 10,
+    "end": 5
+   }
+  },
+  {
+   "id": "karpuz",
+   "names": {
+    "tr": "Karpuz",
+    "en": "Watermelon"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 15.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "seasonal",
+   "season": {
+    "start": 6,
+    "end": 8
+   }
+  },
+  {
+   "id": "kavun",
+   "names": {
+    "tr": "Kavun",
+    "en": "Melon"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 25.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 7,
+    "end": 9
+   }
+  },
+  {
+   "id": "uzum",
+   "names": {
+    "tr": "Üzüm",
+    "en": "Grapes"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 50.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "seasonal",
+   "season": {
+    "start": 8,
+    "end": 10
+   }
+  },
+  {
+   "id": "incir",
+   "names": {
+    "tr": "İncir",
+    "en": "Fig"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 90.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 8,
+    "end": 9
+   }
+  },
+  {
+   "id": "seftali",
+   "names": {
+    "tr": "Şeftali",
+    "en": "Peach"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 55.0,
+   "priceMonth": 7,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 6,
+    "end": 8
+   }
+  },
+  {
+   "id": "kayisi",
+   "names": {
+    "tr": "Kayısı",
+    "en": "Apricot"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 80.0,
+   "priceMonth": 6,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 6,
+    "end": 7
+   }
+  },
+  {
+   "id": "kiraz",
+   "names": {
+    "tr": "Kiraz",
+    "en": "Cherry"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 120.0,
+   "priceMonth": 6,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 5,
+    "end": 6
+   }
+  },
+  {
+   "id": "visne",
+   "names": {
+    "tr": "Vişne",
+    "en": "Sour cherry"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 110.0,
+   "priceMonth": 6,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 6,
+    "end": 7
+   }
+  },
+  {
+   "id": "erik",
+   "names": {
+    "tr": "Erik",
+    "en": "Plum"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 60.0,
+   "priceMonth": 7,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 6,
+    "end": 8
+   }
+  },
+  {
+   "id": "cilek",
+   "names": {
+    "tr": "Çilek",
+    "en": "Strawberry"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 90.0,
+   "priceMonth": 5,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 4,
+    "end": 6
+   }
+  },
+  {
+   "id": "elma",
+   "names": {
+    "tr": "Elma",
+    "en": "Apple"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 55.0,
+   "priceMonth": 8,
+   "source": "hal",
+   "cls": "depo",
+   "season": {
+    "start": 9,
+    "end": 11
+   }
+  },
+  {
+   "id": "armut",
+   "names": {
+    "tr": "Armut",
+    "en": "Pear"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 55.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "depo",
+   "season": {
+    "start": 8,
+    "end": 10
+   }
+  },
+  {
+   "id": "ayva",
+   "names": {
+    "tr": "Ayva",
+    "en": "Quince"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 55.0,
+   "priceMonth": 11,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 10,
+    "end": 12
+   }
+  },
+  {
+   "id": "nar",
+   "names": {
+    "tr": "Nar",
+    "en": "Pomegranate"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 60.0,
+   "priceMonth": 11,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 10,
+    "end": 12
+   }
+  },
+  {
+   "id": "trabzon_hurmasi",
+   "names": {
+    "tr": "Trabzon hurması",
+    "en": "Persimmon"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 70.0,
+   "priceMonth": 11,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 10,
+    "end": 12
+   }
+  },
+  {
+   "id": "portakal",
+   "names": {
+    "tr": "Portakal",
+    "en": "Orange"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 35.0,
+   "priceMonth": 1,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 12,
+    "end": 3
+   }
+  },
+  {
+   "id": "mandalina",
+   "names": {
+    "tr": "Mandalina",
+    "en": "Mandarin"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 40.0,
+   "priceMonth": 12,
+   "source": "tahmin",
+   "cls": "seasonal",
+   "season": {
+    "start": 11,
+    "end": 2
+   }
+  },
+  {
+   "id": "limon",
+   "names": {
+    "tr": "Limon",
+    "en": "Lemon"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 30.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "depo",
+   "season": {
+    "start": 11,
+    "end": 3
+   }
+  },
+  {
+   "id": "muz",
+   "names": {
+    "tr": "Muz",
+    "en": "Banana"
+   },
+   "kind": "meyve",
+   "unit": "kg",
+   "price": 85.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "sera",
+   "season": {
+    "start": 1,
+    "end": 12
+   }
+  },
+  {
+   "id": "kirmizi_mercimek",
+   "names": {
+    "tr": "Kırmızı mercimek",
+    "en": "Red lentils"
+   },
+   "kind": "bakliyat",
+   "unit": "kg",
+   "price": 49.5,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "yesil_mercimek",
+   "names": {
+    "tr": "Yeşil mercimek",
+    "en": "Green lentils"
+   },
+   "kind": "bakliyat",
+   "unit": "kg",
+   "price": 85.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "nohut",
+   "names": {
+    "tr": "Nohut",
+    "en": "Chickpeas"
+   },
+   "kind": "bakliyat",
+   "unit": "kg",
+   "price": 124.95,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "kuru_fasulye",
+   "names": {
+    "tr": "Kuru fasulye",
+    "en": "Dried white beans"
+   },
+   "kind": "bakliyat",
+   "unit": "kg",
+   "price": 100.0,
+   "priceMonth": 8,
+   "source": "pazar",
+   "cls": "kiler"
+  },
+  {
+   "id": "barbunya_kuru",
+   "names": {
+    "tr": "Kuru barbunya",
+    "en": "Dried borlotti beans"
+   },
+   "kind": "bakliyat",
+   "unit": "kg",
+   "price": 150.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "borulce_kuru",
+   "names": {
+    "tr": "Kuru börülce",
+    "en": "Dried black-eyed peas"
+   },
+   "kind": "bakliyat",
+   "unit": "kg",
+   "price": 140.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "bakla_kuru",
+   "names": {
+    "tr": "Kuru bakla (iç)",
+    "en": "Dried split broad beans"
+   },
+   "kind": "bakliyat",
+   "unit": "kg",
+   "price": 180.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "pirinc",
+   "names": {
+    "tr": "Pirinç",
+    "en": "Rice"
+   },
+   "kind": "tahil",
+   "unit": "kg",
+   "price": 58.0,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "bulgur",
+   "names": {
+    "tr": "Bulgur",
+    "en": "Coarse bulgur"
+   },
+   "kind": "tahil",
+   "unit": "kg",
+   "price": 70.95,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "ince_bulgur",
+   "names": {
+    "tr": "İnce bulgur",
+    "en": "Fine bulgur"
+   },
+   "kind": "tahil",
+   "unit": "kg",
+   "price": 72.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "makarna",
+   "names": {
+    "tr": "Makarna",
+    "en": "Pasta"
+   },
+   "kind": "tahil",
+   "unit": "kg",
+   "price": 69.8,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "sehriye",
+   "names": {
+    "tr": "Şehriye",
+    "en": "Vermicelli"
+   },
+   "kind": "tahil",
+   "unit": "kg",
+   "price": 70.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "eriste",
+   "names": {
+    "tr": "Erişte",
+    "en": "Turkish egg noodles"
+   },
+   "kind": "tahil",
+   "unit": "kg",
+   "price": 120.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "un",
+   "names": {
+    "tr": "Un",
+    "en": "Flour"
+   },
+   "kind": "tahil",
+   "unit": "kg",
+   "price": 21.8,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "irmik",
+   "names": {
+    "tr": "İrmik",
+    "en": "Semolina"
+   },
+   "kind": "tahil",
+   "unit": "kg",
+   "price": 40.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "nisasta",
+   "names": {
+    "tr": "Nişasta",
+    "en": "Starch"
+   },
+   "kind": "tahil",
+   "unit": "kg",
+   "price": 60.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "ekmek",
+   "names": {
+    "tr": "Ekmek",
+    "en": "Bread"
+   },
+   "kind": "tahil",
+   "unit": "adet",
+   "price": 17.0,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler",
+   "slicesPerUnit": 20
+  },
+  {
+   "id": "yufka",
+   "names": {
+    "tr": "Yufka",
+    "en": "Yufka pastry"
+   },
+   "kind": "tahil",
+   "unit": "adet",
+   "price": 15.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "tarhana",
+   "names": {
+    "tr": "Tarhana",
+    "en": "Tarhana"
+   },
+   "kind": "tahil",
+   "unit": "kg",
+   "price": 150.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "yumurta",
+   "names": {
+    "tr": "Yumurta",
+    "en": "Egg"
+   },
+   "kind": "protein",
+   "unit": "adet",
+   "price": 4.3,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "tavuk_but",
+   "names": {
+    "tr": "Tavuk but",
+    "en": "Chicken thigh"
+   },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 119.9,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "tavuk_gogus",
+   "names": {
+    "tr": "Tavuk göğsü",
+    "en": "Chicken breast"
+   },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 180.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "kiyma",
+   "names": {
+    "tr": "Kıyma",
+    "en": "Minced beef"
+   },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 769.9,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "kusbasi",
+   "names": {
+    "tr": "Kuşbaşı et",
+    "en": "Beef cubes"
+   },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 750.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "kuzu",
+   "names": {
+    "tr": "Kuzu eti",
+    "en": "Lamb"
+   },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 800.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "sucuk",
+   "names": {
+    "tr": "Sucuk",
+    "en": "Sucuk sausage"
+   },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 500.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "ton_baligi",
+   "names": {
+    "tr": "Ton balığı (konserve)",
+    "en": "Canned tuna"
+   },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 450.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "yogurt",
+   "names": {
+    "tr": "Yoğurt",
+    "en": "Yoghurt"
+   },
+   "kind": "sut",
+   "unit": "kg",
+   "price": 50.0,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "sut",
+   "names": {
+    "tr": "Süt",
+    "en": "Milk"
+   },
+   "kind": "sut",
+   "unit": "L",
+   "price": 41.5,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "beyaz_peynir",
+   "names": {
+    "tr": "Beyaz peynir",
+    "en": "White cheese"
+   },
+   "kind": "sut",
+   "unit": "kg",
+   "price": 225.0,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "kasar",
+   "names": {
+    "tr": "Kaşar peyniri",
+    "en": "Kaşar cheese"
+   },
+   "kind": "sut",
+   "unit": "kg",
+   "price": 400.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "lor",
+   "names": {
+    "tr": "Lor peyniri",
+    "en": "Curd cheese"
+   },
+   "kind": "sut",
+   "unit": "kg",
+   "price": 180.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "tereyagi",
+   "names": {
+    "tr": "Tereyağı",
+    "en": "Butter"
+   },
+   "kind": "sut",
+   "unit": "kg",
+   "price": 450.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "krema",
+   "names": {
+    "tr": "Krema",
+    "en": "Cream"
+   },
+   "kind": "sut",
+   "unit": "L",
+   "price": 300.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "ayran",
+   "names": {
+    "tr": "Ayran",
+    "en": "Ayran"
+   },
+   "kind": "sut",
+   "unit": "L",
+   "price": 45.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "aycicek_yagi",
+   "names": {
+    "tr": "Ayçiçek yağı",
+    "en": "Sunflower oil"
+   },
+   "kind": "yag",
+   "unit": "L",
+   "price": 93.8,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "zeytinyagi",
+   "names": {
+    "tr": "Zeytinyağı",
+    "en": "Olive oil"
+   },
+   "kind": "yag",
+   "unit": "L",
+   "price": 350.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "salca_domates",
+   "names": {
+    "tr": "Domates salçası",
+    "en": "Tomato paste"
+   },
+   "kind": "kiler",
+   "unit": "kg",
+   "price": 120.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "salca_biber",
+   "names": {
+    "tr": "Biber salçası",
+    "en": "Pepper paste"
+   },
+   "kind": "kiler",
+   "unit": "kg",
+   "price": 130.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "zeytin",
+   "names": {
+    "tr": "Zeytin",
+    "en": "Olives"
+   },
+   "kind": "kiler",
+   "unit": "kg",
+   "price": 250.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "tahin",
+   "names": {
+    "tr": "Tahin",
+    "en": "Tahini"
+   },
+   "kind": "kiler",
+   "unit": "kg",
+   "price": 350.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "pekmez",
+   "names": {
+    "tr": "Pekmez",
+    "en": "Grape molasses"
+   },
+   "kind": "kiler",
+   "unit": "kg",
+   "price": 180.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "bal",
+   "names": {
+    "tr": "Bal",
+    "en": "Honey"
+   },
+   "kind": "kiler",
+   "unit": "kg",
+   "price": 500.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "sirke",
+   "names": {
+    "tr": "Sirke",
+    "en": "Vinegar"
+   },
+   "kind": "kiler",
+   "unit": "L",
+   "price": 50.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "seker",
+   "names": {
+    "tr": "Şeker",
+    "en": "Sugar"
+   },
+   "kind": "kiler",
+   "unit": "kg",
+   "price": 47.3,
+   "priceMonth": 8,
+   "source": "market",
+   "cls": "kiler"
+  },
+  {
+   "id": "kuru_uzum",
+   "names": {
+    "tr": "Kuru üzüm",
+    "en": "Raisins"
+   },
+   "kind": "kiler",
+   "unit": "kg",
+   "price": 200.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "ceviz",
+   "names": {
+    "tr": "Ceviz içi",
+    "en": "Walnuts"
+   },
+   "kind": "kiler",
+   "unit": "kg",
+   "price": 500.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "asma_yapragi",
+   "names": {
+    "tr": "Asma yaprağı (salamura)",
+    "en": "Brined vine leaves"
+   },
+   "kind": "kiler",
+   "unit": "kg",
+   "price": 250.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "tuz",
+   "names": {
+    "tr": "Tuz",
+    "en": "Salt"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 15.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "karabiber",
+   "names": {
+    "tr": "Karabiber",
+    "en": "Black pepper"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 600.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "pul_biber",
+   "names": {
+    "tr": "Pul biber",
+    "en": "Chilli flakes"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 350.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "kimyon",
+   "names": {
+    "tr": "Kimyon",
+    "en": "Cumin"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 500.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "kekik",
+   "names": {
+    "tr": "Kekik",
+    "en": "Oregano"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 400.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "nane_kuru",
+   "names": {
+    "tr": "Kuru nane",
+    "en": "Dried mint"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 500.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "sumak",
+   "names": {
+    "tr": "Sumak",
+    "en": "Sumac"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 300.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "tarcin",
+   "names": {
+    "tr": "Tarçın",
+    "en": "Cinnamon"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 450.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "yenibahar",
+   "names": {
+    "tr": "Yenibahar",
+    "en": "Allspice"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 500.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "maya",
+   "names": {
+    "tr": "Maya",
+    "en": "Yeast"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 250.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "kabartma_tozu",
+   "names": {
+    "tr": "Kabartma tozu",
+    "en": "Baking powder"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 200.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "vanilya",
+   "names": {
+    "tr": "Vanilin",
+    "en": "Vanilla"
+   },
+   "kind": "baharat",
+   "unit": "kg",
+   "price": 900.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "misir_unu",
+   "names": {
+    "tr": "Mısır unu",
+    "en": "Cornmeal"
+   },
+   "kind": "tahil",
+   "unit": "kg",
+   "price": 60.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "susam",
+   "names": {
+    "tr": "Susam",
+    "en": "Sesame seeds"
+   },
+   "kind": "kiler",
+   "unit": "kg",
+   "price": 280.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  }
+ ]
+}

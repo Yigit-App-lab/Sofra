@@ -1,0 +1,374 @@
+{
+ "regions": {
+  "marmara": {
+   "tr": "Marmara",
+   "en": "Marmara",
+   "shift": 0,
+   "pad": 1
+  },
+  "ege": {
+   "tr": "Ege",
+   "en": "Aegean",
+   "shift": -1,
+   "pad": 1
+  },
+  "akdeniz": {
+   "tr": "Akdeniz",
+   "en": "Mediterranean",
+   "shift": -1,
+   "pad": 2
+  },
+  "ic_anadolu": {
+   "tr": "İç Anadolu",
+   "en": "Central Anatolia",
+   "shift": 0,
+   "pad": 1
+  },
+  "karadeniz": {
+   "tr": "Karadeniz",
+   "en": "Black Sea",
+   "shift": 0,
+   "pad": 1
+  },
+  "dogu_anadolu": {
+   "tr": "Doğu Anadolu",
+   "en": "Eastern Anatolia",
+   "shift": 1,
+   "pad": 1
+  },
+  "guneydogu": {
+   "tr": "Güneydoğu Anadolu",
+   "en": "Southeastern Anatolia",
+   "shift": -1,
+   "pad": 1
+  }
+ },
+ "cities": [
+  {
+   "name": "Adana",
+   "region": "akdeniz"
+  },
+  {
+   "name": "Adıyaman",
+   "region": "guneydogu"
+  },
+  {
+   "name": "Afyonkarahisar",
+   "region": "ege"
+  },
+  {
+   "name": "Aksaray",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Amasya",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Ankara",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Antalya",
+   "region": "akdeniz"
+  },
+  {
+   "name": "Ardahan",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Artvin",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Aydın",
+   "region": "ege"
+  },
+  {
+   "name": "Ağrı",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Balıkesir",
+   "region": "marmara"
+  },
+  {
+   "name": "Bartın",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Batman",
+   "region": "guneydogu"
+  },
+  {
+   "name": "Bayburt",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Bilecik",
+   "region": "marmara"
+  },
+  {
+   "name": "Bingöl",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Bitlis",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Bolu",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Burdur",
+   "region": "akdeniz"
+  },
+  {
+   "name": "Bursa",
+   "region": "marmara"
+  },
+  {
+   "name": "Denizli",
+   "region": "ege"
+  },
+  {
+   "name": "Diyarbakır",
+   "region": "guneydogu"
+  },
+  {
+   "name": "Düzce",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Edirne",
+   "region": "marmara"
+  },
+  {
+   "name": "Elazığ",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Erzincan",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Erzurum",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Eskişehir",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Gaziantep",
+   "region": "guneydogu"
+  },
+  {
+   "name": "Giresun",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Gümüşhane",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Hakkâri",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Hatay",
+   "region": "akdeniz"
+  },
+  {
+   "name": "Isparta",
+   "region": "akdeniz"
+  },
+  {
+   "name": "Iğdır",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Kahramanmaraş",
+   "region": "akdeniz"
+  },
+  {
+   "name": "Karabük",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Karaman",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Kars",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Kastamonu",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Kayseri",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Kilis",
+   "region": "guneydogu"
+  },
+  {
+   "name": "Kocaeli",
+   "region": "marmara"
+  },
+  {
+   "name": "Konya",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Kütahya",
+   "region": "ege"
+  },
+  {
+   "name": "Kırklareli",
+   "region": "marmara"
+  },
+  {
+   "name": "Kırıkkale",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Kırşehir",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Malatya",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Manisa",
+   "region": "ege"
+  },
+  {
+   "name": "Mardin",
+   "region": "guneydogu"
+  },
+  {
+   "name": "Mersin",
+   "region": "akdeniz"
+  },
+  {
+   "name": "Muğla",
+   "region": "ege"
+  },
+  {
+   "name": "Muş",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Nevşehir",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Niğde",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Ordu",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Osmaniye",
+   "region": "akdeniz"
+  },
+  {
+   "name": "Rize",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Sakarya",
+   "region": "marmara"
+  },
+  {
+   "name": "Samsun",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Siirt",
+   "region": "guneydogu"
+  },
+  {
+   "name": "Sinop",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Sivas",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Tekirdağ",
+   "region": "marmara"
+  },
+  {
+   "name": "Tokat",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Trabzon",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Tunceli",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Uşak",
+   "region": "ege"
+  },
+  {
+   "name": "Van",
+   "region": "dogu_anadolu"
+  },
+  {
+   "name": "Yalova",
+   "region": "marmara"
+  },
+  {
+   "name": "Yozgat",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Zonguldak",
+   "region": "karadeniz"
+  },
+  {
+   "name": "Çanakkale",
+   "region": "marmara"
+  },
+  {
+   "name": "Çankırı",
+   "region": "ic_anadolu"
+  },
+  {
+   "name": "Çorum",
+   "region": "karadeniz"
+  },
+  {
+   "name": "İstanbul",
+   "region": "marmara"
+  },
+  {
+   "name": "İzmir",
+   "region": "ege"
+  },
+  {
+   "name": "Şanlıurfa",
+   "region": "guneydogu"
+  },
+  {
+   "name": "Şırnak",
+   "region": "guneydogu"
+  }
+ ],
+ "default": "marmara",
+ "defaultCity": "İstanbul"
+}

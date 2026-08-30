@@ -1,0 +1,90 @@
+// "Bu Akşam" — the only screen that matters. One answer, one price, in that order.
+import React, { useMemo } from 'react';
+import { ScrollView, View, Pressable, Text } from 'react-native';
+import { useRouter } from 'expo-router';
+import Engine from '../../src/engine';
+import { REC, byId } from '../../src/data';
+import { useStore, useEngineCtx } from '../../src/store';
+import { makeT, tl } from '../../src/i18n';
+import { useTheme, space, radius } from '../../src/theme';
+import { Title, Body, Label, Card, Chip, Button, Row, Price, stateChip } from '../../src/ui';
+
+export default function Tonight() {
+  const c = useTheme();
+  const router = useRouter();
+  const { state, dispatch } = useStore();
+  const t = makeT(state.langIndex);
+  const ctx = useEngineCtx();
+
+  // Ranking 56 recipes takes well under a millisecond, but memoise anyway — this
+  // runs on every render and the library is going to grow.
+  const ranked = useMemo(() => Engine.recommend(REC, ctx, 6), [ctx]);
+
+  if (!ranked.length) {
+    return <View style={{ padding:space.xl }}><Body dim>{t('noneMatch')}</Body></View>;
+  }
+
+  const s = ranked[0];
+  const r = s.recipe;
+  const scale = state.household / r.servings;
+  const heroState = Engine.stateOf(byId[r.hero], ctx.region, ctx.month, ctx.regions);
+  const have = r.ingredients.filter((i) => !i.optional && state.pantry[i.id]).length;
+
+  return (
+    <ScrollView contentContainerStyle={{ padding:space.l, paddingBottom:space.xl*2 }}>
+      <Card>
+        <Title>{t.title(r)}</Title>
+        <Body dim size={12.5}>{r.minutes} {t('min')} · {t.cat(r.category)}</Body>
+
+        <View style={{ marginTop:space.m }}>
+          <Price value={tl(s.cost.perPortion)} unit={t('perPerson')} />
+          <Body dim size={12.5} style={{ marginTop:2 }}>
+            {t('forN', state.household)} · {tl(s.cost.total * scale)} ₺ {t('total').toLowerCase()}
+          </Body>
+        </View>
+
+        <Row gap={6} style={{ flexWrap:'wrap', marginTop:space.m, marginBottom:space.m }}>
+          {stateChip(heroState, t)}
+          <Chip tone="accent">{have} {t('have')}</Chip>
+          {s.missing.length > 0 && <Chip>{s.missing.length} {t('toBuy')}</Chip>}
+        </Row>
+
+        {s.cost.driver && s.cost.driverShare > 0.35 && (
+          <View style={{ backgroundColor:c.surface2, borderRadius:radius.s,
+                         padding:space.m, marginBottom:space.m }}>
+            <Body size={13} dim>
+              {t('driver')}: <Text style={{ color:c.ink, fontWeight:'700' }}>
+                {t.itemName(byId[s.cost.driver.id])}</Text> — {Math.round(s.cost.driverShare*100)}% {t('ofBill')}.
+            </Body>
+          </View>
+        )}
+
+        <Row gap={space.s}>
+          <Button style={{ flex:1 }} onPress={() => router.push(`/tarif/${r.id}`)}>{t('cook')}</Button>
+          <Button kind="ghost" onPress={() => dispatch({ type:'feedback', recipe:r, event:'skipped' })}>
+            {t('skip')}
+          </Button>
+        </Row>
+      </Card>
+
+      <Label>{t('others')}</Label>
+      {ranked.slice(1).map((a) => (
+        <Pressable key={a.recipe.id} onPress={() => router.push(`/tarif/${a.recipe.id}`)}
+          accessibilityRole="button"
+          style={({ pressed }) => ({ backgroundColor:c.surface, borderColor:c.line, borderWidth:1,
+            borderRadius:radius.m, padding:space.m, marginBottom:space.s,
+            flexDirection:'row', alignItems:'center', gap:space.m, opacity: pressed ? 0.7 : 1 })}>
+          <View style={{ flex:1 }}>
+            <Text style={{ color:c.ink, fontSize:15, fontWeight:'600' }}>{t.title(a.recipe)}</Text>
+            <Text style={{ color:c.ink3, fontSize:11.5 }}>
+              {a.recipe.minutes} {t('min')} · {a.missing.length} {t('toBuy')}
+            </Text>
+          </View>
+          <Text style={{ color:c.ink, fontSize:16, fontWeight:'700', fontVariant:['tabular-nums'] }}>
+            {tl(a.cost.perPortion)} <Text style={{ fontSize:11, color:c.ink3 }}>₺</Text>
+          </Text>
+        </Pressable>
+      ))}
+    </ScrollView>
+  );
+}
