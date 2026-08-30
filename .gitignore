@@ -8,3 +8,7 @@ dist/
 *.before-*
 *.old-*
 *.good
+
+# Backend runtime data
+backend/*.db
+recipes.db
