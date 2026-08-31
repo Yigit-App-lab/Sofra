@@ -39,6 +39,10 @@ const S = {
   seasonalFallback:['Canlı fiyat yok · mevsim tahmini gösteriliyor','Live price unavailable · showing seasonal estimate'],
   marketCount:['%s market','%s markets'],
   lastUpdated:['Güncellendi','Updated'],
+  priceSource:['Fiyat kaynağı','Price source'],
+  priceDate:['Fiyat tarihi','Price date'],
+  marketAverageSource:['Market Fiyatı · günlük market ortalaması','Market Fiyatı · daily market average'],
+  seasonalSource:['Sofra · mevsimsel fiyat tahmini','Sofra · seasonal price estimate'],
 };
 
 const CAT = {

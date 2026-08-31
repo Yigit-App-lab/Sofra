@@ -41,6 +41,10 @@ export default function Pazar() {
   const liveById = useMemo(() => Object.fromEntries(
     (live?.items || []).map((item) => [item.id, item])
   ), [live]);
+  const observedAt = live?.items?.find((item) => item.observed_at)?.observed_at;
+  const priceDate = observedAt
+    ? new Date(observedAt).toLocaleDateString(t.code === 'en' ? 'en-GB' : 'tr-TR')
+    : null;
 
   const Item = ({ x }) => {
     const observed = liveById[x.item.id];
@@ -63,11 +67,12 @@ export default function Pazar() {
       <Body dim size={12.5}>
         {t.month(ctx.month)} · {state.city} · {ctx.regions[ctx.region][t.code === 'en' ? 'en' : 'tr']}
       </Body>
-      {live?.updated_at && (
-        <Body dim size={11.5}>
-          {t('lastUpdated')} · {new Date(live.updated_at).toLocaleString(t.code === 'en' ? 'en-GB' : 'tr-TR')}
-        </Body>
-      )}
+      <Body dim size={11.5}>
+        {t('priceSource')} · {priceDate ? t('marketAverageSource') : t('seasonalSource')}
+      </Body>
+      <Body dim size={11.5}>
+        {t('priceDate')} · {priceDate || '—'}
+      </Body>
 
       <Label>{t('cheapNow')}  ·  {cheap.length}</Label>
       {cheap.map((x) => <Item key={x.item.id} x={x} />)}
