@@ -58,6 +58,13 @@ def load_catalog() -> tuple[dict, dict]:
     for alias, item_id in aliases.items():
         if item_id in by_id:
             by_name[alias] = by_id[item_id]
+    if "kusbasi" in by_id:
+        steak = dict(by_id["kusbasi"])
+        # Imported steak recipes often say only "4 parça antrikot". A typical
+        # raw serving piece is about 200 g; weight-based rows still use kg.
+        steak["gramsPerUnit"] = 200
+        for alias in ("antrikot", "dana antrikot", "füme antrikot"):
+            by_name[normalize(alias)] = steak
     if "tavuk_but" in by_id:
         whole_chicken = dict(by_id["tavuk_but"])
         whole_chicken["gramsPerUnit"] = 1800
@@ -189,7 +196,9 @@ def consumed_units(quantity, recipe_unit, item) -> float | None:
         }.get(item.get("id"))
         return q * slice_grams / 1000 if slice_grams else None
     if not unit:
-        piece_grams = {"tavuk_gogus": 250, "tavuk_but": 250}.get(item.get("id"))
+        piece_grams = item.get("gramsPerUnit") or {
+            "tavuk_gogus": 250, "tavuk_but": 250
+        }.get(item.get("id"))
         return q * piece_grams / 1000 if piece_grams and q <= 20 else None
     if unit in ("dis", "dis sarimsak") and item.get("id") == "sarimsak":
         return q * 0.004
@@ -233,6 +242,19 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
             )
             item = find_catalog_item(raw_name, row["original_text"], by_name)
             if not item:
+                raw_text = normalize(row["original_text"] or row["name"])
+                is_unmapped_protein = re.search(
+                    r"\b(antrikot|bonfile|biftek|pirzola|kofte|kiyma|"
+                    r"dana|kuzu|tavuk|hindi|somon|levrek|cipura|hamsi|"
+                    r"balik|karides|kalamar)\b",
+                    raw_text,
+                )
+                is_stock_or_flavouring = re.search(
+                    r"\b(suyu|bulyon|cesni|aroma|tablet)\b", raw_text
+                )
+                if is_unmapped_protein and not is_stock_or_flavouring:
+                    eligible += 1
+                    missing_required_protein = True
                 continue
             # Missing main ingredients reduce confidence. Missing protein is a
             # hard stop: publishing the sauce cost as a chicken/beef meal cost

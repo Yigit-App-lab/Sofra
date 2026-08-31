@@ -1,9 +1,15 @@
 import unittest
 
 try:
-    from .recipe_costs import consumed_units, parse_quantity, quantity_and_unit
+    from .recipe_costs import (
+        consumed_units, find_catalog_item, load_catalog, parse_quantity,
+        quantity_and_unit,
+    )
 except ImportError:
-    from recipe_costs import consumed_units, parse_quantity, quantity_and_unit
+    from recipe_costs import (
+        consumed_units, find_catalog_item, load_catalog, parse_quantity,
+        quantity_and_unit,
+    )
 
 
 class RecipeCostTests(unittest.TestCase):
@@ -58,6 +64,13 @@ class RecipeCostTests(unittest.TestCase):
             }),
             1.8,
         )
+
+    def test_prices_antrikot_by_weight_or_piece(self):
+        _, by_name = load_catalog()
+        steak = find_catalog_item("antrikot", "4 parça antrikot", by_name)
+        self.assertEqual(steak["id"], "kusbasi")
+        self.assertEqual(consumed_units(400, "gr", steak), 0.4)
+        self.assertEqual(consumed_units(4, "", steak), 0.8)
 
 
 if __name__ == "__main__":
