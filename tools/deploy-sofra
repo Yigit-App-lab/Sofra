@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+exec 9>/run/lock/sofra-deploy.lock
+flock -n 9 || exit 0
+
+REPO="/root/sofra-tr/tr/app/sofra-app"
+LIVE_API="/root/recipe_api.py"
+LIVE_MARKET="/root/market_prices.py"
+
+cd "$REPO"
+git fetch origin main
+
+LOCAL_REV="$(git rev-parse HEAD)"
+REMOTE_REV="$(git rev-parse origin/main)"
+
+if [ "$LOCAL_REV" != "$REMOTE_REV" ]; then
+  git merge --ff-only origin/main
+fi
+
+changed=0
+if ! cmp -s backend/recipe_api.py "$LIVE_API"; then
+  install -m 0644 backend/recipe_api.py "$LIVE_API"
+  changed=1
+fi
+if ! cmp -s backend/market_prices.py "$LIVE_MARKET"; then
+  install -m 0644 backend/market_prices.py "$LIVE_MARKET"
+  changed=1
+fi
+
+if [ "$changed" -eq 1 ]; then
+  systemctl restart sofra-api.service
+fi
+
+if [ "$LOCAL_REV" != "$REMOTE_REV" ]; then
+  echo "Sofra deployed: $LOCAL_REV -> $REMOTE_REV"
+fi
