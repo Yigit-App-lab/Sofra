@@ -43,6 +43,8 @@ def meal_role(recipe: dict) -> str:
         "atistirmalik", "aperatif", "kahvalti", "sandvic", "simit", "tost",
         "pizza", "borek", "pogaca", "corek", "milfoy", "ekmek", "pide",
         "corba", "salata", "meze", "sos", "tart", "kurabiye", "tatli",
+        "lahmacun", "manti", "makarna", "pilav", "krep", "kis", "burger",
+        "dondurucu", "buzluk", "tavuk suyu",
     )
     if any(token in text for token in light):
         return "light_or_snack"
