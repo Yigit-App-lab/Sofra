@@ -31,6 +31,18 @@ SEASONAL_PRODUCE = {
     "muz": (1, 12),
 }
 
+VEGETABLE_NAMES = set(SEASONAL_PRODUCE) | {
+    "semizotu", "ispanak", "pazi", "karalahana", "marul", "kivircik",
+    "taze sogan", "taze sarimsak", "maydanoz", "dereotu", "taze nane",
+    "roka",
+}
+
+FRUIT_NAMES = {
+    "karpuz", "kavun", "uzum", "incir", "seftali", "kayisi", "kiraz",
+    "visne", "erik", "cilek", "elma", "armut", "ayva", "nar",
+    "trabzon hurmasi", "portakal", "mandalina", "limon", "muz",
+}
+
 REGION_SEASON_SHIFT = {
     "marmara": 0, "ege": -1, "akdeniz": -1, "ic_anadolu": 0,
     "karadeniz": 0, "dogu_anadolu": 1, "guneydogu": -1,
@@ -51,6 +63,15 @@ def shifted_month(month, shift):
 
 def month_in_window(month, start, end):
     return start <= month <= end if start <= end else month >= start or month <= end
+
+
+def ingredient_class(value):
+    name = normalize_ingredient_name(value)
+    if name in FRUIT_NAMES:
+        return "fruit"
+    if name in VEGETABLE_NAMES:
+        return "vegetable"
+    return "other"
 
 
 
@@ -231,6 +252,34 @@ def get_db():
     db = sqlite3.connect(DB)
     db.row_factory = sqlite3.Row
     return db
+
+
+def ensure_ingredient_classes():
+    """Create and refresh the conservative produce classification."""
+    db = get_db()
+    try:
+        columns = {
+            row[1] for row in db.execute("PRAGMA table_info(kiler_ingredients)")
+        }
+        if "ingredient_class" not in columns:
+            db.execute(
+                "ALTER TABLE kiler_ingredients "
+                "ADD COLUMN ingredient_class TEXT NOT NULL DEFAULT 'other'"
+            )
+
+        rows = db.execute("SELECT id, name FROM kiler_ingredients").fetchall()
+        db.executemany(
+            "UPDATE kiler_ingredients SET ingredient_class = ? WHERE id = ?",
+            [(ingredient_class(row["name"]), row["id"]) for row in rows],
+        )
+        db.commit()
+    finally:
+        db.close()
+
+
+@app.on_event("startup")
+def initialize_ingredient_classes():
+    ensure_ingredient_classes()
 
 
 @app.get("/")
@@ -800,6 +849,7 @@ def kiler_ingredients(
                 SELECT
                     id,
                     name,
+                    ingredient_class,
                     recipe_count
                 FROM kiler_ingredients
                 WHERE name_normalized LIKE ?
@@ -824,6 +874,7 @@ def kiler_ingredients(
                 SELECT
                     id,
                     name,
+                    ingredient_class,
                     recipe_count
                 FROM kiler_ingredients
                 ORDER BY recipe_count DESC
@@ -1175,6 +1226,31 @@ def seasonal_recipes(payload: SeasonalRequest):
             "seasonal_ingredients": list(seasonal_kiler.values()),
             "count": len(recipes),
             "recipes": recipes,
+        }
+    finally:
+        db.close()
+
+
+@app.get("/kiler/ingredient-classes")
+def kiler_ingredient_classes():
+    db = get_db()
+    try:
+        rows = db.execute("""
+            SELECT ingredient_class, COUNT(*) AS ingredient_count
+            FROM kiler_ingredients
+            GROUP BY ingredient_class
+            ORDER BY ingredient_class
+        """).fetchall()
+        samples = db.execute("""
+            SELECT id, name
+            FROM kiler_ingredients
+            WHERE ingredient_class = 'other'
+            ORDER BY recipe_count DESC, name_normalized
+            LIMIT 25
+        """).fetchall()
+        return {
+            "classes": [dict(row) for row in rows],
+            "other_samples": [dict(row) for row in samples],
         }
     finally:
         db.close()
