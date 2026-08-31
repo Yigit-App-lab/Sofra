@@ -9,8 +9,9 @@ import {
 import { useLocalSearchParams } from 'expo-router';
 
 import { getRecipe } from '../../src/api';
-import { useStore } from '../../src/store';
+import { useStore, apiRecipeForLearning } from '../../src/store';
 import { useTheme, space, radius } from '../../src/theme';
+import { Button, Row } from '../../src/ui';
 
 
 function IngredientRow({ item, checked, onToggle, c, english }) {
@@ -274,6 +275,10 @@ export default function ApiTarif() {
         unit: ingredient.unit ?? null,
       });
     });
+  }
+
+  function recordFeedback(event) {
+    dispatch({ type:'feedback', recipe:apiRecipeForLearning(recipe), event });
   }
 
 
@@ -660,6 +665,20 @@ export default function ApiTarif() {
           {english ? 'No preparation instructions found.' : 'Hazırlanış bilgisi bulunamadı.'}
         </Text>
       )}
+
+      <View style={{ height:space.l }} />
+      <Row gap={6}>
+        <Button style={{ flex:1 }} onPress={() => recordFeedback('liked')}>
+          {english ? 'Loved it' : 'Beğendim'}
+        </Button>
+        <Button style={{ flex:1 }} kind="ghost" onPress={() => recordFeedback('cooked')}>
+          {english ? 'Made it' : 'Pişirdim'}
+        </Button>
+      </Row>
+      <View style={{ height:space.s }} />
+      <Button kind="ghost" onPress={() => recordFeedback('disliked')}>
+        {english ? 'Not for me' : 'Bana göre değil'}
+      </Button>
     </ScrollView>
   );
 }

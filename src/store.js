@@ -47,6 +47,17 @@ const initial = {
 /** Integer day number — the engine takes days, not dates, so its tests stay stable. */
 export function today() { return Math.floor(Date.now() / 86400000); }
 
+export function apiRecipeForLearning(recipe) {
+  return {
+    id: `api:${recipe.id}`,
+    category: recipe.category || 'api',
+    ingredients: [],
+    tags: [],
+    hero: null,
+    apiTitle: recipe.title,
+  };
+}
+
 function reducer(s, a) {
   switch (a.type) {
     case 'hydrate': return { ...s, ...a.value, city:PRICING_CITY, ready:true };
@@ -133,6 +144,13 @@ function reducer(s, a) {
       // Engine.learn mutates in place, so clone first — React needs a new object.
       const profile = JSON.parse(JSON.stringify(s.profile));
       Engine.learn(profile, a.recipe, a.event, today(), byId);
+      if (a.recipe.apiTitle) {
+        profile.apiRecipes = { ...(profile.apiRecipes || {}) };
+        profile.apiRecipes[a.recipe.id] = {
+          title: a.recipe.apiTitle,
+          category: a.recipe.category,
+        };
+      }
       return { ...s, profile };
     }
     case 'resetProfile': return { ...s, profile: Engine.emptyProfile() };

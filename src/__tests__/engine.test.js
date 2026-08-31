@@ -277,6 +277,15 @@ t('disliking lowers similar dishes', () => {
   E.learn(c.profile, recById.etsiz_kuru_fasulye, 'disliked', 1000, byId);
   ok(E.recommend(rec.recipes, c).find(s => s.recipe.id === 'nohut_yemegi').parts.taste < before);
 });
+t('only cooked feedback enters cooking history', () => {
+  const p = E.emptyProfile();
+  E.learn(p, recById.kisir, 'liked', 1000, byId);
+  ok(p.cooked.kisir == null, 'liked was recorded as cooked');
+  E.learn(p, recById.kisir, 'disliked', 1001, byId);
+  ok(p.cooked.kisir == null, 'disliked was recorded as cooked');
+  E.learn(p, recById.kisir, 'cooked', 1002, byId);
+  eq(p.cooked.kisir, 1002);
+});
 t('learning does not leak into unrelated categories', () => {
   const c = ctx();
   const before = E.recommend(rec.recipes, c).find(s => s.recipe.id === 'cilbir').parts.taste;

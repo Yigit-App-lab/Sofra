@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import { useRouter } from 'expo-router';
 import Engine from '../../src/engine';
 import { ING, REC, byId } from '../../src/data';
-import { useStore, useEngineCtx, PRICING_CITY } from '../../src/store';
+import { useStore, useEngineCtx, PRICING_CITY, apiRecipeForLearning } from '../../src/store';
 import { makeT, tl } from '../../src/i18n';
 import { useTheme, space, radius } from '../../src/theme';
 import { Body, Button, Card, Chip, Price, Row, Title, stateChip } from '../../src/ui';
@@ -148,6 +148,10 @@ export default function Tonight() {
     }
   }
 
+  function recordApiFeedback(recipe, event) {
+    dispatch({ type:'feedback', recipe:apiRecipeForLearning(recipe), event });
+  }
+
   function renderLocalResult() {
     return (
       <View style={{ marginTop:space.l }}>
@@ -233,6 +237,14 @@ export default function Tonight() {
                   </>
                 )}
               </Row>
+              <Row gap={6} style={{ marginBottom:space.s }}>
+                <Button style={{ flex:1 }} onPress={() => recordApiFeedback(r, 'liked')}>{t('loved')}</Button>
+                <Button style={{ flex:1 }} kind="ghost" onPress={() => recordApiFeedback(r, 'cooked')}>{t('made')}</Button>
+              </Row>
+              <Button kind="ghost" onPress={() => recordApiFeedback(r, 'disliked')}>
+                {t('nope')}
+              </Button>
+              <View style={{ height:space.s }} />
               <Button onPress={() => router.push(`/api-tarif/${r.id}`)}>
                 {t('cook')}
               </Button>

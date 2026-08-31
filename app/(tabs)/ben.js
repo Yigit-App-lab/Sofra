@@ -89,7 +89,7 @@ export default function Ben() {
         <>
           <Label>{t('history')}</Label>
           {cooked.sort((a, b) => p.cooked[b] - p.cooked[a]).slice(0, 10).map((id) => (
-            <LineItem key={id} name={t.title(recById[id])}
+            <LineItem key={id} name={recById[id] ? t.title(recById[id]) : (p.apiRecipes?.[id]?.title || id)}
               chips={<Chip>{today() - p.cooked[id]}{t.code === 'en' ? 'd' : ' gün'}</Chip>} />
           ))}
         </>

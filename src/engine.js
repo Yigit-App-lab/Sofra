@@ -235,8 +235,11 @@
     var sig = signatureIngredients(recipe, byId);
     for (var i = 0; i < sig.length; i++) nudge(profile.ingredients, sig[i], target);
     for (var j = 0; j < recipe.tags.length; j++) nudge(profile.tags, recipe.tags[j], target);
-    if (event === 'skipped') profile.skips[recipe.id] = (profile.skips[recipe.id] || 0) + 1;
-    else profile.cooked[recipe.id] = day;
+    if (event === 'skipped' || event === 'disliked') {
+      profile.skips[recipe.id] = (profile.skips[recipe.id] || 0) + 1;
+    } else if (event === 'cooked') {
+      profile.cooked[recipe.id] = day;
+    }
     profile.events += 1;
     return profile;
   }
