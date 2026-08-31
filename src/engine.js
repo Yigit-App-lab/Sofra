@@ -203,7 +203,7 @@
   // ---------------------------------------------------------- taste profile
 
   function emptyProfile() {
-    return { cuisines: {}, ingredients: {}, tags: {}, cooked: {}, skips: {},
+    return { cuisines: {}, ingredients: {}, tags: {}, cooked: {}, liked: {}, skips: {},
       feedback: {}, apiRecipes: {}, events: 0 };
   }
 
@@ -238,6 +238,10 @@
     for (var j = 0; j < recipe.tags.length; j++) nudge(profile.tags, recipe.tags[j], target);
     if (event === 'skipped' || event === 'disliked') {
       profile.skips[recipe.id] = (profile.skips[recipe.id] || 0) + 1;
+      if (event === 'disliked' && profile.liked) delete profile.liked[recipe.id];
+    } else if (event === 'liked') {
+      profile.liked = profile.liked || {};
+      profile.liked[recipe.id] = day;
     } else if (event === 'cooked') {
       profile.cooked[recipe.id] = day;
     }

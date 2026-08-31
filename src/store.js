@@ -60,7 +60,16 @@ export function apiRecipeForLearning(recipe) {
 
 function reducer(s, a) {
   switch (a.type) {
-    case 'hydrate': return { ...s, ...a.value, city:PRICING_CITY, ready:true };
+    case 'hydrate': {
+      const profile = { ...s.profile, ...(a.value?.profile || {}) };
+      profile.liked = { ...(profile.liked || {}) };
+      Object.entries(profile.feedback || {}).forEach(([id, item]) => {
+        if (item?.liked || item?.event === 'liked') {
+          profile.liked[id] = item.day || today();
+        }
+      });
+      return { ...s, ...a.value, profile, city:PRICING_CITY, ready:true };
+    }
     case 'set': return a.key === 'city' ? { ...s, city:PRICING_CITY } : { ...s, [a.key]: a.value };
     case 'togglePantry': {
       const pantry = { ...s.pantry };
@@ -145,7 +154,23 @@ function reducer(s, a) {
       const profile = JSON.parse(JSON.stringify(s.profile));
       Engine.learn(profile, a.recipe, a.event, today(), byId);
       profile.feedback = { ...(profile.feedback || {}) };
-      profile.feedback[a.recipe.id] = { event:a.event, day:today() };
+      const previousFeedback = profile.feedback[a.recipe.id] || {};
+      const feedback = {
+        liked: Boolean(previousFeedback.liked || previousFeedback.event === 'liked'),
+        cooked: Boolean(previousFeedback.cooked || previousFeedback.event === 'cooked'),
+        disliked: Boolean(previousFeedback.disliked || previousFeedback.event === 'disliked'),
+        day: today(),
+      };
+      if (a.event === 'liked') {
+        feedback.liked = true;
+        feedback.disliked = false;
+      } else if (a.event === 'cooked') {
+        feedback.cooked = true;
+      } else if (a.event === 'disliked') {
+        feedback.disliked = true;
+        feedback.liked = false;
+      }
+      profile.feedback[a.recipe.id] = feedback;
       if (a.recipe.apiTitle) {
         profile.apiRecipes = { ...(profile.apiRecipes || {}) };
         profile.apiRecipes[a.recipe.id] = {

@@ -22,7 +22,11 @@ export default function Tarif() {
 
   const cost = Engine.costOf(r, ctx);
   const scale = state.household / r.servings;
-  const feedbackEvent = state.profile.feedback?.[r.id]?.event;
+  const feedback = state.profile.feedback?.[r.id] || {};
+  const liked = Boolean(feedback.liked || feedback.event === 'liked');
+  const cooked = Boolean(feedback.cooked || feedback.event === 'cooked');
+  const disliked = Boolean(feedback.disliked || feedback.event === 'disliked');
+  const hasFeedback = liked || cooked || disliked;
 
   function record(event) {
     dispatch({ type:'feedback', recipe:r, event });
@@ -80,21 +84,21 @@ export default function Tarif() {
 
       <View style={{ height:space.xl }} />
       <Row gap={space.s}>
-        <Button disabled={Boolean(feedbackEvent)} style={{ flex:1 }}
-          kind={feedbackEvent === 'liked' ? 'primary' : 'ghost'} onPress={() => record('liked')}>
-          {feedbackEvent === 'liked' ? '✓ ' : ''}{t('loved')}
+        <Button disabled={liked || disliked} style={{ flex:1 }}
+          kind={liked ? 'primary' : 'ghost'} onPress={() => record('liked')}>
+          {liked ? '✓ ' : ''}{t('loved')}
         </Button>
-        <Button disabled={Boolean(feedbackEvent)} style={{ flex:1 }}
-          kind={feedbackEvent === 'cooked' ? 'primary' : 'ghost'} onPress={() => record('cooked')}>
-          {feedbackEvent === 'cooked' ? '✓ ' : ''}{t('made')}
+        <Button disabled={cooked} style={{ flex:1 }}
+          kind={cooked ? 'primary' : 'ghost'} onPress={() => record('cooked')}>
+          {cooked ? '✓ ' : ''}{t('made')}
         </Button>
       </Row>
       <View style={{ height:space.s }} />
-      <Button disabled={Boolean(feedbackEvent)}
-        kind={feedbackEvent === 'disliked' ? 'primary' : 'ghost'} onPress={() => record('disliked')}>
-        {feedbackEvent === 'disliked' ? '✓ ' : ''}{t('nope')}
+      <Button disabled={disliked || liked}
+        kind={disliked ? 'primary' : 'ghost'} onPress={() => record('disliked')}>
+        {disliked ? '✓ ' : ''}{t('nope')}
       </Button>
-      {feedbackEvent ? <Body dim size={12.5} style={{ marginTop:space.s, textAlign:'center' }}>
+      {hasFeedback ? <Body dim size={12.5} style={{ marginTop:space.s, textAlign:'center' }}>
         {t('feedbackSaved')}
       </Body> : null}
     </ScrollView>

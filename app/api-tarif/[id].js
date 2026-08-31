@@ -327,7 +327,11 @@ export default function ApiTarif() {
         .filter(Boolean)
     : [];
   const feedbackId = `api:${recipe.id}`;
-  const feedbackEvent = state.profile.feedback?.[feedbackId]?.event;
+  const feedback = state.profile.feedback?.[feedbackId] || {};
+  const liked = Boolean(feedback.liked || feedback.event === 'liked');
+  const cooked = Boolean(feedback.cooked || feedback.event === 'cooked');
+  const disliked = Boolean(feedback.disliked || feedback.event === 'disliked');
+  const hasFeedback = liked || cooked || disliked;
 
 
   return (
@@ -670,21 +674,21 @@ export default function ApiTarif() {
 
       <View style={{ height:space.l }} />
       <Row gap={6}>
-        <Button disabled={Boolean(feedbackEvent)} style={{ flex:1 }}
-          kind={feedbackEvent === 'liked' ? 'primary' : 'ghost'} onPress={() => recordFeedback('liked')}>
-          {feedbackEvent === 'liked' ? '✓ ' : ''}{english ? 'Loved it' : 'Beğendim'}
+        <Button disabled={liked || disliked} style={{ flex:1 }}
+          kind={liked ? 'primary' : 'ghost'} onPress={() => recordFeedback('liked')}>
+          {liked ? '✓ ' : ''}{english ? 'Loved it' : 'Beğendim'}
         </Button>
-        <Button disabled={Boolean(feedbackEvent)} style={{ flex:1 }}
-          kind={feedbackEvent === 'cooked' ? 'primary' : 'ghost'} onPress={() => recordFeedback('cooked')}>
-          {feedbackEvent === 'cooked' ? '✓ ' : ''}{english ? 'Made it' : 'Pişirdim'}
+        <Button disabled={cooked} style={{ flex:1 }}
+          kind={cooked ? 'primary' : 'ghost'} onPress={() => recordFeedback('cooked')}>
+          {cooked ? '✓ ' : ''}{english ? 'Made it' : 'Pişirdim'}
         </Button>
       </Row>
       <View style={{ height:space.s }} />
-      <Button disabled={Boolean(feedbackEvent)}
-        kind={feedbackEvent === 'disliked' ? 'primary' : 'ghost'} onPress={() => recordFeedback('disliked')}>
-        {feedbackEvent === 'disliked' ? '✓ ' : ''}{english ? 'Not for me' : 'Bana göre değil'}
+      <Button disabled={disliked || liked}
+        kind={disliked ? 'primary' : 'ghost'} onPress={() => recordFeedback('disliked')}>
+        {disliked ? '✓ ' : ''}{english ? 'Not for me' : 'Bana göre değil'}
       </Button>
-      {feedbackEvent ? <Text style={{ color:c.ink3, fontSize:12.5, textAlign:'center', marginTop:space.s }}>
+      {hasFeedback ? <Text style={{ color:c.ink3, fontSize:12.5, textAlign:'center', marginTop:space.s }}>
         {english ? 'Saved to your profile.' : 'Seçimin profiline eklendi.'}
       </Text> : null}
     </ScrollView>

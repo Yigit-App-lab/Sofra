@@ -29,6 +29,7 @@ const S = {
   cookedN:['Pişirilen yemek','Dishes cooked'], signalsN:['Zevk sinyali','Taste signals'],
   pantryN:['Mutfaktaki malzeme','Items in kitchen'], favCat:['En sevilen tür','Favourite category'],
   avgCost:['Ortalama maliyet','Average cost'], history:['Son pişirilenler','Recently cooked'],
+  likedRecipes:['Beğendiklerim','Liked recipes'],
   nothingYet:['Bir şey pişirin, burası dolsun.','Cook something and this fills up.'],
   noneMatch:['Bu filtrelerle yemek yok. Bütçeyi veya süreyi genişletin.','Nothing matches. Loosen the budget or time.'],
   settings:['Ayarlar','Settings'], city:['Şehir','City'], household:['Kaç kişi','People'],

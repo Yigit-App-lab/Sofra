@@ -281,8 +281,10 @@ t('only cooked feedback enters cooking history', () => {
   const p = E.emptyProfile();
   E.learn(p, recById.kisir, 'liked', 1000, byId);
   ok(p.cooked.kisir == null, 'liked was recorded as cooked');
+  eq(p.liked.kisir, 1000);
   E.learn(p, recById.kisir, 'disliked', 1001, byId);
   ok(p.cooked.kisir == null, 'disliked was recorded as cooked');
+  ok(p.liked.kisir == null, 'disliked recipe stayed in liked list');
   E.learn(p, recById.kisir, 'cooked', 1002, byId);
   eq(p.cooked.kisir, 1002);
 });

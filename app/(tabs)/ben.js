@@ -60,6 +60,10 @@ export default function Ben() {
   const set = (key, value) => dispatch({ type:'set', key, value });
 
   const cooked = Object.keys(p.cooked);
+  const liked = Object.keys(p.liked || {});
+  const profileRecipeTitle = (id) => recById[id]
+    ? t.title(recById[id])
+    : (p.apiRecipes?.[id]?.title || id);
   const fav = useMemo(() => {
     let best = null, bw = 0;
     Object.keys(p.cuisines).forEach((k) => { if (p.cuisines[k].w > bw) { bw = p.cuisines[k].w; best = k; } });
@@ -89,8 +93,17 @@ export default function Ben() {
         <>
           <Label>{t('history')}</Label>
           {cooked.sort((a, b) => p.cooked[b] - p.cooked[a]).slice(0, 10).map((id) => (
-            <LineItem key={id} name={recById[id] ? t.title(recById[id]) : (p.apiRecipes?.[id]?.title || id)}
+            <LineItem key={id} name={profileRecipeTitle(id)}
               chips={<Chip>{today() - p.cooked[id]}{t.code === 'en' ? 'd' : ' gün'}</Chip>} />
+          ))}
+        </>
+      )}
+
+      {liked.length > 0 && (
+        <>
+          <Label>{t('likedRecipes')}</Label>
+          {liked.sort((a, b) => p.liked[b] - p.liked[a]).slice(0, 20).map((id) => (
+            <LineItem key={id} name={profileRecipeTitle(id)} />
           ))}
         </>
       )}
