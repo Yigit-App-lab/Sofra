@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import { useRouter } from 'expo-router';
 import Engine from '../../src/engine';
 import { ING, REC, byId } from '../../src/data';
-import { useStore, useEngineCtx } from '../../src/store';
+import { useStore, useEngineCtx, PRICING_CITY } from '../../src/store';
 import { makeT, tl } from '../../src/i18n';
 import { useTheme, space, radius } from '../../src/theme';
 import { Body, Button, Card, Chip, Price, Row, Title, stateChip } from '../../src/ui';
@@ -53,7 +53,7 @@ export default function Tonight() {
       const produce = ING
         .filter((item) => ['sebze', 'meyve', 'yesillik', 'protein'].includes(item.kind))
         .map((item) => ({ id:item.id, name:item.names.tr, unit:item.unit, kind:item.kind }));
-      const snapshot = await getMarketPrices(state.city, produce);
+      const snapshot = await getMarketPrices(PRICING_CITY, produce);
       dispatch({ type:'setMarketPrices', value:snapshot });
       const priceOverrides = Object.fromEntries(
         (snapshot.items || []).map((item) => [item.id, item])
@@ -94,7 +94,7 @@ export default function Tonight() {
       const data = await getSeasonalRecipes({
         month: ctx.month,
         region: ctx.region,
-        city: state.city,
+        city: PRICING_CITY,
         limit: 3,
         timeBudget: state.timeBudget,
         diet: state.dietPreference,
@@ -130,7 +130,7 @@ export default function Tonight() {
       setLoading(true);
       setError(null);
       const data = await getTonightRecipes(kilerIds, {
-        limit:3, timeBudget:state.timeBudget, city:state.city,
+        limit:3, timeBudget:state.timeBudget, city:PRICING_CITY,
       });
       const recipes = data.recipes || [];
       if (!recipes.length) {

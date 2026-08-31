@@ -70,6 +70,8 @@ REGION_SEASON_SHIFT = {
     "karadeniz": 0, "dogu_anadolu": 1, "guneydogu": -1,
 }
 
+PRICING_CITY = "İstanbul"
+
 
 def normalize_ingredient_name(value):
     text = str(value or "").casefold().replace("ı", "i")
@@ -357,7 +359,7 @@ def market_prices(payload: MarketPriceRequest):
     """Daily averages from Market Fiyati, with cached stale-data fallback."""
     return get_market_prices(
         [{"id": item.id, "name": item.name, "unit": item.unit, "kind": item.kind} for item in payload.items],
-        payload.city,
+        PRICING_CITY,
     )
 
 
@@ -1323,7 +1325,7 @@ def seasonal_recipes(payload: SeasonalRequest):
             )
         )
         recipes = recipes[:max(1, min(payload.limit, 20))]
-        safely_attach_recipe_costs(db, recipes, payload.city)
+        safely_attach_recipe_costs(db, recipes, PRICING_CITY)
 
         return {
             "month": month,
@@ -1684,7 +1686,7 @@ def recipes_tonight(payload: TonightRequest):
         )
 
         recipes = recipes[:limit]
-        safely_attach_recipe_costs(db, recipes, payload.city)
+        safely_attach_recipe_costs(db, recipes, PRICING_CITY)
 
         return {
             "kiler_count": len(ids),

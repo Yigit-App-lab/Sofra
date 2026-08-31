@@ -4,7 +4,7 @@
 import React, { useMemo } from 'react';
 import { ScrollView, View, Text, Pressable } from 'react-native';
 import Engine from '../../src/engine';
-import { REC, recById, CITIES } from '../../src/data';
+import { REC, recById } from '../../src/data';
 import { useStore, useEngineCtx, today } from '../../src/store';
 import { makeT, tl, LANGS } from '../../src/i18n';
 import { useTheme, space } from '../../src/theme';
@@ -96,12 +96,6 @@ export default function Ben() {
       )}
 
       <Label>{t('settings')}</Label>
-      <Body dim size={12}>{t('city')}</Body>
-      <View style={{ height:space.s }} />
-      <Choice scroll options={CITIES.map((x) => ({ value:x.name, label:x.name }))}
-              value={state.city} onChange={(v) => set('city', v)} />
-
-      <View style={{ height:space.l }} />
       <Body dim size={12}>{t('household')}</Body>
       <View style={{ height:space.s }} />
       <Choice options={[1,2,3,4,5,6,7,8].map((n) => ({ value:n, label:String(n) }))}

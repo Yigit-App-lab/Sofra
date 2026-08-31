@@ -5,7 +5,7 @@ import { ScrollView } from 'react-native';
 import Engine from '../../src/engine';
 import { ING, REC } from '../../src/data';
 import { getMarketPrices } from '../../src/api';
-import { useStore, useEngineCtx } from '../../src/store';
+import { useStore, useEngineCtx, PRICING_CITY } from '../../src/store';
 import { makeT, tl } from '../../src/i18n';
 import { space } from '../../src/theme';
 import { Label, Body, LineItem, stateChip, Chip } from '../../src/ui';
@@ -24,7 +24,7 @@ export default function Pazar() {
       .filter((item) => ['sebze', 'meyve', 'yesillik'].includes(item.kind))
       .slice(0, 18)
       .map((item) => ({ id:item.id, name:item.names.tr, unit:item.unit, kind:item.kind }));
-    getMarketPrices(state.city, produce)
+    getMarketPrices(PRICING_CITY, produce)
       .then((result) => {
         if (active) {
           setLive(result);
@@ -33,7 +33,7 @@ export default function Pazar() {
       })
       .catch(() => { if (active) setLive(null); });
     return () => { active = false; };
-  }, [state.city, dispatch]);
+  }, [dispatch]);
 
   const cheap = list.filter((x) => x.factor < 1);
   const dear = list.filter((x) => x.factor > 1.2);
@@ -70,7 +70,7 @@ export default function Pazar() {
   return (
     <ScrollView contentContainerStyle={{ padding:space.l, paddingBottom:space.xl*2 }}>
       <Body dim size={12.5}>
-        {t.month(ctx.month)} · {state.city} · {ctx.regions[ctx.region][t.code === 'en' ? 'en' : 'tr']}
+        {t.month(ctx.month)} · {PRICING_CITY} · {ctx.regions[ctx.region][t.code === 'en' ? 'en' : 'tr']}
       </Body>
       <Body dim size={11.5}>
         {t('priceSource')} · {priceDate ? t('marketAverageSource') : t('seasonalSource')}

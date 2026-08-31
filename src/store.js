@@ -10,11 +10,12 @@ import { byId, cityRec, REGIONS } from './data';
 import { deviceLangIndex } from './i18n';
 
 const KEY = 'sofra.tr.v1';
+export const PRICING_CITY = 'İstanbul';
 
 const initial = {
   ready: false,
   langIndex: 0,
-  city: 'İstanbul',
+  city: PRICING_CITY,
   household: 4,
   timeBudget: 60,
   maxPerPortion: 120,
@@ -48,8 +49,8 @@ export function today() { return Math.floor(Date.now() / 86400000); }
 
 function reducer(s, a) {
   switch (a.type) {
-    case 'hydrate': return { ...s, ...a.value, ready: true };
-    case 'set': return { ...s, [a.key]: a.value };
+    case 'hydrate': return { ...s, ...a.value, city:PRICING_CITY, ready:true };
+    case 'set': return a.key === 'city' ? { ...s, city:PRICING_CITY } : { ...s, [a.key]: a.value };
     case 'togglePantry': {
       const pantry = { ...s.pantry };
       if (pantry[a.id]) delete pantry[a.id]; else pantry[a.id] = 1;
@@ -177,13 +178,13 @@ export function useEngineCtx() {
   const { state } = useStore();
   const priceOverrides = useMemo(() => {
     const snapshot = state.marketPriceSnapshot;
-    if (!snapshot || snapshot.city !== state.city) return {};
+    if (!snapshot || snapshot.city !== PRICING_CITY) return {};
     return Object.fromEntries((snapshot.items || []).map((item) => [item.id, item]));
-  }, [state.marketPriceSnapshot, state.city]);
+  }, [state.marketPriceSnapshot]);
   return useMemo(() => ({
     byId,
     regions: REGIONS,
-    region: cityRec(state.city).region,
+    region: cityRec(PRICING_CITY).region,
     month: new Date().getMonth() + 1,
     pantrySet: state.pantry,
     profile: state.profile,
@@ -194,7 +195,7 @@ export function useEngineCtx() {
     day: today(),
     priceOverrides,
     priceSnapshot: state.marketPriceSnapshot,
-  }), [state.city, state.pantry, state.profile, state.timeBudget,
+  }), [state.pantry, state.profile, state.timeBudget,
        state.maxPerPortion, state.meatless, state.skill, state.marketPriceSnapshot,
        priceOverrides]);
 }
