@@ -100,7 +100,7 @@ def _matching_product(title: str, query: str) -> bool:
     return bool(query_words) and all(word in title_words for word in query_words)
 
 
-def aggregate_search_response(data: dict, query: str, unit: str) -> dict | None:
+def aggregate_search_response(data: dict, query: str, unit: str, kind: str = "produce") -> dict | None:
     """Aggregate one comparable observation per market, with outlier trimming."""
     by_market: dict[str, list[float]] = {}
     for product in data.get("content") or []:
@@ -109,7 +109,7 @@ def aggregate_search_response(data: dict, query: str, unit: str) -> dict | None:
         # Produce on Market Fiyati is catalogued as unbranded. Requiring that
         # marker excludes chips, sauces, juices and preserves without a brittle
         # list of every processed-food word.
-        if normalize(product.get("brand")) != "markasiz":
+        if kind != "protein" and normalize(product.get("brand")) != "markasiz":
             continue
         for depot in product.get("productDepotInfoList") or []:
             value = normalized_unit_price(depot, unit)
@@ -196,6 +196,7 @@ def get_market_prices(items: list[dict], city: str) -> dict:
         item_id = str(item.get("id") or "")
         query = str(item.get("name") or "").strip()
         unit = str(item.get("unit") or "kg")
+        kind = str(item.get("kind") or "produce")
         if not item_id or not query:
             continue
         key = f"{normalize(city)}:{item_id}:{unit}"
@@ -209,11 +210,11 @@ def get_market_prices(items: list[dict], city: str) -> dict:
         if cached and age is not None and age < CACHE_TTL_SECONDS:
             results.append({**cached, "id": item_id, "fresh": True})
             continue
-        pending.append((item_id, query, unit, key, cached))
+        pending.append((item_id, query, unit, kind, key, cached))
 
     def fetch_one(entry):
-        item_id, query, unit, key, cached = entry
-        aggregate = aggregate_search_response(_search(query, city), query, unit)
+        item_id, query, unit, kind, key, cached = entry
+        aggregate = aggregate_search_response(_search(query, city), query, unit, kind)
         return item_id, unit, key, cached, aggregate
 
     # Bounded concurrency keeps the first daily refresh practical without
@@ -221,7 +222,7 @@ def get_market_prices(items: list[dict], city: str) -> dict:
     with ThreadPoolExecutor(max_workers=min(6, max(1, len(pending)))) as pool:
         futures = {pool.submit(fetch_one, entry): entry for entry in pending}
         for future in as_completed(futures):
-            item_id, _, _, _, cached = futures[future]
+            item_id, _, _, _, _, cached = futures[future]
             try:
                 item_id, unit, key, cached, aggregate = future.result()
                 if aggregate:

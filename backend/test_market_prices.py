@@ -44,6 +44,17 @@ class MarketPriceTests(unittest.TestCase):
         }]}
         self.assertIsNone(aggregate_search_response(response, "patates", "kg"))
 
+    def test_accepts_branded_exact_protein(self):
+        response = {"content": [{
+            "title": "Dana Kıyma 500 Gr",
+            "brand": "Market Kasap",
+            "productDepotInfoList": [
+                {"marketAdi": "market", "unitPrice": "699,90 ₺/kg"},
+            ],
+        }]}
+        result = aggregate_search_response(response, "kıyma", "kg", "protein")
+        self.assertEqual(result["average"], 699.9)
+
 
 if __name__ == "__main__":
     unittest.main()

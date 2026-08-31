@@ -19,7 +19,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 INGREDIENTS_PATH = ROOT / "assets" / "data" / "ingredients.json"
-PRODUCE_KINDS = {"sebze", "meyve", "yesillik"}
+TRACKED_KINDS = {"sebze", "meyve", "yesillik", "protein"}
 
 
 def produce_items() -> list[dict]:
@@ -29,9 +29,10 @@ def produce_items() -> list[dict]:
             "id": item["id"],
             "name": item["names"]["tr"],
             "unit": item.get("unit", "kg"),
+            "kind": item.get("kind", "produce"),
         }
         for item in data.get("items", [])
-        if item.get("kind") in PRODUCE_KINDS
+        if item.get("kind") in TRACKED_KINDS
     ]
 
 

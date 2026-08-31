@@ -320,6 +320,7 @@ class MarketPriceItem(BaseModel):
     id: str
     name: str
     unit: str = "kg"
+    kind: str = "produce"
 
 
 class MarketPriceRequest(BaseModel):
@@ -331,7 +332,7 @@ class MarketPriceRequest(BaseModel):
 def market_prices(payload: MarketPriceRequest):
     """Daily averages from Market Fiyati, with cached stale-data fallback."""
     return get_market_prices(
-        [{"id": item.id, "name": item.name, "unit": item.unit} for item in payload.items],
+        [{"id": item.id, "name": item.name, "unit": item.unit, "kind": item.kind} for item in payload.items],
         payload.city,
     )
 

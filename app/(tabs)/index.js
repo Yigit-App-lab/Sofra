@@ -51,8 +51,8 @@ export default function Tonight() {
     let currentRanked = ranked;
     try {
       const produce = ING
-        .filter((item) => ['sebze', 'meyve', 'yesillik'].includes(item.kind))
-        .map((item) => ({ id:item.id, name:item.names.tr, unit:item.unit }));
+        .filter((item) => ['sebze', 'meyve', 'yesillik', 'protein'].includes(item.kind))
+        .map((item) => ({ id:item.id, name:item.names.tr, unit:item.unit, kind:item.kind }));
       const snapshot = await getMarketPrices(state.city, produce);
       dispatch({ type:'setMarketPrices', value:snapshot });
       const priceOverrides = Object.fromEntries(

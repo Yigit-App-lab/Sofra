@@ -23,7 +23,7 @@ export default function Pazar() {
     const produce = ING
       .filter((item) => ['sebze', 'meyve', 'yesillik'].includes(item.kind))
       .slice(0, 18)
-      .map((item) => ({ id:item.id, name:item.names.tr, unit:item.unit }));
+      .map((item) => ({ id:item.id, name:item.names.tr, unit:item.unit, kind:item.kind }));
     getMarketPrices(state.city, produce)
       .then((result) => {
         if (active) {
