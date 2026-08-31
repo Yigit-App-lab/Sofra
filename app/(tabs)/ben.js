@@ -85,8 +85,6 @@ export default function Ben() {
         <View style={{ marginTop:space.l }}><Body dim size={13.5}>{t('nothingYet')}</Body></View>
       )}
 
-      <Weights title={t.code === 'en' ? 'Categories' : 'Yemek türleri'}
-               bucket={p.cuisines} limit={5} labelOf={(k) => t.cat(k)} />
       <Weights title={t.code === 'en' ? 'Ingredients' : 'Malzemeler'}
                bucket={p.ingredients} limit={6} labelOf={(k) => t.itemName(ctx.byId[k]) || k} />
 
