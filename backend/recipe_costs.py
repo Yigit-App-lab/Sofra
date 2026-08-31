@@ -40,6 +40,17 @@ def load_catalog() -> tuple[dict, dict]:
     for item in items:
         by_name[normalize(item["names"]["tr"])] = item
         by_name[normalize(item["id"].replace("_", " "))] = item
+    aliases = {
+        "toz seker": "seker",
+        "sivi yag": "aycicek_yagi",
+        "yesil biber": "biber_sivri",
+        "salca": "salca_domates",
+        "hakiki zeytinyagi": "zeytinyagi",
+        "kucuk cay bardagi zeytinyagi": "zeytinyagi",
+    }
+    for alias, item_id in aliases.items():
+        if item_id in by_id:
+            by_name[alias] = by_id[item_id]
     return by_id, by_name
 
 
@@ -75,8 +86,17 @@ def consumed_units(quantity, recipe_unit, item) -> float | None:
     if unit in ("cay kasigi", "ck"): return q * 0.005
     if unit in ("su bardagi", "bardak", "sb"): return q * 0.2
     if unit in ("cay bardagi", "cb"): return q * 0.1
-    if unit in ("adet", "tane") and item.get("gramsPerUnit"):
-        return q * float(item["gramsPerUnit"]) / 1000
+    if unit in ("adet", "tane"):
+        default_grams = {
+            "domates": 180, "patlican": 250, "kabak": 250,
+            "havuc": 100, "patates": 180, "sogan": 120,
+            "taze_fasulye": 12, "biber_sivri": 40,
+            "biber_dolmalik": 120, "limon": 120,
+        }.get(item.get("id"))
+        grams = item.get("gramsPerUnit") or default_grams
+        return q * float(grams) / 1000 if grams else None
+    if unit in ("dis", "dis sarimsak") and item.get("id") == "sarimsak":
+        return q * 0.004
     return None
 
 
@@ -104,10 +124,17 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
         total = 0.0
         priced = 0
         live_count = 0
+        eligible = 0
         observed_dates = []
         ingredients = grouped.get(recipe["id"], [])
         for row in ingredients:
-            item = by_name.get(normalize(row["kiler_name"] or row["name"]))
+            raw_name = normalize(row["kiler_name"] or row["name"])
+            if raw_name in ("su", "ilik su", "sicak su", "soguk su", "kaynar su"):
+                continue
+            if parse_quantity(row["quantity"]) is None:
+                continue
+            eligible += 1
+            item = by_name.get(raw_name)
             if not item:
                 continue
             units = consumed_units(row["quantity"], row["unit"], item)
@@ -128,7 +155,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
         usable_cost = priced > 0 and total >= 0.05
         recipe["cost_total"] = round(total, 2) if usable_cost else None
         recipe["cost_per_portion"] = round(total / servings, 2) if usable_cost else None
-        recipe["cost_coverage"] = round(priced / len(ingredients), 2) if ingredients else 0
+        recipe["cost_coverage"] = round(priced / eligible, 2) if eligible else 0
         recipe["cost_live_count"] = live_count
         recipe["cost_observed_at"] = max(observed_dates) if observed_dates else None
 
