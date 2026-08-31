@@ -8,8 +8,10 @@ import unicodedata
 
 try:
     from .market_prices import get_market_prices
+    from .recipe_costs import attach_recipe_costs
 except ImportError:  # `uvicorn recipe_api:app` from the backend directory
     from market_prices import get_market_prices
+    from recipe_costs import attach_recipe_costs
 
 
 # Peak-season windows for fresh Turkish produce. Region shifts mirror the
@@ -1140,6 +1142,7 @@ def recipes_by_kiler(payload: KilerMatchRequest):
 class SeasonalRequest(BaseModel):
     month: int
     region: str = "marmara"
+    city: str = "İstanbul"
     limit: int = 3
     time_budget: int | None = None
     diet: str | None = None
@@ -1272,6 +1275,7 @@ def seasonal_recipes(payload: SeasonalRequest):
             )
         )
         recipes = recipes[:max(1, min(payload.limit, 20))]
+        attach_recipe_costs(db, recipes, payload.city)
 
         return {
             "month": month,
@@ -1313,6 +1317,7 @@ class TonightRequest(BaseModel):
     kiler_ids: list[int]
     limit: int = 50
     time_budget: int | None = None
+    city: str = "İstanbul"
 
 
 @app.post("/recipes/tonight")
@@ -1622,6 +1627,7 @@ def recipes_tonight(payload: TonightRequest):
         )
 
         recipes = recipes[:limit]
+        attach_recipe_costs(db, recipes, payload.city)
 
         return {
             "kiler_count": len(ids),

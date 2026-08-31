@@ -93,6 +93,7 @@ export default function Tonight() {
       const data = await getSeasonalRecipes({
         month: ctx.month,
         region: ctx.region,
+        city: state.city,
         limit: 3,
         timeBudget: state.timeBudget,
         diet: state.dietPreference,
@@ -127,7 +128,9 @@ export default function Tonight() {
     try {
       setLoading(true);
       setError(null);
-      const data = await getTonightRecipes(kilerIds, { limit:3, timeBudget:state.timeBudget });
+      const data = await getTonightRecipes(kilerIds, {
+        limit:3, timeBudget:state.timeBudget, city:state.city,
+      });
       const recipes = data.recipes || [];
       if (!recipes.length) {
         setChoice(null);
@@ -184,6 +187,8 @@ export default function Tonight() {
       <View style={{ marginTop:space.l }}>
         {choice.recipes.map((r, index) => {
           const ready = r.missing_count === 0;
+          const hasCost = r.cost_per_portion != null;
+          const scale = state.household / (r.servings || 4);
           return (
             <Card key={r.id} style={{ marginBottom:space.m }}>
               <Text style={{ color:c.accent, fontSize:11, fontWeight:'800', letterSpacing:0.7 }}>
@@ -193,8 +198,8 @@ export default function Tonight() {
               </Text>
               <Title size={24}>{r.title}</Title>
               <Body dim size={12.5}>
+                {r.total_minutes != null ? `${r.total_minutes} ${t('min')} · ` : ''}
                 {r.category || (english ? 'Recipe' : 'Tarif')}
-                {r.total_minutes != null ? ` · ${r.total_minutes} ${english ? 'min' : 'dk'}` : ''}
               </Body>
               <Body size={13} style={{ marginTop:space.s }}>
                 {choice.mode === 'seasonal'
@@ -203,7 +208,18 @@ export default function Tonight() {
                     ? `Matched with ${r.matched_count || 0} ingredients in your Kiler`
                     : `Kilerindeki ${r.matched_count || 0} malzemeyle eşleşti`}
               </Body>
+              {hasCost && (
+                <View style={{ marginTop:space.m }}>
+                  <Price value={tl(r.cost_per_portion)} unit={t('perPerson')} />
+                  <Body dim size={12.5}>
+                    {t('forN', state.household)} · {tl(r.cost_total * scale)} ₺ {t('total').toLowerCase()} · {t('approximateCost')}
+                  </Body>
+                </View>
+              )}
               <Row gap={6} style={{ flexWrap:'wrap', marginVertical:space.m }}>
+                {hasCost && (
+                  <Chip>{t('priceCoverage', `%${Math.round((r.cost_coverage || 0) * 100)}`)}</Chip>
+                )}
                 {choice.mode === 'seasonal' && (
                   <Chip tone="accent">{r.seasonal_count} {english ? 'in season' : 'mevsiminde'}</Chip>
                 )}
@@ -217,7 +233,7 @@ export default function Tonight() {
                 )}
               </Row>
               <Button onPress={() => router.push(`/api-tarif/${r.id}`)}>
-                {english ? 'Open recipe' : 'Tarifi aç'}
+                {t('cook')}
               </Button>
             </Card>
           );

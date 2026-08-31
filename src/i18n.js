@@ -43,6 +43,8 @@ const S = {
   priceDate:['Fiyat tarihi','Price date'],
   marketAverageSource:['Market Fiyatı · günlük market ortalaması','Market Fiyatı · daily market average'],
   seasonalSource:['Sofra · mevsimsel fiyat tahmini','Sofra · seasonal price estimate'],
+  approximateCost:['yaklaşık maliyet','estimated cost'],
+  priceCoverage:['%s fiyat kapsamı','%s price coverage'],
 };
 
 const CAT = {

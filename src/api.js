@@ -167,6 +167,7 @@ export async function getRecipesByKiler(kilerIds, limit = 30) {
 export async function getSeasonalRecipes({
   month,
   region,
+  city,
   limit = 3,
   timeBudget = null,
   diet = null,
@@ -180,6 +181,7 @@ export async function getSeasonalRecipes({
     body: JSON.stringify({
       month,
       region,
+      city,
       limit,
       time_budget: timeBudget,
       diet,
@@ -201,11 +203,13 @@ export async function getTonightRecipes(
   {
     limit = 30,
     timeBudget = null,
+    city = 'İstanbul',
   } = {}
 ) {
   const body = {
     kiler_ids: kilerIds,
     limit,
+    city,
   };
 
   if (timeBudget != null) {

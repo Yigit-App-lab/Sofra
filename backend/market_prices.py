@@ -154,6 +154,14 @@ def _write_cache(cache: dict) -> None:
         pass  # Memory response is still useful; cache failure must not break Pazar.
 
 
+def get_cached_price(item_id: str, unit: str, city: str) -> dict | None:
+    """Return the last observation without triggering an upstream request."""
+    key = f"{normalize(city)}:{item_id}:{unit}"
+    with _lock:
+        item = (_read_cache().get("items") or {}).get(key)
+    return dict(item) if item else None
+
+
 def _search(query: str, city: str) -> dict:
     latitude, longitude = CITY_CENTRES.get(normalize(city), CITY_CENTRES["istanbul"])
     body = json.dumps({
