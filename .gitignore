@@ -12,3 +12,7 @@ dist/
 # Backend runtime data
 backend/*.db
 recipes.db
+
+# Python cache
+__pycache__/
+*.py[cod]
