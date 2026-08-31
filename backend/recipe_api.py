@@ -6,6 +6,11 @@ import re
 import sqlite3
 import unicodedata
 
+try:
+    from .market_prices import get_market_prices
+except ImportError:  # `uvicorn recipe_api:app` from the backend directory
+    from market_prices import get_market_prices
+
 
 # Peak-season windows for fresh Turkish produce. Region shifts mirror the
 # mobile app's season model: Mediterranean/Aegean/Southeast arrive earlier,
@@ -307,6 +312,26 @@ def home():
         "name": "Sofra Recipe API",
         "status": "running"
     }
+
+
+class MarketPriceItem(BaseModel):
+    id: str
+    name: str
+    unit: str = "kg"
+
+
+class MarketPriceRequest(BaseModel):
+    city: str = "İstanbul"
+    items: list[MarketPriceItem]
+
+
+@app.post("/market/prices")
+def market_prices(payload: MarketPriceRequest):
+    """Daily averages from Market Fiyati, with cached stale-data fallback."""
+    return get_market_prices(
+        [{"id": item.id, "name": item.name, "unit": item.unit} for item in payload.items],
+        payload.city,
+    )
 
 
 @app.get("/recipes/search")

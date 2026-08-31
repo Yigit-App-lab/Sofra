@@ -35,6 +35,10 @@ const S = {
   meatless:['Etsiz','Meatless'], language:['Dil','Language'],
   resetProfile:['Öğrenilenleri sıfırla','Reset what it learned'],
   estimated:['tahmini','estimated'],
+  livePrices:['Günlük market ortalaması','Daily market average'],
+  seasonalFallback:['Canlı fiyat yok · mevsim tahmini gösteriliyor','Live price unavailable · showing seasonal estimate'],
+  marketCount:['%s market','%s markets'],
+  lastUpdated:['Güncellendi','Updated'],
 };
 
 const CAT = {

@@ -1,9 +1,10 @@
 // "Pazar" — what is cheap this month, in ₺, and what is about to come back.
 // This is the screen that makes the app feel like it knows the market.
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView } from 'react-native';
 import Engine from '../../src/engine';
 import { ING, REC } from '../../src/data';
+import { getMarketPrices } from '../../src/api';
 import { useStore, useEngineCtx } from '../../src/store';
 import { makeT, tl } from '../../src/i18n';
 import { space } from '../../src/theme';
@@ -14,8 +15,21 @@ export default function Pazar() {
   const { state } = useStore();
   const t = makeT(state.langIndex);
   const ctx = useEngineCtx();
-
+  const [live, setLive] = useState(null);
   const list = useMemo(() => Engine.marketNow(ING, ctx), [ctx]);
+
+  useEffect(() => {
+    let active = true;
+    const produce = list
+      .filter((x) => ['sebze', 'meyve', 'yesillik'].includes(x.item.kind))
+      .slice(0, 18)
+      .map((x) => ({ id:x.item.id, name:x.item.names.tr, unit:x.item.unit }));
+    getMarketPrices(state.city, produce)
+      .then((result) => { if (active) setLive(result); })
+      .catch(() => { if (active) setLive(null); });
+    return () => { active = false; };
+  }, [state.city, list]);
+
   const cheap = list.filter((x) => x.factor < 1);
   const dear = list.filter((x) => x.factor > 1.2);
   const soon = useMemo(() => Engine.comingSoon(REC, ctx, 6), [ctx]);
@@ -24,20 +38,36 @@ export default function Pazar() {
     : u === 'adet' ? (t.code === 'en' ? '₺/each' : '₺/adet')
     : (t.code === 'en' ? '₺/bunch' : '₺/demet'));
 
-  const Item = ({ x }) => (
-    <LineItem
-      name={t.itemName(x.item)}
-      sub={x.item.source === 'tahmin' ? t('estimated') : undefined}
-      chips={stateChip(x.state, t)}
-      value={`${tl(x.price)} ${unitLabel(x.item.unit)}`}
-    />
-  );
+  const liveById = useMemo(() => Object.fromEntries(
+    (live?.items || []).map((item) => [item.id, item])
+  ), [live]);
+
+  const Item = ({ x }) => {
+    const observed = liveById[x.item.id];
+    const price = observed?.average ?? x.price;
+    const sub = observed
+      ? `${t('livePrices')} · ${t('marketCount', observed.market_count)}`
+      : (x.item.source === 'tahmin' ? t('estimated') : t('seasonalFallback'));
+    return (
+      <LineItem
+        name={t.itemName(x.item)}
+        sub={sub}
+        chips={stateChip(x.state, t)}
+        value={`${tl(price)} ${unitLabel(x.item.unit)}`}
+      />
+    );
+  };
 
   return (
     <ScrollView contentContainerStyle={{ padding:space.l, paddingBottom:space.xl*2 }}>
       <Body dim size={12.5}>
         {t.month(ctx.month)} · {state.city} · {ctx.regions[ctx.region][t.code === 'en' ? 'en' : 'tr']}
       </Body>
+      {live?.updated_at && (
+        <Body dim size={11.5}>
+          {t('lastUpdated')} · {new Date(live.updated_at).toLocaleString(t.code === 'en' ? 'en-GB' : 'tr-TR')}
+        </Body>
+      )}
 
       <Label>{t('cheapNow')}  ·  {cheap.length}</Label>
       {cheap.map((x) => <Item key={x.item.id} x={x} />)}

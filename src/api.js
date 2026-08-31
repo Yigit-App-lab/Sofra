@@ -226,3 +226,22 @@ export async function getTonightRecipes(
 
   return response.json();
 }
+
+export async function getMarketPrices(city, items) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 35000);
+  try {
+    const response = await fetch(`${API_URL}/market/prices`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ city, items }),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`Market price request failed: ${response.status}`);
+    }
+    return response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
