@@ -121,9 +121,29 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 live_count += 1
                 if observation.get("observed_at"):
                     observed_dates.append(observation["observed_at"])
-        servings = max(1, int(recipe.get("servings") or 4))
-        recipe["cost_total"] = round(total, 2) if priced else None
-        recipe["cost_per_portion"] = round(total / servings, 2) if priced else None
+        servings = parse_quantity(recipe.get("servings")) or 4
+        servings = max(1, servings)
+        # A few imported rows contain zero or placeholder quantities. Publishing
+        # 0.0 TL is worse than admitting that the price could not be calculated.
+        usable_cost = priced > 0 and total >= 0.05
+        recipe["cost_total"] = round(total, 2) if usable_cost else None
+        recipe["cost_per_portion"] = round(total / servings, 2) if usable_cost else None
         recipe["cost_coverage"] = round(priced / len(ingredients), 2) if ingredients else 0
         recipe["cost_live_count"] = live_count
         recipe["cost_observed_at"] = max(observed_dates) if observed_dates else None
+
+
+def safely_attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
+    """Cost enrichment is optional and may never take recommendations down."""
+    try:
+        attach_recipe_costs(db, recipes, city)
+    except Exception as exc:
+        print(f"Recipe cost enrichment failed: {exc}")
+        for recipe in recipes:
+            recipe.update({
+                "cost_total": None,
+                "cost_per_portion": None,
+                "cost_coverage": 0,
+                "cost_live_count": 0,
+                "cost_observed_at": None,
+            })

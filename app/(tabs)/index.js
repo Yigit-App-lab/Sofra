@@ -208,14 +208,14 @@ export default function Tonight() {
                     ? `Matched with ${r.matched_count || 0} ingredients in your Kiler`
                     : `Kilerindeki ${r.matched_count || 0} malzemeyle eşleşti`}
               </Body>
-              {hasCost && (
-                <View style={{ marginTop:space.m }}>
-                  <Price value={tl(r.cost_per_portion)} unit={t('perPerson')} />
-                  <Body dim size={12.5}>
-                    {t('forN', state.household)} · {tl(r.cost_total * scale)} ₺ {t('total').toLowerCase()} · {t('approximateCost')}
-                  </Body>
-                </View>
-              )}
+              <View style={{ marginTop:space.m }}>
+                <Price value={hasCost ? tl(r.cost_per_portion) : '—'} unit={t('perPerson')} />
+                <Body dim size={12.5}>
+                  {hasCost
+                    ? `${t('forN', state.household)} · ${tl(r.cost_total * scale)} ₺ ${t('total').toLowerCase()} · ${t('approximateCost')}`
+                    : t('costUnavailable')}
+                </Body>
+              </View>
               <Row gap={6} style={{ flexWrap:'wrap', marginVertical:space.m }}>
                 {hasCost && (
                   <Chip>{t('priceCoverage', `%${Math.round((r.cost_coverage || 0) * 100)}`)}</Chip>

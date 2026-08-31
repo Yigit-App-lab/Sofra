@@ -45,6 +45,7 @@ const S = {
   seasonalSource:['Sofra · mevsimsel fiyat tahmini','Sofra · seasonal price estimate'],
   approximateCost:['yaklaşık maliyet','estimated cost'],
   priceCoverage:['%s fiyat kapsamı','%s price coverage'],
+  costUnavailable:['Fiyat hesaplanamadı','Cost unavailable'],
 };
 
 const CAT = {
