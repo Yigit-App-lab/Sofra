@@ -132,26 +132,8 @@ INGREDIENT_SUBSTITUTIONS = {
 }
 
 
-SUBSTITUTION_ALIASES = {
-    "süt": {"süt", "inek sütü", "tam yağlı süt", "yarım yağlı süt", "yağsız süt"},
-    "yoğurt": {"yoğurt", "tam yağlı yoğurt", "süzme yoğurt"},
-    "tereyağı": {"tereyağı", "tuzlu tereyağı", "tuzsuz tereyağı"},
-    "krema": {"krema", "sıvı krema", "yemeklik krema"},
-    "yumurta": {"yumurta", "tavuk yumurtası"},
-    "pirinç": {"pirinç", "baldo pirinç", "osmancık pirinç"},
-    "un": {"un", "beyaz un", "buğday unu"},
-    "şeker": {"şeker", "toz şeker", "beyaz şeker"},
-    "limon suyu": {"limon suyu", "taze limon suyu"},
-    "galeta unu": {"galeta unu"},
-}
-
-
 def substitutions_for(name):
-    normalized = normalize_tr(name)
-    for key, aliases in SUBSTITUTION_ALIASES.items():
-        if normalized in aliases:
-            return INGREDIENT_SUBSTITUTIONS[key]
-    return []
+    return INGREDIENT_SUBSTITUTIONS.get(normalize_tr(name), [])
 
 
 
