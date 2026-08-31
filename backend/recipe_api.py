@@ -1496,8 +1496,14 @@ def recipes_tonight(payload: TonightRequest):
             matched AS (
                 SELECT
                     rk.recipe_id,
-                    COUNT(DISTINCT rk.kiler_id) AS matched_count
+                    COUNT(DISTINCT rk.kiler_id) AS matched_count,
+                    COUNT(DISTINCT CASE
+                        WHEN km.ingredient_class = 'protein'
+                        THEN rk.kiler_id
+                    END) AS matched_protein_count
                 FROM recipe_kiler rk
+                JOIN kiler_ingredients km
+                    ON km.id = rk.kiler_id
                 WHERE rk.kiler_id IN ({placeholders})
                 GROUP BY rk.recipe_id
             ),
@@ -1553,6 +1559,7 @@ def recipes_tonight(payload: TonightRequest):
                 r.is_low_glycemic,
 
                 m.matched_count,
+                m.matched_protein_count,
                 t.total_kiler_ingredients,
 
                 rcx.raw_ingredient_count,
@@ -1719,13 +1726,15 @@ def recipes_tonight(payload: TonightRequest):
 
         recipes.sort(
             key=lambda r: (
-                -r["tonight_score"],
+                -r["matched_protein_count"],
                 r["core_missing_count"],
+                -r["matched_count"],
                 -r["core_matched_count"],
+                -r["tonight_score"],
                 -r["match_percent"],
-                r["total_minutes"]
+                -(r["total_minutes"]
                     if r["total_minutes"] is not None
-                    else 9999,
+                    else 0),
             )
         )
 
