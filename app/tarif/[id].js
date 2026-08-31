@@ -2,7 +2,7 @@
 // Everything the app knows about its user enters through this screen.
 import React from 'react';
 import { ScrollView, View, Text } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import Engine from '../../src/engine';
 import { recById } from '../../src/data';
 import { useStore, useEngineCtx } from '../../src/store';
@@ -12,7 +12,6 @@ import { Title, Body, Label, Chip, Button, Row, Price, LineItem, stateChip } fro
 
 export default function Tarif() {
   const c = useTheme();
-  const router = useRouter();
   const { id } = useLocalSearchParams();
   const { state, dispatch } = useStore();
   const t = makeT(state.langIndex);
@@ -23,10 +22,10 @@ export default function Tarif() {
 
   const cost = Engine.costOf(r, ctx);
   const scale = state.household / r.servings;
+  const feedbackEvent = state.profile.feedback?.[r.id]?.event;
 
   function record(event) {
     dispatch({ type:'feedback', recipe:r, event });
-    router.back();
   }
 
   return (
@@ -81,11 +80,23 @@ export default function Tarif() {
 
       <View style={{ height:space.xl }} />
       <Row gap={space.s}>
-        <Button style={{ flex:1 }} onPress={() => record('liked')}>{t('loved')}</Button>
-        <Button style={{ flex:1 }} kind="ghost" onPress={() => record('cooked')}>{t('made')}</Button>
+        <Button disabled={Boolean(feedbackEvent)} style={{ flex:1 }}
+          kind={feedbackEvent === 'liked' ? 'primary' : 'ghost'} onPress={() => record('liked')}>
+          {feedbackEvent === 'liked' ? '✓ ' : ''}{t('loved')}
+        </Button>
+        <Button disabled={Boolean(feedbackEvent)} style={{ flex:1 }}
+          kind={feedbackEvent === 'cooked' ? 'primary' : 'ghost'} onPress={() => record('cooked')}>
+          {feedbackEvent === 'cooked' ? '✓ ' : ''}{t('made')}
+        </Button>
       </Row>
       <View style={{ height:space.s }} />
-      <Button kind="ghost" onPress={() => record('disliked')}>{t('nope')}</Button>
+      <Button disabled={Boolean(feedbackEvent)}
+        kind={feedbackEvent === 'disliked' ? 'primary' : 'ghost'} onPress={() => record('disliked')}>
+        {feedbackEvent === 'disliked' ? '✓ ' : ''}{t('nope')}
+      </Button>
+      {feedbackEvent ? <Body dim size={12.5} style={{ marginTop:space.s, textAlign:'center' }}>
+        {t('feedbackSaved')}
+      </Body> : null}
     </ScrollView>
   );
 }

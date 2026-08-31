@@ -13,6 +13,7 @@ const S = {
   total:['Toplam','Total'], min:['dk','min'],
   cook:['Bunu pişir','Cook this'], skip:['Bu akşam olmaz','Not tonight'],
   loved:['Beğendim','Loved it'], made:['Pişirdim','Made it'], nope:['Bana göre değil','Not for me'],
+  feedbackSaved:['Seçimin profiline eklendi.','Saved to your profile.'],
   have:['mutfağında','in your kitchen'], toBuy:['alınacak','to buy'],
   peak:['Tam mevsimi','Peak season'], shoulder:['Mevsimine yakın','Near season'],
   stored:['Her zaman uygun','Cheap all year'], winter:['Serada, pahalı','Greenhouse, pricey'],

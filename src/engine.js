@@ -203,7 +203,8 @@
   // ---------------------------------------------------------- taste profile
 
   function emptyProfile() {
-    return { cuisines: {}, ingredients: {}, tags: {}, cooked: {}, skips: {}, events: 0 };
+    return { cuisines: {}, ingredients: {}, tags: {}, cooked: {}, skips: {},
+      feedback: {}, apiRecipes: {}, events: 0 };
   }
 
   function w(bucket, key) { var e = bucket[key]; return e ? e.w : 0.5; }

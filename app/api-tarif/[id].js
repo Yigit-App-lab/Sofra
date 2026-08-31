@@ -326,6 +326,8 @@ export default function ApiTarif() {
         .map(x => x.trim())
         .filter(Boolean)
     : [];
+  const feedbackId = `api:${recipe.id}`;
+  const feedbackEvent = state.profile.feedback?.[feedbackId]?.event;
 
 
   return (
@@ -668,17 +670,23 @@ export default function ApiTarif() {
 
       <View style={{ height:space.l }} />
       <Row gap={6}>
-        <Button style={{ flex:1 }} onPress={() => recordFeedback('liked')}>
-          {english ? 'Loved it' : 'Beğendim'}
+        <Button disabled={Boolean(feedbackEvent)} style={{ flex:1 }}
+          kind={feedbackEvent === 'liked' ? 'primary' : 'ghost'} onPress={() => recordFeedback('liked')}>
+          {feedbackEvent === 'liked' ? '✓ ' : ''}{english ? 'Loved it' : 'Beğendim'}
         </Button>
-        <Button style={{ flex:1 }} kind="ghost" onPress={() => recordFeedback('cooked')}>
-          {english ? 'Made it' : 'Pişirdim'}
+        <Button disabled={Boolean(feedbackEvent)} style={{ flex:1 }}
+          kind={feedbackEvent === 'cooked' ? 'primary' : 'ghost'} onPress={() => recordFeedback('cooked')}>
+          {feedbackEvent === 'cooked' ? '✓ ' : ''}{english ? 'Made it' : 'Pişirdim'}
         </Button>
       </Row>
       <View style={{ height:space.s }} />
-      <Button kind="ghost" onPress={() => recordFeedback('disliked')}>
-        {english ? 'Not for me' : 'Bana göre değil'}
+      <Button disabled={Boolean(feedbackEvent)}
+        kind={feedbackEvent === 'disliked' ? 'primary' : 'ghost'} onPress={() => recordFeedback('disliked')}>
+        {feedbackEvent === 'disliked' ? '✓ ' : ''}{english ? 'Not for me' : 'Bana göre değil'}
       </Button>
+      {feedbackEvent ? <Text style={{ color:c.ink3, fontSize:12.5, textAlign:'center', marginTop:space.s }}>
+        {english ? 'Saved to your profile.' : 'Seçimin profiline eklendi.'}
+      </Text> : null}
     </ScrollView>
   );
 }

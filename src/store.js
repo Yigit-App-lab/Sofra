@@ -144,6 +144,8 @@ function reducer(s, a) {
       // Engine.learn mutates in place, so clone first — React needs a new object.
       const profile = JSON.parse(JSON.stringify(s.profile));
       Engine.learn(profile, a.recipe, a.event, today(), byId);
+      profile.feedback = { ...(profile.feedback || {}) };
+      profile.feedback[a.recipe.id] = { event:a.event, day:today() };
       if (a.recipe.apiTitle) {
         profile.apiRecipes = { ...(profile.apiRecipes || {}) };
         profile.apiRecipes[a.recipe.id] = {

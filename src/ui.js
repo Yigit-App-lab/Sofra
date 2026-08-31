@@ -56,14 +56,15 @@ export function Chip({ children, tone = 'plain' }) {
   );
 }
 
-export function Button({ children, onPress, kind = 'primary', style }) {
+export function Button({ children, onPress, kind = 'primary', style, disabled = false }) {
   const c = useTheme();
   const p = kind === 'primary';
   return (
-    <Pressable onPress={onPress} accessibilityRole="button"
+    <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button"
+      accessibilityState={{ disabled }}
       style={({ pressed }) => [{ backgroundColor: p ? c.accent : c.surface2,
         borderRadius:radius.m, paddingVertical:13, paddingHorizontal:16,
-        alignItems:'center', opacity: pressed ? 0.8 : 1 }, style]}>
+        alignItems:'center', opacity: disabled ? 0.55 : pressed ? 0.8 : 1 }, style]}>
       <Text style={{ color: p ? c.onAccent : c.ink2, fontSize:15, fontWeight:'700' }}>{children}</Text>
     </Pressable>
   );
