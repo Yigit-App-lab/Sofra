@@ -39,8 +39,8 @@ def classify(row: sqlite3.Row) -> tuple[str, str] | None:
         (r"\btavuk suyu (yap|hazirla)", "Tavuk suyu hazırlama kaydı"),
         (r"\bet suyu (yap|hazirla)", "Et suyu hazırlama kaydı"),
         (r"\bkemik suyu (yap|hazirla)", "Kemik suyu hazırlama kaydı"),
-        (r"\bnasil (yapilir|hazirlanir|saklanir)\b", "Yemek yerine nasıl-yapılır kaydı"),
-        (r"\b(kavanoz|konserve) nasil hazirlanir\b", "Konserve hazırlama kaydı"),
+        (r"\bnasil saklanir\b", "Yemek yerine saklama/hazırlık kaydı"),
+        (r"\b(dondurucuda|buzlukta).+saklanir\b", "Dondurucu saklama kaydı"),
     )
     for pattern, detail in preparation_patterns:
         if re.search(pattern, title):
