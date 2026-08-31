@@ -1,9 +1,9 @@
 import unittest
 
 try:
-    from .recipe_costs import consumed_units, parse_quantity
+    from .recipe_costs import consumed_units, parse_quantity, quantity_and_unit
 except ImportError:
-    from recipe_costs import consumed_units, parse_quantity
+    from recipe_costs import consumed_units, parse_quantity, quantity_and_unit
 
 
 class RecipeCostTests(unittest.TestCase):
@@ -42,6 +42,11 @@ class RecipeCostTests(unittest.TestCase):
             consumed_units(5, "diş", {"id": "sarimsak", "unit": "kg"}),
             0.02,
         )
+
+    def test_recovers_broken_decimal_kilo_from_original_text(self):
+        quantity, unit = quantity_and_unit("1", None, "1. 5 kilo kuşbaşı")
+        self.assertEqual(quantity, 1.5)
+        self.assertEqual(unit, "kg")
 
 
 if __name__ == "__main__":

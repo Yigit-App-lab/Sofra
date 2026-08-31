@@ -47,6 +47,7 @@ def load_catalog() -> tuple[dict, dict]:
         "salca": "salca_domates",
         "hakiki zeytinyagi": "zeytinyagi",
         "kucuk cay bardagi zeytinyagi": "zeytinyagi",
+        "kusbasi": "kusbasi",
     }
     for alias, item_id in aliases.items():
         if item_id in by_id:
@@ -66,6 +67,44 @@ def parse_quantity(value) -> float | None:
         return int(fraction.group(1)) / int(fraction.group(2))
     match = re.search(r"\d+(?:\.\d+)?", text)
     return float(match.group(0)) if match else None
+
+
+def quantity_and_unit(quantity, recipe_unit, original_text) -> tuple[float | None, str]:
+    """Recover quantity/unit when the source parser damaged `1. 5 kilo`."""
+    text = normalize(original_text)
+    broken_decimal = re.search(r"\b(\d+)\.\s+(\d+)\b", text)
+    q = (float(f"{broken_decimal.group(1)}.{broken_decimal.group(2)}")
+         if broken_decimal else parse_quantity(quantity))
+    unit = normalize(recipe_unit)
+    if not unit:
+        unit_patterns = (
+            (r"\b(kilo|kilogram|kg)\b", "kg"),
+            (r"\b(gr|gram)\b", "gram"),
+            (r"\b(adet|tane)\b", "adet"),
+            (r"\bdis\b", "diş"),
+            (r"\byemek kasigi\b", "yemek kaşığı"),
+            (r"\btatli kasigi\b", "tatlı kaşığı"),
+            (r"\bcay kasigi\b", "çay kaşığı"),
+            (r"\bsu bardagi\b", "su bardağı"),
+            (r"\bcay bardagi\b", "çay bardağı"),
+        )
+        for pattern, inferred in unit_patterns:
+            if re.search(pattern, text):
+                unit = inferred
+                break
+    return q, unit
+
+
+def find_catalog_item(name, original_text, by_name):
+    normalized_name = normalize(name)
+    item = by_name.get(normalized_name)
+    if item:
+        return item
+    haystack = normalize(original_text or name)
+    for candidate in sorted(by_name, key=len, reverse=True):
+        if len(candidate) >= 4 and re.search(rf"\b{re.escape(candidate)}\b", haystack):
+            return by_name[candidate]
+    return None
 
 
 def consumed_units(quantity, recipe_unit, item) -> float | None:
@@ -107,7 +146,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
     ids = [recipe["id"] for recipe in recipes]
     placeholders = ",".join("?" for _ in ids)
     rows = db.execute(f"""
-        SELECT ri.recipe_id, ri.quantity, ri.unit, i.name,
+        SELECT ri.recipe_id, ri.quantity, ri.unit, ri.original_text, i.name,
                ki.name AS kiler_name
         FROM recipe_ingredients ri
         JOIN ingredients i ON i.id = ri.ingredient_id
@@ -131,13 +170,16 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
             raw_name = normalize(row["kiler_name"] or row["name"])
             if raw_name in ("su", "ilik su", "sicak su", "soguk su", "kaynar su"):
                 continue
-            if parse_quantity(row["quantity"]) is None:
+            quantity, recipe_unit = quantity_and_unit(
+                row["quantity"], row["unit"], row["original_text"]
+            )
+            if quantity is None:
                 continue
             eligible += 1
-            item = by_name.get(raw_name)
+            item = find_catalog_item(raw_name, row["original_text"], by_name)
             if not item:
                 continue
-            units = consumed_units(row["quantity"], row["unit"], item)
+            units = consumed_units(quantity, recipe_unit, item)
             if units is None:
                 continue
             observation = get_cached_price(item["id"], item["unit"], city)
