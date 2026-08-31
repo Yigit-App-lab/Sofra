@@ -201,7 +201,8 @@ def search_recipes(
     diet: str | None = None,
     gluten_free: bool = False,
     lactose_free: bool = False,
-    low_glycemic: bool = False
+    low_glycemic: bool = False,
+    max_minutes: int | None = Query(default=None, ge=1, le=1440)
 ):
     db = get_db()
 
@@ -216,6 +217,10 @@ def search_recipes(
 
         if low_glycemic:
             diet_sql += " AND r.is_low_glycemic = 1"
+
+        if max_minutes is not None:
+            diet_sql += " AND r.total_minutes IS NOT NULL AND r.total_minutes <= ?"
+            params.append(max_minutes)
 
         if gluten_free:
             diet_sql += """
@@ -406,7 +411,8 @@ def list_recipes(
     diet: str | None = None,
     gluten_free: bool = False,
     lactose_free: bool = False,
-    low_glycemic: bool = False
+    low_glycemic: bool = False,
+    max_minutes: int | None = Query(default=None, ge=1, le=1440)
 ):
     db = get_db()
 
@@ -425,6 +431,10 @@ def list_recipes(
 
         if low_glycemic:
             where.append("is_low_glycemic = 1")
+
+        if max_minutes is not None:
+            where.append("total_minutes IS NOT NULL AND total_minutes <= ?")
+            params.append(max_minutes)
 
         if gluten_free:
             where.append("""
@@ -1005,10 +1015,8 @@ def recipes_tonight(payload: TonightRequest):
 
         if payload.time_budget is not None and payload.time_budget > 0:
             time_filter = """
-                AND (
-                    r.total_minutes IS NULL
-                    OR r.total_minutes <= ?
-                )
+                AND r.total_minutes IS NOT NULL
+                AND r.total_minutes <= ?
             """
             time_params.append(payload.time_budget)
 

@@ -54,6 +54,7 @@ export default function Tarifler() {
       state.glutenFree,
       state.lactoseFree,
       state.lowGlycemic,
+      state.timeBudget,
       selectedCategory
     ])
   );
@@ -71,7 +72,8 @@ export default function Tarifler() {
     state.dietPreference,
     state.glutenFree,
     state.lactoseFree,
-    state.lowGlycemic
+    state.lowGlycemic,
+    state.timeBudget
   ]);
 
   async function loadCategories() {
@@ -103,6 +105,7 @@ export default function Tarifler() {
         glutenFree: state.glutenFree,
         lactoseFree: state.lactoseFree,
         lowGlycemic: state.lowGlycemic,
+        maxMinutes: state.timeBudget,
       });
 
       setRecipes(prev =>
@@ -132,7 +135,8 @@ export default function Tarifler() {
         state.dietPreference,
         state.glutenFree,
         state.lactoseFree,
-        state.lowGlycemic
+        state.lowGlycemic,
+        state.timeBudget
       );
 
       setRecipes(data.recipes || []);
@@ -361,6 +365,29 @@ export default function Tarifler() {
           </Text>
         </View>
       ) : null}
+
+      <View
+        style={{
+          alignSelf: 'flex-start',
+          marginBottom: space.m,
+          borderRadius: 8,
+          paddingHorizontal: 14,
+          paddingVertical: 8,
+          backgroundColor: c.surface,
+          borderWidth: 1,
+          borderColor: c.line,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: '800',
+            color: c.ink2,
+          }}
+        >
+          ✓ En fazla {state.timeBudget} dk
+        </Text>
+      </View>
 
       <View
         style={{

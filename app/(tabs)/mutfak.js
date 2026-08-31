@@ -10,7 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 
 import { useStore } from '../../src/store';
-import { getKilerIngredients, getRecipesByKiler } from '../../src/api';
+import { getKilerIngredients, getTonightRecipes } from '../../src/api';
 import { useTheme, space, radius } from '../../src/theme';
 
 
@@ -221,7 +221,10 @@ export default function Kiler() {
         setRecipeLoading(true);
         setRecipeError(null);
 
-        const data = await getRecipesByKiler(kilerIds, 20);
+        const data = await getTonightRecipes(kilerIds, {
+          limit: 20,
+          timeBudget: state.timeBudget,
+        });
 
         if (!cancelled) {
           setRecipes(data.recipes || []);
@@ -244,7 +247,7 @@ export default function Kiler() {
     return () => {
       cancelled = true;
     };
-  }, [kilerIds]);
+  }, [kilerIds, state.timeBudget]);
 
 
   async function loadIngredients(query) {
@@ -438,6 +441,29 @@ export default function Kiler() {
         >
           Elindeki malzemelere göre en uygun tarifler
         </Text>
+
+        <View
+          style={{
+            alignSelf: 'flex-start',
+            marginBottom: 14,
+            borderRadius: 8,
+            paddingHorizontal: 12,
+            paddingVertical: 7,
+            backgroundColor: c.surface,
+            borderWidth: 1,
+            borderColor: c.line,
+          }}
+        >
+          <Text
+            style={{
+              color: c.ink2,
+              fontSize: 12.5,
+              fontWeight: '700',
+            }}
+          >
+            ✓ En fazla {state.timeBudget} dk
+          </Text>
+        </View>
 
         {!kilerIds.length ? (
           <Text style={{ color: c.ink3, fontSize: 13 }}>
