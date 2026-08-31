@@ -48,7 +48,7 @@ export default function Tonight() {
   async function recommendRandom() {
     setLoading(true);
     setError(null);
-    let currentRanked = ranked;
+    let currentRanked = ranked.filter((item) => item.recipe.main);
     try {
       const produce = ING
         .filter((item) => ['sebze', 'meyve', 'yesillik', 'protein'].includes(item.kind))
@@ -58,7 +58,8 @@ export default function Tonight() {
       const priceOverrides = Object.fromEntries(
         (snapshot.items || []).map((item) => [item.id, item])
       );
-      currentRanked = Engine.recommend(REC, { ...ctx, priceOverrides });
+      currentRanked = Engine.recommend(REC, { ...ctx, priceOverrides })
+        .filter((item) => item.recipe.main);
     } catch (e) {
       // Live data improves the ranking but must never block dinner offline.
       console.warn('Market prices unavailable; using seasonal estimates:', e);

@@ -181,12 +181,12 @@ def clean_ingredient_text(text):
 
 
 
-def dinner_category_score(category):
+def dinner_category_score(category, title=None):
     """Dinner suitability for recommendation only. Database is untouched."""
-    if not category:
+    if not category and not title:
         return 0
 
-    c = category.casefold()
+    c = f"{category or ''} {title or ''}".casefold()
 
     # Definitely not an evening meal recommendation.
     reject = (
@@ -201,6 +201,8 @@ def dinner_category_score(category):
         "bebek", "mama",
         "zayıflama kür", "bitkisel kür",
         "takviye edici",
+        "tavuk suyu yap", "et suyu yap",
+        "stok hazırl", "konserve hazırl",
     )
 
     if any(x in c for x in reject):
@@ -213,6 +215,8 @@ def dinner_category_score(category):
         "poğaça", "börek", "çörek",
         "ekmek", "krep", "pankek",
         "simit", "tost",
+        "sandviç", "pizza", "lahmacun",
+        "milföy", "burger",
     )
 
     if any(x in c for x in weak):
@@ -1257,8 +1261,10 @@ def seasonal_recipes(payload: SeasonalRequest):
         recipes = []
         for row in rows:
             recipe = dict(row)
-            dinner_score = dinner_category_score(recipe.get("category"))
-            if dinner_score <= -100:
+            dinner_score = dinner_category_score(
+                recipe.get("category"), recipe.get("title")
+            )
+            if dinner_score <= -35:
                 continue
             recipe["dinner_score"] = dinner_score
             recipe["seasonal_score"] = (
@@ -1572,8 +1578,13 @@ def recipes_tonight(payload: TonightRequest):
             recipe = dict(row)
 
             dinner_score = dinner_category_score(
-                recipe.get("category")
+                recipe.get("category"), recipe.get("title")
             )
+
+            # "Bu akşam ne pişirelim?" only returns dinner-suitable recipes.
+            # Snacks and preparation/how-to records stay searchable elsewhere.
+            if dinner_score <= -35:
+                continue
 
             missing = recipe.get("missing_count") or 0
             core_missing = recipe.get("core_missing_count") or 0
