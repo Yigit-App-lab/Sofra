@@ -81,7 +81,7 @@ export default function Ben() {
         <Stat label={t('cookedN')} value={cooked.length} />
         <Stat label={t('signalsN')} value={p.events} />
         <Stat label={t('pantryN')}
-              value={Object.keys(state.pantry).filter((k) => state.pantry[k]).length} />
+              value={Object.keys(state.kiler || {}).length} />
         <Stat label={t('favCat')} value={fav} />
         <Stat label={t('avgCost')} value={`${tl(avg)} ₺`} />
       </Card>
