@@ -307,9 +307,29 @@ def ensure_ingredient_classes():
         db.close()
 
 
+def ensure_recipe_exclusions():
+    """Create the reversible quarantine registry; never delete recipe data."""
+    db = get_db()
+    try:
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS recipe_exclusions (
+                recipe_id INTEGER PRIMARY KEY,
+                reason_code TEXT NOT NULL,
+                reason_detail TEXT,
+                detected_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                active INTEGER NOT NULL DEFAULT 1,
+                FOREIGN KEY (recipe_id) REFERENCES recipes(id)
+            )
+        """)
+        db.commit()
+    finally:
+        db.close()
+
+
 @app.on_event("startup")
 def initialize_ingredient_classes():
     ensure_ingredient_classes()
+    ensure_recipe_exclusions()
 
 
 @app.get("/")
@@ -418,6 +438,10 @@ def search_recipes(
             FROM recipes_fts f
             JOIN recipes r ON r.id = f.rowid
             WHERE recipes_fts MATCH ?
+            AND NOT EXISTS (
+                SELECT 1 FROM recipe_exclusions rex
+                WHERE rex.recipe_id = r.id AND rex.active = 1
+            )
             {diet_sql}
             ORDER BY bm25(recipes_fts)
             LIMIT ?
@@ -448,6 +472,10 @@ def random_recipes(limit: int = Query(default=10, ge=1, le=50)):
                 total_minutes,
                 servings
             FROM recipes
+            WHERE NOT EXISTS (
+                SELECT 1 FROM recipe_exclusions rex
+                WHERE rex.recipe_id = recipes.id AND rex.active = 1
+            )
             ORDER BY RANDOM()
             LIMIT ?
         """, (limit,)).fetchall()
@@ -472,6 +500,10 @@ def categories():
             FROM recipes
             WHERE category IS NOT NULL
               AND TRIM(category) != ''
+              AND NOT EXISTS (
+                  SELECT 1 FROM recipe_exclusions rex
+                  WHERE rex.recipe_id = recipes.id AND rex.active = 1
+              )
             GROUP BY category
             ORDER BY recipe_count DESC
         """).fetchall()
@@ -493,6 +525,10 @@ def recipe(recipe_id: int):
             SELECT *
             FROM recipes
             WHERE id = ?
+              AND NOT EXISTS (
+                  SELECT 1 FROM recipe_exclusions rex
+                  WHERE rex.recipe_id = recipes.id AND rex.active = 1
+              )
         """, (recipe_id,)).fetchone()
 
         if row is None:
@@ -564,7 +600,8 @@ def list_recipes(
     db = get_db()
 
     try:
-        where = []
+        where = ["NOT EXISTS (SELECT 1 FROM recipe_exclusions rex "
+                 "WHERE rex.recipe_id = recipes.id AND rex.active = 1)"]
         params = []
 
         if category:
@@ -1253,6 +1290,10 @@ def seasonal_recipes(payload: SeasonalRequest):
             FROM recipe_seasonal rs
             JOIN recipes r ON r.id = rs.recipe_id
             WHERE 1 = 1
+            AND NOT EXISTS (
+                SELECT 1 FROM recipe_exclusions rex
+                WHERE rex.recipe_id = r.id AND rex.active = 1
+            )
             {filters}
             ORDER BY rs.seasonal_count DESC, RANDOM()
             LIMIT 600
@@ -1561,6 +1602,10 @@ def recipes_tonight(payload: TonightRequest):
                 ON cm.recipe_id = m.recipe_id
 
             WHERE 1 = 1
+            AND NOT EXISTS (
+                SELECT 1 FROM recipe_exclusions rex
+                WHERE rex.recipe_id = r.id AND rex.active = 1
+            )
             {time_filter}
         """
 
