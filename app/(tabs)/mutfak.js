@@ -185,6 +185,8 @@ export default function Kiler() {
   const [recipes, setRecipes] = useState([]);
   const [recipeLoading, setRecipeLoading] = useState(false);
   const [recipeError, setRecipeError] = useState(null);
+  const [recipeLimit, setRecipeLimit] = useState(20);
+  const [hasMoreRecipes, setHasMoreRecipes] = useState(false);
 
   const kiler = state.kiler || {};
 
@@ -224,12 +226,18 @@ export default function Kiler() {
         setRecipeError(null);
 
         const data = await getTonightRecipes(kilerIds, {
-          limit: 20,
+          limit: recipeLimit,
           timeBudget: state.timeBudget,
+          meatless: state.meatless,
+          diet: state.dietPreference,
+          glutenFree: state.glutenFree,
+          lactoseFree: state.lactoseFree,
+          lowGlycemic: state.lowGlycemic,
         });
 
         if (!cancelled) {
           setRecipes(data.recipes || []);
+          setHasMoreRecipes(Boolean(data.has_more));
         }
       } catch (e) {
         console.error(e);
@@ -249,7 +257,14 @@ export default function Kiler() {
     return () => {
       cancelled = true;
     };
-  }, [kilerIds, state.timeBudget, state.langIndex]);
+  }, [kilerIds, recipeLimit, state.timeBudget, state.langIndex,
+      state.meatless, state.dietPreference, state.glutenFree,
+      state.lactoseFree, state.lowGlycemic]);
+
+  useEffect(() => {
+    setRecipeLimit(20);
+  }, [kilerIds, state.timeBudget, state.meatless, state.dietPreference,
+      state.glutenFree, state.lactoseFree, state.lowGlycemic]);
 
 
   async function loadIngredients(query) {
@@ -501,7 +516,7 @@ export default function Kiler() {
               ? 'Add a few pantry ingredients to get recipe suggestions.'
               : "Tarif önermek için Kiler'e birkaç malzeme ekle."}
           </Text>
-        ) : recipeLoading ? (
+        ) : recipeLoading && recipes.length === 0 ? (
           <ActivityIndicator
             size="small"
             color={c.accent}
@@ -516,14 +531,39 @@ export default function Kiler() {
             {english ? 'No suitable recipes found.' : 'Uygun tarif bulunamadı.'}
           </Text>
         ) : (
-          recipes.map(recipe => (
-            <RecipeCard
-              key={recipe.id}
-              recipe={recipe}
-              english={english}
-              onPress={() => router.push(`/api-tarif/${recipe.id}`)}
-            />
-          ))
+          <>
+            {recipes.map(recipe => (
+              <RecipeCard
+                key={recipe.id}
+                recipe={recipe}
+                english={english}
+                onPress={() => router.push(`/api-tarif/${recipe.id}`)}
+              />
+            ))}
+            {hasMoreRecipes ? (
+              <Pressable
+                disabled={recipeLoading}
+                onPress={() => setRecipeLimit(limit => limit + 20)}
+                style={({ pressed }) => ({
+                  borderColor: c.line,
+                  borderWidth: 1,
+                  borderRadius: radius.m,
+                  paddingVertical: 13,
+                  alignItems: 'center',
+                  marginTop: 4,
+                  opacity: recipeLoading ? 0.55 : pressed ? 0.65 : 1,
+                })}
+              >
+                {recipeLoading ? (
+                  <ActivityIndicator size="small" color={c.accent} />
+                ) : (
+                  <Text style={{ color: c.accent, fontWeight: '700' }}>
+                    {english ? 'Show 20 more' : '20 tarif daha göster'}
+                  </Text>
+                )}
+              </Pressable>
+            ) : null}
+          </>
         )}
       </View>
     </ScrollView>

@@ -1386,6 +1386,11 @@ class TonightRequest(BaseModel):
     limit: int = 50
     time_budget: int | None = None
     city: str = "İstanbul"
+    meatless: bool = False
+    diet: str | None = None
+    gluten_free: bool = False
+    lactose_free: bool = False
+    low_glycemic: bool = False
 
 
 @app.post("/recipes/tonight")
@@ -1409,8 +1414,40 @@ def recipes_tonight(payload: TonightRequest):
         time_filter = ""
         time_params = []
 
+        if payload.diet == "vegan":
+            time_filter += " AND r.is_vegan = 1"
+        elif payload.diet == "vegetarian" or payload.meatless:
+            time_filter += " AND r.is_vegetarian = 1"
+
+        if payload.low_glycemic:
+            time_filter += " AND r.is_low_glycemic = 1"
+
+        if payload.gluten_free:
+            time_filter += """
+                AND NOT EXISTS (
+                    SELECT 1 FROM recipe_ingredients rg
+                    JOIN ingredients ig ON ig.id = rg.ingredient_id
+                    LEFT JOIN ingredient_aliases iag ON iag.alias_normalized = ig.name_normalized
+                    LEFT JOIN kiler_canonical_map kcg ON kcg.canonical_id = iag.canonical_id
+                    LEFT JOIN kiler_ingredients kig ON kig.id = kcg.kiler_id
+                    WHERE rg.recipe_id = r.id AND kig.contains_gluten = 1
+                )
+            """
+
+        if payload.lactose_free:
+            time_filter += """
+                AND NOT EXISTS (
+                    SELECT 1 FROM recipe_ingredients rl
+                    JOIN ingredients il ON il.id = rl.ingredient_id
+                    LEFT JOIN ingredient_aliases ial ON ial.alias_normalized = il.name_normalized
+                    LEFT JOIN kiler_canonical_map kcl ON kcl.canonical_id = ial.canonical_id
+                    LEFT JOIN kiler_ingredients kil ON kil.id = kcl.kiler_id
+                    WHERE rl.recipe_id = r.id AND kil.contains_lactose = 1
+                )
+            """
+
         if payload.time_budget is not None and payload.time_budget > 0:
-            time_filter = """
+            time_filter += """
                 AND r.total_minutes IS NOT NULL
                 AND r.total_minutes <= ?
             """
@@ -1511,6 +1548,9 @@ def recipes_tonight(payload: TonightRequest):
                 r.cook_minutes,
                 r.total_minutes,
                 r.servings,
+                r.is_vegan,
+                r.is_vegetarian,
+                r.is_low_glycemic,
 
                 m.matched_count,
                 t.total_kiler_ingredients,
@@ -1652,22 +1692,9 @@ def recipes_tonight(payload: TonightRequest):
             if dinner_score <= -35:
                 continue
 
-            missing = recipe.get("missing_count") or 0
             core_missing = recipe.get("core_missing_count") or 0
 
-            if missing == 0:
-                missing_penalty = 0
-            elif missing == 1:
-                missing_penalty = 5
-            elif missing == 2:
-                missing_penalty = 15
-            elif missing == 3:
-                missing_penalty = 30
-            else:
-                missing_penalty = 45
-
             recipe["dinner_score"] = dinner_score
-            recipe["missing_penalty"] = missing_penalty
 
             total_ingredients = recipe.get("total_kiler_ingredients") or 0
 
@@ -1684,7 +1711,6 @@ def recipes_tonight(payload: TonightRequest):
                 float(recipe.get("score") or 0)
                 + dinner_score
                 - (core_missing * 50)
-                - missing_penalty
                 - substance_penalty,
                 1
             )
@@ -1697,13 +1723,13 @@ def recipes_tonight(payload: TonightRequest):
                 r["core_missing_count"],
                 -r["core_matched_count"],
                 -r["match_percent"],
-                r["missing_count"],
                 r["total_minutes"]
                     if r["total_minutes"] is not None
                     else 9999,
             )
         )
 
+        total_count = len(recipes)
         recipes = recipes[:limit]
         safely_attach_recipe_costs(db, recipes, PRICING_CITY)
 
@@ -1711,6 +1737,8 @@ def recipes_tonight(payload: TonightRequest):
             "kiler_count": len(ids),
             "time_budget": payload.time_budget,
             "count": len(recipes),
+            "total_count": total_count,
+            "has_more": total_count > len(recipes),
             "recipes": recipes
         }
 

@@ -131,6 +131,11 @@ export default function Tonight() {
       setError(null);
       const data = await getTonightRecipes(kilerIds, {
         limit:3, timeBudget:state.timeBudget, city:PRICING_CITY,
+        meatless:state.meatless,
+        diet:state.dietPreference,
+        glutenFree:state.glutenFree,
+        lactoseFree:state.lactoseFree,
+        lowGlycemic:state.lowGlycemic,
       });
       const recipes = data.recipes || [];
       if (!recipes.length) {

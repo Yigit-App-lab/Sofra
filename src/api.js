@@ -204,12 +204,22 @@ export async function getTonightRecipes(
     limit = 30,
     timeBudget = null,
     city = 'İstanbul',
+    meatless = false,
+    diet = null,
+    glutenFree = false,
+    lactoseFree = false,
+    lowGlycemic = false,
   } = {}
 ) {
   const body = {
     kiler_ids: kilerIds,
     limit,
     city,
+    meatless,
+    diet,
+    gluten_free: glutenFree,
+    lactose_free: lactoseFree,
+    low_glycemic: lowGlycemic,
   };
 
   if (timeBudget != null) {
