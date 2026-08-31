@@ -43,6 +43,21 @@ FRUIT_NAMES = {
     "trabzon hurmasi", "portakal", "mandalina", "limon", "muz",
 }
 
+PROTEIN_NAMES = {
+    "yumurta", "yumurta sarisi", "yumurta beyazi", "tavuk but",
+    "tavuk gogsu", "tavuk eti", "butun tavuk", "kiyma", "dana kiyma",
+    "kusbasi et", "dana eti", "kuzu eti", "hindi eti", "sucuk", "pastirma",
+    "ton baligi", "ton baligi konserve", "somon", "levrek", "cupra",
+    "hamsi", "alabalik", "karides", "kalamar",
+}
+
+GRAIN_NAMES = {
+    "pirinc", "bulgur", "ince bulgur", "makarna", "sehriye", "eriste",
+    "un", "irmik", "nisasta", "ekmek", "yufka", "tarhana", "misir unu",
+    "kirmizi mercimek", "yesil mercimek", "nohut", "kuru fasulye",
+    "kuru barbunya", "kuru borulce", "kuru bakla ic",
+}
+
 REGION_SEASON_SHIFT = {
     "marmara": 0, "ege": -1, "akdeniz": -1, "ic_anadolu": 0,
     "karadeniz": 0, "dogu_anadolu": 1, "guneydogu": -1,
@@ -71,6 +86,10 @@ def ingredient_class(value):
         return "fruit"
     if name in VEGETABLE_NAMES:
         return "vegetable"
+    if name in PROTEIN_NAMES:
+        return "protein"
+    if name in GRAIN_NAMES:
+        return "grain"
     return "other"
 
 
@@ -877,7 +896,16 @@ def kiler_ingredients(
                     ingredient_class,
                     recipe_count
                 FROM kiler_ingredients
-                ORDER BY recipe_count DESC
+                ORDER BY
+                    CASE ingredient_class
+                        WHEN 'vegetable' THEN 0
+                        WHEN 'protein' THEN 1
+                        WHEN 'grain' THEN 2
+                        WHEN 'fruit' THEN 3
+                        ELSE 4
+                    END,
+                    recipe_count DESC,
+                    name_normalized
                 LIMIT ?
             """, (limit,)).fetchall()
 

@@ -178,6 +178,7 @@ export default function Kiler() {
 
   const [q, setQ] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [suggestionLimit, setSuggestionLimit] = useState(40);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -205,7 +206,7 @@ export default function Kiler() {
     }, q.trim() ? 250 : 0);
 
     return () => clearTimeout(timer);
-  }, [q, state.langIndex]);
+  }, [q, state.langIndex, suggestionLimit]);
 
 
   useEffect(() => {
@@ -258,7 +259,7 @@ export default function Kiler() {
 
       const data = await getKilerIngredients(
         query,
-        query.trim() ? 50 : 40
+        query.trim() ? 50 : suggestionLimit
       );
 
       setSuggestions(data.ingredients || []);
@@ -278,6 +279,20 @@ export default function Kiler() {
       name: item.name,
     });
   }
+
+  const suggestionGroups = [
+    { key:'vegetable', tr:'Sebzeler', en:'Vegetables' },
+    { key:'protein', tr:'Et ve Proteinler', en:'Meat and Proteins' },
+    { key:'grain', tr:'Hububat ve Bakliyat', en:'Grains and Pulses' },
+    { key:'fruit', tr:'Meyveler', en:'Fruits' },
+    { key:'other', tr:'Diğer', en:'Other' },
+  ].map(group => ({
+    ...group,
+    items: suggestions.filter(item =>
+      !kiler[String(item.id)] &&
+      (item.ingredient_class || 'other') === group.key
+    ),
+  })).filter(group => group.items.length > 0);
 
 
   return (
@@ -397,22 +412,34 @@ export default function Kiler() {
       ) : error ? (
         <Text style={{ color: c.ink }}>{error}</Text>
       ) : (
-        <View
-          style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            gap: 7,
-          }}
-        >
-          {suggestions
-            .filter(item => !kiler[String(item.id)])
-            .map(item => (
-              <Pill
-                key={item.id}
-                label={item.name}
-                onPress={() => toggle(item)}
-              />
-            ))}
+        <View>
+          {suggestionGroups.map(group => (
+            <View key={group.key} style={{ marginBottom:16 }}>
+              <Text style={{ color:c.ink3, fontSize:11, fontWeight:'700',
+                letterSpacing:0.8, textTransform:'uppercase', marginBottom:7 }}>
+                {english ? group.en : group.tr}
+              </Text>
+              <View style={{ flexDirection:'row', flexWrap:'wrap', gap:7 }}>
+                {group.items.map(item => (
+                  <Pill key={item.id} label={item.name} onPress={() => toggle(item)} />
+                ))}
+              </View>
+            </View>
+          ))}
+
+          {!q.trim() && suggestions.length >= suggestionLimit && suggestionLimit < 200 ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setSuggestionLimit(limit => Math.min(limit + 40, 200))}
+              style={({ pressed }) => ({ alignSelf:'flex-start', backgroundColor:c.surface,
+                borderColor:c.line, borderWidth:1, borderRadius:radius.s,
+                paddingHorizontal:14, paddingVertical:9, opacity:pressed ? 0.65 : 1 })}
+            >
+              <Text style={{ color:c.accent, fontSize:13.5, fontWeight:'700' }}>
+                {english ? 'Show more ingredients' : 'Daha fazla malzeme göster'}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
       )}
 
