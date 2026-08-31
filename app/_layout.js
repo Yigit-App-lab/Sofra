@@ -1,14 +1,27 @@
 // Root layout. Everything the whole app needs is wired up exactly once, here.
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { StoreProvider, useStore } from '../src/store';
 import { useTheme } from '../src/theme';
+import { configureDailyReminder } from '../src/notifications';
 
 function Shell() {
   const c = useTheme();
   const { state } = useStore();
+
+  useEffect(() => {
+    if (!state.ready) return;
+    configureDailyReminder({
+      enabled: Boolean(state.dailyReminder),
+      shoppingList: state.shoppingList || {},
+      langIndex: state.langIndex,
+    }).catch((error) => {
+      console.warn('Daily reminder could not be scheduled', error);
+    });
+  }, [state.ready, state.dailyReminder, state.shoppingList, state.langIndex]);
+
   if (!state.ready) return <View style={{ flex:1, backgroundColor:c.ground }} />;
   return (
     <>

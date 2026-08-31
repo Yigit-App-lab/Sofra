@@ -114,6 +114,20 @@ export default function Ben() {
               value={state.timeBudget} onChange={(v) => set('timeBudget', v)} />
 
       <View style={{ height:space.l }} />
+      <Body dim size={12}>
+        {t.code === 'en' ? 'Daily reminder · 11:00' : 'Günlük hatırlatma · 11:00'}
+      </Body>
+      <View style={{ height:space.s }} />
+      <Choice
+        options={[
+          { value:false, label:t.code === 'en' ? 'Off' : 'Kapalı' },
+          { value:true, label:t.code === 'en' ? 'On' : 'Açık' },
+        ]}
+        value={Boolean(state.dailyReminder)}
+        onChange={(v) => set('dailyReminder', v)}
+      />
+
+      <View style={{ height:space.l }} />
       <Body dim size={12}>{t('budget')} · {state.maxPerPortion} ₺</Body>
       <View style={{ height:space.s }} />
       <Choice options={[15,25,40,60,120].map((m) => ({ value:m, label:`${m} ₺` }))}
