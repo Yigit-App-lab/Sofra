@@ -779,6 +779,31 @@ def usable_ingredient_name(name: str) -> bool:
     return True
 
 
+def usable_kiler_name(name: str) -> bool:
+    """Keep pantry choices as products, not recipe preparation/size variants."""
+    if not usable_ingredient_name(name):
+        return False
+
+    value = normalize_ingredient_name(name)
+    preparation_words = (
+        "rendesi", "rendelenmis", "dogranmis", "haslanmis", "soyulmus",
+        "dilimlenmis", "kavrulmus", "ezilmis", "ufalanmis",
+    )
+    if any(word in value.split() for word in preparation_words):
+        return False
+
+    # Imported recipe phrases such as "tane orta boy havuç" are not distinct
+    # pantry products. Their unqualified base ingredient remains selectable.
+    if re.match(
+        r"^(?:bir|iki|uc|dort|bes|\d+)?\s*"
+        r"(?:tane|adet|buyuk|kucuk|orta|orta boy|iri)\s+",
+        value,
+    ):
+        return False
+
+    return True
+
+
 @app.get("/ingredients/search")
 def search_ingredients(
     q: str = Query(min_length=1),
@@ -973,7 +998,7 @@ def kiler_ingredients(
                 "%" + query + "%",
                 query,
                 query + "%",
-                limit
+                limit * 8
             )).fetchall()
 
         else:
@@ -995,11 +1020,20 @@ def kiler_ingredients(
                     recipe_count DESC,
                     name_normalized
                 LIMIT ?
-            """, (limit,)).fetchall()
+            """, (limit * 8,)).fetchall()
+
+        ingredients = []
+        for row in rows:
+            item = dict(row)
+            if not usable_kiler_name(item.get("name")):
+                continue
+            ingredients.append(item)
+            if len(ingredients) >= limit:
+                break
 
         return {
-            "count": len(rows),
-            "ingredients": [dict(row) for row in rows]
+            "count": len(ingredients),
+            "ingredients": ingredients
         }
 
     finally:
