@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import Engine from '../../src/engine';
 import { REC, recById } from '../../src/data';
 import { useStore, useEngineCtx, today } from '../../src/store';
-import { makeT, tl, LANGS } from '../../src/i18n';
+import { makeT, tl, LANGS, cleanRecipeTitle } from '../../src/i18n';
 import { useTheme, space } from '../../src/theme';
 import { Label, Body, Button, Card, LineItem, Choice, Chip, Divider } from '../../src/ui';
 
@@ -64,7 +64,7 @@ export default function Ben() {
   const cooked = Object.keys(p.cooked);
   const profileRecipeTitle = (id) => recById[id]
     ? t.title(recById[id])
-    : (p.apiRecipes?.[id]?.title || id);
+    : cleanRecipeTitle(p.apiRecipes?.[id]?.title || id);
   const fav = useMemo(() => {
     let best = null, bw = 0;
     Object.keys(p.cuisines).forEach((k) => { if (p.cuisines[k].w > bw) { bw = p.cuisines[k].w; best = k; } });

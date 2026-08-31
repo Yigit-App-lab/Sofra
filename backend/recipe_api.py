@@ -129,6 +129,22 @@ def clean_recipe_text(text):
     return x.strip()
 
 
+def clean_recipe_title(title):
+    """Remove video claims because Sofra does not provide source videos."""
+    if not title:
+        return title
+    value = re.sub(r"\s*[\(\[]?\s*videolu\s*[\)\]]?", " ", str(title), flags=re.I)
+    value = re.sub(r"\s+", " ", value).strip(" -–|/")
+    return value.strip()
+
+
+def recipe_dict(row):
+    item = dict(row)
+    if "title" in item:
+        item["title"] = clean_recipe_title(item["title"])
+    return item
+
+
 def clean_description(text, title=None):
     """Reject obviously broken/generated descriptions."""
     if not text:
@@ -452,7 +468,7 @@ def search_recipes(
         return {
             "query": q,
             "count": len(rows),
-            "recipes": [dict(row) for row in rows]
+            "recipes": [recipe_dict(row) for row in rows]
         }
 
     finally:
@@ -483,7 +499,7 @@ def random_recipes(limit: int = Query(default=10, ge=1, le=50)):
         """, (limit,)).fetchall()
 
         return {
-            "recipes": [dict(row) for row in rows]
+            "recipes": [recipe_dict(row) for row in rows]
         }
 
     finally:
@@ -562,6 +578,7 @@ def recipe(recipe_id: int):
         """, (recipe_id,)).fetchall()
 
         result = dict(row)
+        result["title"] = clean_recipe_title(result.get("title"))
 
         # Presentation-only cleanup. Raw database values remain unchanged.
         result["description"] = clean_description(
@@ -691,7 +708,7 @@ def list_recipes(
             "limit": limit,
             "offset": offset,
             "has_more": offset + len(rows) < total,
-            "recipes": [dict(row) for row in rows]
+            "recipes": [recipe_dict(row) for row in rows]
         }
 
     finally:
@@ -917,7 +934,7 @@ def recipes_by_ingredients(payload: IngredientMatchRequest):
         return {
             "kiler_ingredient_count": len(ids),
             "count": len(rows),
-            "recipes": [dict(row) for row in rows]
+            "recipes": [recipe_dict(row) for row in rows]
         }
 
     finally:
@@ -1176,7 +1193,7 @@ def recipes_by_kiler(payload: KilerMatchRequest):
         return {
             "kiler_count": len(ids),
             "count": len(rows),
-            "recipes": [dict(row) for row in rows]
+            "recipes": [recipe_dict(row) for row in rows]
         }
 
     finally:
@@ -1304,6 +1321,7 @@ def seasonal_recipes(payload: SeasonalRequest):
         recipes = []
         for row in rows:
             recipe = dict(row)
+            recipe["title"] = clean_recipe_title(recipe.get("title"))
             dinner_score = dinner_category_score(
                 recipe.get("category"), recipe.get("title")
             )
@@ -1623,6 +1641,7 @@ def recipes_tonight(payload: TonightRequest):
 
         for row in rows:
             recipe = dict(row)
+            recipe["title"] = clean_recipe_title(recipe.get("title"))
 
             dinner_score = dinner_category_score(
                 recipe.get("category"), recipe.get("title")

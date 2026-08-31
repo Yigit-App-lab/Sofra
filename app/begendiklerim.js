@@ -3,7 +3,7 @@ import { ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { recById } from '../src/data';
 import { useStore } from '../src/store';
-import { makeT } from '../src/i18n';
+import { makeT, cleanRecipeTitle } from '../src/i18n';
 import { space } from '../src/theme';
 import { Body, LineItem } from '../src/ui';
 
@@ -17,7 +17,7 @@ export default function Begendiklerim() {
 
   const titleOf = (id) => recById[id]
     ? t.title(recById[id])
-    : (profile.apiRecipes?.[id]?.title || id);
+    : cleanRecipeTitle(profile.apiRecipes?.[id]?.title || id);
 
   const openRecipe = (id) => {
     if (id.startsWith('api:')) {

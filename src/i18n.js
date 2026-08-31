@@ -84,6 +84,13 @@ export function makeT(i) {
   return t;
 }
 
+export function cleanRecipeTitle(value) {
+  return String(value || '')
+    .replace(/\s*[\(\[]?\s*videolu\s*[\)\]]?/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s\-–|/]+|[\s\-–|/]+$/g, '');
+}
+
 /** 4.6 -> "4.6", 22.4 -> "22", 103.9 -> "104". Prices do not need decimals above ten. */
 export function tl(n) {
   if (n == null) return '—';
