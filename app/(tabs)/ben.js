@@ -13,7 +13,6 @@ import { Label, Body, Button, Card, LineItem, Choice, Chip, Divider } from '../.
 
 function Stat({ label, value }) {
   const c = useTheme();
-  const router = useRouter();
   return (
     <View>
       <View style={{ flexDirection:'row', justifyContent:'space-between',
@@ -55,6 +54,7 @@ function Weights({ title, bucket, limit, labelOf }) {
 
 export default function Ben() {
   const c = useTheme();
+  const router = useRouter();
   const { state, dispatch } = useStore();
   const t = makeT(state.langIndex);
   const ctx = useEngineCtx();
