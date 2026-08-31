@@ -35,7 +35,7 @@ def cost_flags(recipe: dict) -> list[str]:
     elif cost <= 0:
         flags.append("zero_cost")
     elif cost < 30:
-        flags.append("protein_recipe_under_30_per_person")
+        flags.append("meat_recipe_under_30_per_person")
     elif cost > 1000:
         flags.append("over_1000_per_person")
     if coverage < 0.70:
@@ -75,6 +75,7 @@ def audit(db, city: str, recipe_limit: int) -> list[dict]:
         LEFT JOIN kiler_canonical_map kcm ON kcm.canonical_id = ia.canonical_id
         LEFT JOIN kiler_ingredients ki ON ki.id = kcm.kiler_id
         WHERE ki.ingredient_class = 'protein'
+          AND ki.name NOT IN ('yumurta', 'yumurta sarısı', 'yumurta beyazı')
         ORDER BY r.id
         LIMIT ?
     """, (recipe_limit,)).fetchall()]

@@ -52,6 +52,10 @@ def load_catalog() -> tuple[dict, dict]:
     for alias, item_id in aliases.items():
         if item_id in by_id:
             by_name[alias] = by_id[item_id]
+    if "tavuk_but" in by_id:
+        whole_chicken = dict(by_id["tavuk_but"])
+        whole_chicken["gramsPerUnit"] = 1800
+        by_name["butun tavuk"] = whole_chicken
     return by_id, by_name
 
 
@@ -87,6 +91,7 @@ def quantity_and_unit(quantity, recipe_unit, original_text) -> tuple[float | Non
             (r"\bcay kasigi\b", "çay kaşığı"),
             (r"\bsu bardagi\b", "su bardağı"),
             (r"\bcay bardagi\b", "çay bardağı"),
+            (r"\bbutun tavuk\b", "adet"),
         )
         for pattern, inferred in unit_patterns:
             if re.search(pattern, text):
@@ -131,6 +136,7 @@ def consumed_units(quantity, recipe_unit, item) -> float | None:
             "havuc": 100, "patates": 180, "sogan": 120,
             "taze_fasulye": 12, "biber_sivri": 40,
             "biber_dolmalik": 120, "limon": 120,
+            "tavuk_gogus": 250, "tavuk_but": 250,
         }.get(item.get("id"))
         grams = item.get("gramsPerUnit") or default_grams
         return q * float(grams) / 1000 if grams else None

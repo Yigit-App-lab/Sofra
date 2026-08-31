@@ -48,6 +48,17 @@ class RecipeCostTests(unittest.TestCase):
         self.assertEqual(quantity, 1.5)
         self.assertEqual(unit, "kg")
 
+    def test_recovers_whole_chicken_as_a_piece(self):
+        quantity, unit = quantity_and_unit("1", None, "1 bütün tavuk")
+        self.assertEqual(quantity, 1)
+        self.assertEqual(unit, "adet")
+        self.assertEqual(
+            consumed_units(quantity, unit, {
+                "id": "tavuk_but", "unit": "kg", "gramsPerUnit": 1800,
+            }),
+            1.8,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
