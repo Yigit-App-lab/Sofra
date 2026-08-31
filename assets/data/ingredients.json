@@ -1394,6 +1394,76 @@
    "cls": "kiler"
   },
   {
+   "id": "somon",
+   "names": { "tr": "Somon", "en": "Salmon" },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 600.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "levrek",
+   "names": { "tr": "Levrek", "en": "Sea bass" },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 500.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "cipura",
+   "names": { "tr": "Çipura", "en": "Sea bream" },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 450.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "hamsi",
+   "names": { "tr": "Hamsi", "en": "Anchovy" },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 250.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "karides",
+   "names": { "tr": "Karides", "en": "Shrimp" },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 600.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "balik",
+   "names": { "tr": "Balık", "en": "Fish" },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 350.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
+   "id": "pastirma",
+   "names": { "tr": "Pastırma", "en": "Pastirma" },
+   "kind": "protein",
+   "unit": "kg",
+   "price": 1000.0,
+   "priceMonth": 8,
+   "source": "tahmin",
+   "cls": "kiler"
+  },
+  {
    "id": "yogurt",
    "names": {
     "tr": "Yoğurt",

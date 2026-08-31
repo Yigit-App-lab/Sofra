@@ -50,6 +50,10 @@ def load_catalog() -> tuple[dict, dict]:
         "kusbasi": "kusbasi",
         "dana eti": "kusbasi",
         "dana kusbasi": "kusbasi",
+        "tavuk": "tavuk_gogus",
+        "tavuk eti": "tavuk_gogus",
+        "balik": "balik",
+        "balik fileto": "balik",
     }
     for alias, item_id in aliases.items():
         if item_id in by_id:
@@ -158,6 +162,8 @@ def consumed_units(quantity, recipe_unit, item) -> float | None:
             "taze_fasulye": 12, "biber_sivri": 40,
             "biber_dolmalik": 120, "limon": 120,
             "tavuk_gogus": 250, "tavuk_but": 250,
+            "somon": 200, "levrek": 300, "cipura": 300,
+            "hamsi": 25, "karides": 15, "balik": 250,
         }.get(item.get("id"))
         grams = item.get("gramsPerUnit") or default_grams
         return q * float(grams) / 1000 if grams else None
@@ -168,7 +174,10 @@ def consumed_units(quantity, recipe_unit, item) -> float | None:
         }.get(item.get("id"))
         return q * package_grams / 1000 if package_grams else None
     if unit == "dilim":
-        slice_grams = {"sucuk": 10}.get(item.get("id"))
+        slice_grams = {
+            "sucuk": 10, "pastirma": 15, "somon": 200, "levrek": 200,
+            "cipura": 200, "balik": 200,
+        }.get(item.get("id"))
         return q * slice_grams / 1000 if slice_grams else None
     if not unit:
         piece_grams = {"tavuk_gogus": 250, "tavuk_but": 250}.get(item.get("id"))
