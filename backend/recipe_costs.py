@@ -101,6 +101,8 @@ def quantity_and_unit(quantity, recipe_unit, original_text) -> tuple[float | Non
             (r"\bcay kasigi\b", "çay kaşığı"),
             (r"\bsu bardagi\b", "su bardağı"),
             (r"\bcay bardagi\b", "çay bardağı"),
+            (r"\b(ml|mililitre)\b", "ml"),
+            (r"\b(litre|liter|lt)\b", "litre"),
             (r"\bpaket\b", "paket"),
             (r"\bdilim\b", "dilim"),
             (r"\bbutun tavuk\b", "adet"),
@@ -120,7 +122,14 @@ def find_catalog_item(name, original_text, by_name):
     haystack = normalize(original_text or name)
     for candidate in sorted(by_name, key=len, reverse=True):
         if len(candidate) >= 4 and re.search(rf"\b{re.escape(candidate)}\b", haystack):
-            return by_name[candidate]
+            item = by_name[candidate]
+            # "tavuk bulyon", "et suyu" and similar flavourings must not be
+            # priced as hundreds of grams/pieces of the named meat.
+            if item.get("kind") == "protein" and re.search(
+                r"\b(bulyon|cesni|aroma|tablet|et suyu|tavuk suyu)\b", haystack
+            ):
+                continue
+            return item
     return None
 
 
@@ -181,7 +190,7 @@ def consumed_units(quantity, recipe_unit, item) -> float | None:
         return q * slice_grams / 1000 if slice_grams else None
     if not unit:
         piece_grams = {"tavuk_gogus": 250, "tavuk_but": 250}.get(item.get("id"))
-        return q * piece_grams / 1000 if piece_grams else None
+        return q * piece_grams / 1000 if piece_grams and q <= 20 else None
     if unit in ("dis", "dis sarimsak") and item.get("id") == "sarimsak":
         return q * 0.004
     return None
