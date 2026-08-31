@@ -164,6 +164,38 @@ export async function getRecipesByKiler(kilerIds, limit = 30) {
   return response.json();
 }
 
+export async function getSeasonalRecipes({
+  month,
+  region,
+  limit = 3,
+  timeBudget = null,
+  diet = null,
+  glutenFree = false,
+  lactoseFree = false,
+  lowGlycemic = false,
+}) {
+  const response = await fetch(`${API_URL}/recipes/seasonal`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      month,
+      region,
+      limit,
+      time_budget: timeBudget,
+      diet,
+      gluten_free: glutenFree,
+      lactose_free: lactoseFree,
+      low_glycemic: lowGlycemic,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Seasonal recipe request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 export async function getTonightRecipes(
   kilerIds,
   {

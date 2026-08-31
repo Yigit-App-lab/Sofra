@@ -7,7 +7,7 @@ import { useStore, useEngineCtx } from '../../src/store';
 import { makeT, tl } from '../../src/i18n';
 import { useTheme, space, radius } from '../../src/theme';
 import { Body, Button, Card, Chip, Price, Row, Title, stateChip } from '../../src/ui';
-import { getTonightRecipes } from '../../src/api';
+import { getSeasonalRecipes, getTonightRecipes } from '../../src/api';
 
 function ChoiceButton({ number, title, subtitle, onPress, disabled }) {
   const c = useTheme();
@@ -64,18 +64,34 @@ export default function Tonight() {
       reason:english ? 'A dinner idea chosen for you' : 'Senin için seçilen bir akşam yemeği' });
   }
 
-  function recommendSeasonal() {
-    if (!ranked.length) {
+  async function recommendSeasonal() {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getSeasonalRecipes({
+        month: ctx.month,
+        region: ctx.region,
+        limit: 3,
+        timeBudget: state.timeBudget,
+        diet: state.dietPreference,
+        glutenFree: state.glutenFree,
+        lactoseFree: state.lactoseFree,
+        lowGlycemic: state.lowGlycemic,
+      });
+      const recipes = data.recipes || [];
+      if (!recipes.length) {
+        setChoice(null);
+        setError(english ? 'No suitable seasonal dinner was found.' : 'Mevsime uygun akşam yemeği bulunamadı.');
+        return;
+      }
+      setChoice({ kind:'api', mode:'seasonal', recipes });
+    } catch (e) {
+      console.error('Tonight seasonal recommendation:', e);
       setChoice(null);
-      setError(t('noneMatch'));
-      return;
+      setError(english ? 'Seasonal recommendations could not be loaded.' : 'Mevsim önerileri yüklenemedi.');
+    } finally {
+      setLoading(false);
     }
-    const results = [...ranked].sort((a, b) =>
-      (b.parts?.season || 0) - (a.parts?.season || 0) || b.total - a.total
-    ).slice(0, 3);
-    setError(null);
-    setChoice({ kind:'local', mode:'seasonal', results,
-      reason:english ? 'Recommended for this month and your region' : 'Bu aya ve bulunduğun bölgeye uygun' });
   }
 
   async function recommendFromKiler() {
@@ -149,7 +165,9 @@ export default function Tonight() {
           return (
             <Card key={r.id} style={{ marginBottom:space.m }}>
               <Text style={{ color:c.accent, fontSize:11, fontWeight:'800', letterSpacing:0.7 }}>
-                {english ? `FROM YOUR PANTRY ${index + 1}` : `KİLERİNDEN ${index + 1}`}
+                {choice.mode === 'seasonal'
+                  ? `${english ? 'SEASONAL CHOICE' : 'MEVSİMSEL SEÇİM'} ${index + 1}`
+                  : `${english ? 'FROM YOUR PANTRY' : 'KİLERİNDEN'} ${index + 1}`}
               </Text>
               <Title size={24}>{r.title}</Title>
               <Body dim size={12.5}>
@@ -157,15 +175,24 @@ export default function Tonight() {
                 {r.total_minutes != null ? ` · ${r.total_minutes} ${english ? 'min' : 'dk'}` : ''}
               </Body>
               <Body size={13} style={{ marginTop:space.s }}>
-                {english
-                  ? `Matched with ${r.matched_count || 0} ingredients in your Kiler`
-                  : `Kilerindeki ${r.matched_count || 0} malzemeyle eşleşti`}
+                {choice.mode === 'seasonal'
+                  ? `${english ? 'Seasonal ingredients' : 'Mevsim malzemeleri'}: ${(r.seasonal_ingredients || []).join(', ')}`
+                  : english
+                    ? `Matched with ${r.matched_count || 0} ingredients in your Kiler`
+                    : `Kilerindeki ${r.matched_count || 0} malzemeyle eşleşti`}
               </Body>
               <Row gap={6} style={{ flexWrap:'wrap', marginVertical:space.m }}>
+                {choice.mode === 'seasonal' && (
+                  <Chip tone="accent">{r.seasonal_count} {english ? 'in season' : 'mevsiminde'}</Chip>
+                )}
+                {choice.mode !== 'seasonal' && (
+                  <>
                 <Chip tone={ready ? 'accent' : undefined}>
                   {ready ? english ? 'Ready' : 'Hazır' : `${r.missing_count} ${english ? 'missing' : 'eksik'}`}
                 </Chip>
                 <Chip>%{Math.round(r.match_percent || 0)} {english ? 'match' : 'eşleşme'}</Chip>
+                  </>
+                )}
               </Row>
               <Button onPress={() => router.push(`/api-tarif/${r.id}`)}>
                 {english ? 'Open recipe' : 'Tarifi aç'}

@@ -4,6 +4,53 @@ from pydantic import BaseModel
 import html
 import re
 import sqlite3
+import unicodedata
+
+
+# Peak-season windows for fresh Turkish produce. Region shifts mirror the
+# mobile app's season model: Mediterranean/Aegean/Southeast arrive earlier,
+# Eastern Anatolia later.
+SEASONAL_PRODUCE = {
+    "domates": (7, 10), "salatalik": (6, 9), "patlican": (6, 9),
+    "dolmalik biber": (6, 10), "sivri biber": (6, 10),
+    "aci biber": (6, 10), "kirmizi salcalik biber": (8, 9),
+    "kabak": (6, 9), "taze fasulye": (6, 9), "bamya": (7, 9),
+    "taze bakla": (4, 6), "enginar": (4, 6), "taze bezelye": (4, 6),
+    "taze borulce": (8, 9), "taze barbunya": (8, 9), "misir": (8, 9),
+    "pirasa": (11, 3), "kereviz": (11, 3), "beyaz lahana": (10, 3),
+    "bruksel lahanasi": (11, 2), "karnabahar": (10, 3),
+    "brokoli": (10, 3), "balkabagi": (10, 2), "pancar": (10, 3),
+    "kirmizi turp": (10, 4), "mantar": (9, 11), "sogan": (8, 10),
+    "patates": (9, 11), "havuc": (8, 11), "sarimsak": (7, 9),
+    "karpuz": (6, 8), "kavun": (7, 9), "uzum": (8, 10),
+    "incir": (8, 9), "seftali": (6, 8), "kayisi": (6, 7),
+    "kiraz": (5, 6), "visne": (6, 7), "erik": (6, 8),
+    "cilek": (4, 6), "elma": (9, 11), "armut": (8, 10),
+    "ayva": (10, 12), "nar": (10, 12), "trabzon hurmasi": (10, 12),
+    "portakal": (12, 3), "mandalina": (11, 2), "limon": (11, 3),
+    "muz": (1, 12),
+}
+
+REGION_SEASON_SHIFT = {
+    "marmara": 0, "ege": -1, "akdeniz": -1, "ic_anadolu": 0,
+    "karadeniz": 0, "dogu_anadolu": 1, "guneydogu": -1,
+}
+
+
+def normalize_ingredient_name(value):
+    text = str(value or "").casefold().replace("ı", "i")
+    return "".join(
+        char for char in unicodedata.normalize("NFKD", text)
+        if not unicodedata.combining(char)
+    ).strip()
+
+
+def shifted_month(month, shift):
+    return ((month - 1 + shift) % 12) + 1
+
+
+def month_in_window(month, start, end):
+    return start <= month <= end if start <= end else month >= start or month <= end
 
 
 
@@ -982,6 +1029,153 @@ def recipes_by_kiler(payload: KilerMatchRequest):
             "recipes": [dict(row) for row in rows]
         }
 
+    finally:
+        db.close()
+
+
+class SeasonalRequest(BaseModel):
+    month: int
+    region: str = "marmara"
+    limit: int = 3
+    time_budget: int | None = None
+    diet: str | None = None
+    gluten_free: bool = False
+    lactose_free: bool = False
+    low_glycemic: bool = False
+
+
+@app.post("/recipes/seasonal")
+def seasonal_recipes(payload: SeasonalRequest):
+    month = max(1, min(int(payload.month), 12))
+    shift = REGION_SEASON_SHIFT.get(payload.region, 0)
+
+    seasonal_names = {
+        name for name, (start, end) in SEASONAL_PRODUCE.items()
+        if month_in_window(
+            month,
+            shifted_month(start, shift),
+            shifted_month(end, shift),
+        )
+    }
+
+    db = get_db()
+
+    try:
+        kiler_rows = db.execute(
+            "SELECT id, name FROM kiler_ingredients"
+        ).fetchall()
+        seasonal_kiler = {
+            row["id"]: row["name"]
+            for row in kiler_rows
+            if normalize_ingredient_name(row["name"]) in seasonal_names
+        }
+
+        if not seasonal_kiler:
+            return {
+                "month": month,
+                "region": payload.region,
+                "seasonal_ingredients": [],
+                "count": 0,
+                "recipes": [],
+            }
+
+        ids = list(seasonal_kiler)
+        placeholders = ",".join("?" for _ in ids)
+        filters = ""
+        filter_params = []
+
+        if payload.diet == "vegan":
+            filters += " AND r.is_vegan = 1"
+        elif payload.diet == "vegetarian":
+            filters += " AND r.is_vegetarian = 1"
+
+        if payload.low_glycemic:
+            filters += " AND r.is_low_glycemic = 1"
+
+        if payload.time_budget is not None and payload.time_budget > 0:
+            filters += " AND r.total_minutes IS NOT NULL AND r.total_minutes <= ?"
+            filter_params.append(payload.time_budget)
+
+        if payload.gluten_free:
+            filters += """
+            AND NOT EXISTS (
+                SELECT 1 FROM recipe_ingredients rg
+                JOIN ingredients ig ON ig.id = rg.ingredient_id
+                LEFT JOIN ingredient_aliases iag ON iag.alias_normalized = ig.name_normalized
+                LEFT JOIN kiler_canonical_map kcg ON kcg.canonical_id = iag.canonical_id
+                LEFT JOIN kiler_ingredients kig ON kig.id = kcg.kiler_id
+                WHERE rg.recipe_id = r.id AND kig.contains_gluten = 1
+            )
+            """
+
+        if payload.lactose_free:
+            filters += """
+            AND NOT EXISTS (
+                SELECT 1 FROM recipe_ingredients rl
+                JOIN ingredients il ON il.id = rl.ingredient_id
+                LEFT JOIN ingredient_aliases ial ON ial.alias_normalized = il.name_normalized
+                LEFT JOIN kiler_canonical_map kcl ON kcl.canonical_id = ial.canonical_id
+                LEFT JOIN kiler_ingredients kil ON kil.id = kcl.kiler_id
+                WHERE rl.recipe_id = r.id AND kil.contains_lactose = 1
+            )
+            """
+
+        rows = db.execute(f"""
+            WITH recipe_seasonal AS (
+                SELECT
+                    ri.recipe_id,
+                    COUNT(DISTINCT kcm.kiler_id) AS seasonal_count,
+                    GROUP_CONCAT(DISTINCT ki.name) AS seasonal_ingredients
+                FROM recipe_ingredients ri
+                JOIN ingredients i ON i.id = ri.ingredient_id
+                JOIN ingredient_aliases ia ON ia.alias_normalized = i.name_normalized
+                JOIN kiler_canonical_map kcm ON kcm.canonical_id = ia.canonical_id
+                JOIN kiler_ingredients ki ON ki.id = kcm.kiler_id
+                WHERE kcm.kiler_id IN ({placeholders})
+                GROUP BY ri.recipe_id
+            )
+            SELECT
+                r.id, r.title, r.category, r.prep_minutes, r.cook_minutes,
+                r.total_minutes, r.servings, r.is_vegan, r.is_vegetarian,
+                r.is_low_glycemic, rs.seasonal_count, rs.seasonal_ingredients
+            FROM recipe_seasonal rs
+            JOIN recipes r ON r.id = rs.recipe_id
+            WHERE 1 = 1
+            {filters}
+            ORDER BY rs.seasonal_count DESC, RANDOM()
+            LIMIT 600
+        """, (*ids, *filter_params)).fetchall()
+
+        recipes = []
+        for row in rows:
+            recipe = dict(row)
+            dinner_score = dinner_category_score(recipe.get("category"))
+            if dinner_score <= -100:
+                continue
+            recipe["dinner_score"] = dinner_score
+            recipe["seasonal_score"] = (
+                recipe.get("seasonal_count", 0) * 40 + dinner_score
+            )
+            recipe["seasonal_ingredients"] = (
+                recipe.get("seasonal_ingredients", "").split(",")
+            )
+            recipes.append(recipe)
+
+        recipes.sort(
+            key=lambda recipe: (
+                -recipe["seasonal_score"],
+                recipe["total_minutes"] if recipe["total_minutes"] is not None else 9999,
+            )
+        )
+        recipes = recipes[:max(1, min(payload.limit, 20))]
+
+        return {
+            "month": month,
+            "region": payload.region,
+            "seasonal_ingredients": list(seasonal_kiler.values()),
+            "count": len(recipes),
+            "recipes": recipes,
+        }
     finally:
         db.close()
 
