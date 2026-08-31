@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 import re
 import sqlite3
+import unicodedata
 
 try:
     from .recipe_costs import safely_attach_recipe_costs
@@ -27,16 +28,50 @@ UNIT_IN_TEXT = re.compile(
 )
 
 
+def normalize(value) -> str:
+    text = str(value or "").casefold().replace("ı", "i")
+    return "".join(
+        char for char in unicodedata.normalize("NFKD", text)
+        if not unicodedata.combining(char)
+    )
+
+
+def meal_role(recipe: dict) -> str:
+    """Conservative audit-only main-course classification."""
+    text = normalize(f"{recipe.get('category', '')} {recipe.get('title', '')}")
+    light = (
+        "atistirmalik", "aperatif", "kahvalti", "sandvic", "simit", "tost",
+        "pizza", "borek", "pogaca", "corek", "milfoy", "ekmek", "pide",
+        "corba", "salata", "meze", "sos", "tart", "kurabiye", "tatli",
+    )
+    if any(token in text for token in light):
+        return "light_or_snack"
+    main = (
+        "ana yemek", "aksam yemegi", "et yemegi", "etli yemek", "kavurma",
+        "kofte", "kebap", "sote", "sis", "guvec", "tencere", "firinda",
+        "tavuk", "kiyma", "kusbasi", "dana", "kuzu", "balik", "somon",
+        "hamsi", "levrek", "cipura", "karides",
+    )
+    if any(token in text for token in main):
+        return "main_course"
+    return "mixed_or_unknown"
+
+
 def cost_flags(recipe: dict) -> list[str]:
     flags = []
     cost = recipe.get("cost_per_portion")
     coverage = float(recipe.get("cost_coverage") or 0)
+    role = meal_role(recipe)
     if cost is None:
         flags.append("cost_unavailable")
     elif cost <= 0:
         flags.append("zero_cost")
+    elif cost < 30 and coverage >= 0.70 and role == "main_course":
+        flags.append("main_course_protein_under_30_per_person")
+    elif cost < 30 and coverage >= 0.70 and role == "light_or_snack":
+        flags.append("light_or_snack_protein_under_30_per_person")
     elif cost < 30 and coverage >= 0.70:
-        flags.append("high_confidence_meat_recipe_under_30_per_person")
+        flags.append("mixed_protein_recipe_under_30_per_person")
     elif cost < 30:
         flags.append("low_confidence_meat_recipe_under_30_per_person")
     elif cost > 1000:
@@ -67,12 +102,12 @@ def audit(db, city: str, recipe_limit: int) -> list[dict]:
             findings.append({
                 "recipe_id": row["id"], "title": row["title"],
                 "cost_per_portion": "", "cost_total": "", "coverage": "",
-                "issue": flag, "ingredient_text": text,
+                "meal_role": "", "issue": flag, "ingredient_text": text,
             })
 
     # High-risk first trial: recipes mapped to protein ingredients.
     recipes = [dict(row) for row in db.execute("""
-        SELECT DISTINCT r.id, r.title, r.servings
+        SELECT DISTINCT r.id, r.title, r.category, r.servings
         FROM recipes r
         JOIN recipe_ingredients ri ON ri.recipe_id = r.id
         JOIN ingredients i ON i.id = ri.ingredient_id
@@ -95,6 +130,7 @@ def audit(db, city: str, recipe_limit: int) -> list[dict]:
                     "cost_per_portion": recipe.get("cost_per_portion"),
                     "cost_total": recipe.get("cost_total"),
                     "coverage": recipe.get("cost_coverage"),
+                    "meal_role": meal_role(recipe),
                     "issue": flag, "ingredient_text": "",
                 })
     return findings
@@ -118,7 +154,7 @@ def main() -> int:
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     fields = ["recipe_id", "title", "cost_per_portion", "cost_total",
-              "coverage", "issue", "ingredient_text"]
+              "coverage", "meal_role", "issue", "ingredient_text"]
     with output.open("w", newline="", encoding="utf-8-sig") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
