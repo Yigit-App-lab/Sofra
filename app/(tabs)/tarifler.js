@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,47 @@ import { useTheme, space, radius } from '../../src/theme';
 import { useStore } from '../../src/store';
 
 const PAGE_SIZE = 30;
+
+const RecipeRow = memo(function RecipeRow({ item, english, onOpen }) {
+  const c = useTheme();
+  const minutes =
+    item.total_minutes ||
+    ((item.prep_minutes || 0) + (item.cook_minutes || 0));
+
+  return (
+    <Pressable
+      onPress={() => onOpen(item.id)}
+      style={({ pressed }) => ({
+        backgroundColor: c.surface,
+        borderColor: c.line,
+        borderWidth: 1,
+        borderRadius: radius.m,
+        padding: space.m,
+        marginBottom: 9,
+        opacity: pressed ? 0.65 : 1,
+      })}
+    >
+      <Text
+        style={{
+          color: c.ink,
+          fontSize: 16,
+          fontWeight: '700',
+          marginBottom: 5,
+        }}
+      >
+        {item.title}
+      </Text>
+
+      <Text style={{ color: c.ink3, fontSize: 13 }}>
+        {item.category || (english ? 'Recipe' : 'Tarif')}
+        {minutes ? ` · ${minutes} ${english ? 'min' : 'dk'}` : ''}
+        {item.servings ? ` · ${item.servings} ${english ? 'servings' : 'kişilik'}` : ''}
+      </Text>
+    </Pressable>
+  );
+}, (previous, next) => (
+  previous.item === next.item && previous.english === next.english
+));
 
 export default function Tarifler() {
   const c = useTheme();
@@ -192,48 +233,17 @@ export default function Tarifler() {
     loadCatalogue(false, selectedCategory);
   }
 
-  function renderRecipe({ item }) {
-    const minutes =
-      item.total_minutes ||
-      ((item.prep_minutes || 0) + (item.cook_minutes || 0));
+  const openRecipe = useCallback(
+    (id) => router.push(`/api-tarif/${id}`),
+    [router]
+  );
 
-    return (
-      <Pressable
-        onPress={() => router.push(`/api-tarif/${item.id}`)}
-        style={({ pressed }) => ({
-          backgroundColor: c.surface,
-          borderColor: c.line,
-          borderWidth: 1,
-          borderRadius: radius.m,
-          padding: space.m,
-          marginBottom: 9,
-          opacity: pressed ? 0.65 : 1,
-        })}
-      >
-        <Text
-          style={{
-            color: c.ink,
-            fontSize: 16,
-            fontWeight: '700',
-            marginBottom: 5,
-          }}
-        >
-          {item.title}
-        </Text>
-
-        <Text
-          style={{
-            color: c.ink3,
-            fontSize: 13,
-          }}
-        >
-          {item.category || (english ? 'Recipe' : 'Tarif')}
-          {minutes ? ` · ${minutes} ${english ? 'min' : 'dk'}` : ''}
-          {item.servings ? ` · ${item.servings} ${english ? 'servings' : 'kişilik'}` : ''}
-        </Text>
-      </Pressable>
-    );
-  }
+  const renderRecipe = useCallback(
+    ({ item }) => (
+      <RecipeRow item={item} english={english} onOpen={openRecipe} />
+    ),
+    [english, openRecipe]
+  );
 
   const header = (
     <View>
@@ -562,6 +572,11 @@ export default function Tarifler() {
       renderItem={renderRecipe}
       onEndReached={loadMore}
       onEndReachedThreshold={0.5}
+      initialNumToRender={10}
+      maxToRenderPerBatch={8}
+      updateCellsBatchingPeriod={40}
+      windowSize={7}
+      removeClippedSubviews
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
       ListFooterComponent={
