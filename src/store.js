@@ -16,7 +16,6 @@ const initial = {
   ready: false,
   langIndex: 0,
   city: PRICING_CITY,
-  household: 4,
   timeBudget: 60,
   maxPerPortion: 120,
   meatless: false,
@@ -62,13 +61,15 @@ function reducer(s, a) {
   switch (a.type) {
     case 'hydrate': {
       const profile = { ...s.profile, ...(a.value?.profile || {}) };
+      const hydrated = { ...(a.value || {}) };
+      delete hydrated.household;
       profile.liked = { ...(profile.liked || {}) };
       Object.entries(profile.feedback || {}).forEach(([id, item]) => {
         if (item?.liked || item?.event === 'liked') {
           profile.liked[id] = item.day || today();
         }
       });
-      return { ...s, ...a.value, profile, city:PRICING_CITY, ready:true };
+      return { ...s, ...hydrated, profile, city:PRICING_CITY, ready:true };
     }
     case 'set': return a.key === 'city' ? { ...s, city:PRICING_CITY } : { ...s, [a.key]: a.value };
     case 'togglePantry': {

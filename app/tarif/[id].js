@@ -21,7 +21,6 @@ export default function Tarif() {
   if (!r) return <View style={{ padding:space.xl }}><Body dim>—</Body></View>;
 
   const cost = Engine.costOf(r, ctx);
-  const scale = state.household / r.servings;
   const feedback = state.profile.feedback?.[r.id] || {};
   const liked = Boolean(feedback.liked || feedback.event === 'liked');
   const cooked = Boolean(feedback.cooked || feedback.event === 'cooked');
@@ -38,7 +37,7 @@ export default function Tarif() {
       <View style={{ marginTop:space.s }}>
         <Price value={tl(cost.perPortion)} unit={t('perPerson')} size={30} />
         <Body dim size={12.5} style={{ marginTop:2 }}>
-          {r.minutes} {t('min')} · {t('forN', state.household)} {tl(cost.total * scale)} ₺
+          {r.minutes} {t('min')} · {t('forN', r.servings || 2)} {tl(cost.total)} ₺
         </Body>
       </View>
 
@@ -60,7 +59,7 @@ export default function Tarif() {
                   ? stateChip(st, t) : null}
               </Row>
             }
-            value={ri.optional ? '—' : `${tl(lineCost * scale)} ₺`} />
+            value={ri.optional ? '—' : `${tl(lineCost)} ₺`} />
         );
       })}
 
@@ -68,7 +67,7 @@ export default function Tarif() {
                      borderTopWidth:2, borderTopColor:c.ink, paddingTop:space.m, marginTop:space.s }}>
         <Text style={{ color:c.ink, fontSize:16, fontWeight:'700' }}>{t('total')}</Text>
         <Text style={{ color:c.accent, fontSize:20, fontWeight:'700', fontVariant:['tabular-nums'] }}>
-          {tl(cost.total * scale)} ₺
+          {tl(cost.total)} ₺
         </Text>
       </View>
 

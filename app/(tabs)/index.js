@@ -158,7 +158,6 @@ export default function Tonight() {
       <View style={{ marginTop:space.l }}>
         {choice.results.map((s, index) => {
           const r = s.recipe;
-          const scale = state.household / r.servings;
           const heroState = Engine.stateOf(byId[r.hero], ctx.region, ctx.month, ctx.regions);
           return (
             <Card key={r.id} style={{ marginBottom:space.m }}>
@@ -173,7 +172,7 @@ export default function Tonight() {
               <View style={{ marginTop:space.m }}>
                 <Price value={tl(s.cost.perPortion)} unit={t('perPerson')} />
                 <Body dim size={12.5}>
-                  {t('forN', state.household)} · {tl(s.cost.total * scale)} ₺ {t('total').toLowerCase()}
+                  {t('forN', r.servings || 2)} · {tl(s.cost.total)} ₺ {t('total').toLowerCase()}
                 </Body>
               </View>
               <Row gap={6} style={{ flexWrap:'wrap', marginVertical:space.m }}>
@@ -194,7 +193,7 @@ export default function Tonight() {
         {choice.recipes.map((r, index) => {
           const ready = r.missing_count === 0;
           const hasCost = r.cost_per_portion != null && (r.cost_coverage || 0) >= 0.7;
-          const scale = state.household / (r.servings || 4);
+          const servings = r.servings || 2;
           return (
             <Card key={r.id} style={{ marginBottom:space.m }}>
               <Text style={{ color:c.accent, fontSize:11, fontWeight:'800', letterSpacing:0.7 }}>
@@ -218,7 +217,7 @@ export default function Tonight() {
                 <Price value={hasCost ? tl(r.cost_per_portion) : '—'} unit={t('perPerson')} />
                 <Body dim size={12.5}>
                   {hasCost
-                    ? `${t('forN', state.household)} · ${tl(r.cost_total * scale)} ₺ ${t('total').toLowerCase()} · ${t('approximateCost')}`
+                    ? `${t('forN', servings)} · ${tl(r.cost_total)} ₺ ${t('total').toLowerCase()} · ${t('approximateCost')}`
                     : t('costUnavailable')}
                 </Body>
               </View>

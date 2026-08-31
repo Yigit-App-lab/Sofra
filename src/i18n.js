@@ -33,7 +33,7 @@ const S = {
   likedEmpty:['Henüz beğendiğin bir tarif yok.','You have not liked a recipe yet.'],
   nothingYet:['Bir şey pişirin, burası dolsun.','Cook something and this fills up.'],
   noneMatch:['Bu filtrelerle yemek yok. Bütçeyi veya süreyi genişletin.','Nothing matches. Loosen the budget or time.'],
-  settings:['Ayarlar','Settings'], city:['Şehir','City'], household:['Kaç kişi','People'],
+  settings:['Ayarlar','Settings'], city:['Şehir','City'],
   timeBudget:['Süre','Time'], budget:['Bütçe · kişi başı','Budget · per person'],
   meatless:['Etsiz','Meatless'], language:['Dil','Language'],
   resetProfile:['Öğrenilenleri sıfırla','Reset what it learned'],

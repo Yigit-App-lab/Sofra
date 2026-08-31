@@ -106,12 +106,6 @@ export default function Ben() {
       </Button>
 
       <Label>{t('settings')}</Label>
-      <Body dim size={12}>{t('household')}</Body>
-      <View style={{ height:space.s }} />
-      <Choice options={[1,2,3,4,5,6,7,8].map((n) => ({ value:n, label:String(n) }))}
-              value={state.household} onChange={(v) => set('household', v)} />
-
-      <View style={{ height:space.l }} />
       <Body dim size={12}>{t('timeBudget')} · {state.timeBudget} {t('min')}</Body>
       <View style={{ height:space.s }} />
       <Choice options={[20,30,45,60,90].map((m) => ({ value:m, label:`${m}` }))}

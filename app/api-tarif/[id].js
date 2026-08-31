@@ -10,8 +10,9 @@ import { useLocalSearchParams } from 'expo-router';
 
 import { getRecipe } from '../../src/api';
 import { useStore, apiRecipeForLearning } from '../../src/store';
+import { tl } from '../../src/i18n';
 import { useTheme, space, radius } from '../../src/theme';
-import { Button, Row } from '../../src/ui';
+import { Button, Price, Row } from '../../src/ui';
 
 
 function IngredientRow({ item, checked, onToggle, c, english }) {
@@ -318,6 +319,12 @@ export default function ApiTarif() {
   const minutes =
     recipe.total_minutes ||
     ((recipe.prep_minutes || 0) + (recipe.cook_minutes || 0));
+  const servings = recipe.servings || 2;
+  const servingsDefaulted = !recipe.servings;
+  const hasCost =
+    recipe.cost_total != null &&
+    recipe.cost_per_portion != null &&
+    (recipe.cost_coverage || 0) >= 0.7;
 
 
   const steps = recipe.instructions
@@ -438,8 +445,30 @@ export default function ApiTarif() {
       >
         {recipe.category || (english ? 'Recipe' : 'Tarif')}
         {minutes ? ` · ${minutes} ${english ? 'min' : 'dk'}` : ''}
-        {recipe.servings ? ` · ${recipe.servings} ${english ? 'servings' : 'kişilik'}` : ''}
+        {` · ${servings} ${english ? 'servings' : 'kişilik'}`}
+        {servingsDefaulted ? (english ? ' (default)' : ' (varsayılan)') : ''}
       </Text>
+
+      <View
+        style={{
+          backgroundColor: c.surface,
+          borderColor: c.line,
+          borderWidth: 1,
+          borderRadius: radius.m,
+          padding: space.m,
+          marginTop: 18,
+        }}
+      >
+        <Price
+          value={hasCost ? tl(recipe.cost_total) : '—'}
+          unit={english ? 'estimated total cost' : 'toplam tahmini maliyet'}
+        />
+        <Text style={{ color:c.ink3, fontSize:12.5, marginTop:5 }}>
+          {hasCost
+            ? `${servings} ${english ? 'servings' : 'kişi'} · ${tl(recipe.cost_per_portion)} ₺ ${english ? 'per person' : 'kişi başı'}`
+            : english ? 'Cost unavailable' : 'Maliyet hesaplanamadı'}
+        </Text>
+      </View>
 
 
       {recipe.description ? (

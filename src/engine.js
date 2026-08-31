@@ -176,7 +176,7 @@
       });
     }
     lines.sort(function (a, b) { return b.cost - a.cost; });
-    var servings = recipe.servings || 4;
+    var servings = recipe.servings || 2;
     return {
       total: total,
       perPortion: total / servings,

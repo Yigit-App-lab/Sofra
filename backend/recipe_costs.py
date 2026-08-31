@@ -255,7 +255,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 live_count += 1
                 if observation.get("observed_at"):
                     observed_dates.append(observation["observed_at"])
-        servings = parse_quantity(recipe.get("servings")) or 4
+        servings = parse_quantity(recipe.get("servings")) or 2
         servings = max(1, servings)
         # A few imported rows contain zero or placeholder quantities. Publishing
         # 0.0 TL is worse than admitting that the price could not be calculated.

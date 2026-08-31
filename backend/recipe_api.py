@@ -599,6 +599,8 @@ def recipe(recipe_id: int):
             for item in ingredients
         ]
 
+        safely_attach_recipe_costs(db, [result], PRICING_CITY)
+
         return result
 
     finally:
