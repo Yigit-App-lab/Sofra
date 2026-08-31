@@ -48,6 +48,8 @@ def load_catalog() -> tuple[dict, dict]:
         "hakiki zeytinyagi": "zeytinyagi",
         "kucuk cay bardagi zeytinyagi": "zeytinyagi",
         "kusbasi": "kusbasi",
+        "dana eti": "kusbasi",
+        "dana kusbasi": "kusbasi",
     }
     for alias, item_id in aliases.items():
         if item_id in by_id:
@@ -202,6 +204,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
         live_count = 0
         eligible = 0
         observed_dates = []
+        missing_required_protein = False
         ingredients = grouped.get(recipe["id"], [])
         for row in ingredients:
             raw_name = normalize(row["kiler_name"] or row["name"])
@@ -213,11 +216,14 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
             item = find_catalog_item(raw_name, row["original_text"], by_name)
             if not item:
                 continue
-            # A missing protein amount must reduce confidence instead of letting
-            # bread/sauce make a meat recipe look fully priced and very cheap.
+            # Missing main ingredients reduce confidence. Missing protein is a
+            # hard stop: publishing the sauce cost as a chicken/beef meal cost
+            # is materially misleading.
             if quantity is None:
-                if item.get("kind") == "protein":
+                if item.get("kind") in ("protein", "sut", "tahil", "sebze", "meyve"):
                     eligible += 1
+                if item.get("kind") == "protein":
+                    missing_required_protein = True
                 continue
             eligible += 1
             units = consumed_units(quantity, recipe_unit, item)
@@ -235,7 +241,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
         servings = max(1, servings)
         # A few imported rows contain zero or placeholder quantities. Publishing
         # 0.0 TL is worse than admitting that the price could not be calculated.
-        usable_cost = priced > 0 and total >= 0.05
+        usable_cost = priced > 0 and total >= 0.05 and not missing_required_protein
         recipe["cost_total"] = round(total, 2) if usable_cost else None
         recipe["cost_per_portion"] = round(total / servings, 2) if usable_cost else None
         recipe["cost_coverage"] = round(priced / eligible, 2) if eligible else 0

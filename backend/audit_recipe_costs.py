@@ -35,8 +35,10 @@ def cost_flags(recipe: dict) -> list[str]:
         flags.append("cost_unavailable")
     elif cost <= 0:
         flags.append("zero_cost")
+    elif cost < 30 and coverage >= 0.70:
+        flags.append("high_confidence_meat_recipe_under_30_per_person")
     elif cost < 30:
-        flags.append("meat_recipe_under_30_per_person")
+        flags.append("low_confidence_meat_recipe_under_30_per_person")
     elif cost > 1000:
         flags.append("over_1000_per_person")
     if coverage < 0.70:
