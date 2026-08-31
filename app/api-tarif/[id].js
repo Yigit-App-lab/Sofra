@@ -13,7 +13,7 @@ import { useStore } from '../../src/store';
 import { useTheme, space, radius } from '../../src/theme';
 
 
-function IngredientRow({ item, checked, onToggle, c }) {
+function IngredientRow({ item, checked, onToggle, c, kiler }) {
   const hasGluten =
     item.contains_gluten === 1 ||
     item.contains_gluten === true;
@@ -21,6 +21,12 @@ function IngredientRow({ item, checked, onToggle, c }) {
   const hasLactose =
     item.contains_lactose === 1 ||
     item.contains_lactose === true;
+
+  const alternatives = [...(item.alternatives || [])].sort((a, b) => {
+    const aOwned = a.kiler_id != null && kiler[String(a.kiler_id)] ? 1 : 0;
+    const bOwned = b.kiler_id != null && kiler[String(b.kiler_id)] ? 1 : 0;
+    return bOwned - aOwned;
+  });
 
   return (
     <Pressable
@@ -128,6 +134,60 @@ function IngredientRow({ item, checked, onToggle, c }) {
                 </Text>
               </View>
             ) : null}
+          </View>
+        ) : null}
+
+        {alternatives.length ? (
+          <View
+            style={{
+              marginTop: 9,
+              padding: 10,
+              borderRadius: radius.s,
+              backgroundColor: c.ground,
+            }}
+          >
+            <Text
+              style={{
+                color: c.ink2,
+                fontSize: 11,
+                fontWeight: '800',
+                marginBottom: 6,
+              }}
+            >
+              ALTERNATİFLER
+            </Text>
+
+            {alternatives.map((alternative, index) => {
+              const inKiler =
+                alternative.kiler_id != null &&
+                Boolean(kiler[String(alternative.kiler_id)]);
+
+              return (
+                <View
+                  key={`${alternative.name}-${index}`}
+                  style={{ marginTop: index ? 7 : 0 }}
+                >
+                  <Text
+                    style={{
+                      color: inKiler ? c.accent : c.ink,
+                      fontSize: 13,
+                      fontWeight: inKiler ? '800' : '600',
+                    }}
+                  >
+                    {inKiler ? '✓ ' : ''}{alternative.name} · {alternative.ratio}
+                  </Text>
+                  <Text
+                    style={{
+                      color: c.ink3,
+                      fontSize: 11.5,
+                      marginTop: 2,
+                    }}
+                  >
+                    {alternative.note}{inKiler ? ' · Kilerinde var' : ''}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         ) : null}
       </View>
@@ -588,6 +648,7 @@ export default function ApiTarif() {
           checked={Boolean(owned[index])}
           onToggle={() => toggleIngredient(index)}
           c={c}
+          kiler={kiler}
         />
       ))}
 

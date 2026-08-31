@@ -86,6 +86,56 @@ def clean_ingredient_text(text):
     return x
 
 
+# Curated culinary substitutions. These are suggestions, not allergy guarantees;
+# ingredient labels still need to be checked by the user.
+INGREDIENT_SUBSTITUTIONS = {
+    "süt": [
+        {"name": "Badem sütü", "ratio": "1:1", "note": "Tatlı ve soslarda"},
+        {"name": "Yulaf sütü", "ratio": "1:1", "note": "Tatlı ve soslarda"},
+        {"name": "Soya sütü", "ratio": "1:1", "note": "Pişirme ve hamur işlerinde"},
+    ],
+    "yoğurt": [
+        {"name": "Bitkisel yoğurt", "ratio": "1:1", "note": "Soğuk tarif ve soslarda"},
+        {"name": "Kefir", "ratio": "1:1", "note": "Daha akışkan sonuç verir"},
+    ],
+    "tereyağı": [
+        {"name": "Zeytinyağı", "ratio": "3/4 ölçü", "note": "Tuzlu tariflerde"},
+        {"name": "Margarin", "ratio": "1:1", "note": "Hamur işlerinde"},
+    ],
+    "krema": [
+        {"name": "Yoğurt", "ratio": "1:1", "note": "Kaynatmadan, düşük ısıda ekle"},
+        {"name": "Hindistan cevizi sütü", "ratio": "1:1", "note": "Aroma değiştirir"},
+    ],
+    "yumurta": [
+        {"name": "Keten tohumu", "ratio": "1 yumurta = 1 yk + 3 yk su", "note": "Hamur işlerinde"},
+        {"name": "Elma püresi", "ratio": "1 yumurta = 1/4 bardak", "note": "Tatlı hamur işlerinde"},
+    ],
+    "pirinç": [
+        {"name": "Bulgur", "ratio": "1:1", "note": "Suyu tarife göre ayarla"},
+        {"name": "Karabuğday", "ratio": "1:1", "note": "Doku ve pişme süresi değişir"},
+    ],
+    "un": [
+        {"name": "Tam buğday unu", "ratio": "1:1", "note": "Biraz daha fazla sıvı gerekebilir"},
+        {"name": "Yulaf unu", "ratio": "1:1", "note": "Doku daha yumuşak olabilir"},
+    ],
+    "şeker": [
+        {"name": "Hurma püresi", "ratio": "3/4 ölçü", "note": "Sıvıyı biraz azalt"},
+        {"name": "Elma püresi", "ratio": "1:1", "note": "Tatlı hamur işlerinde"},
+    ],
+    "limon suyu": [
+        {"name": "Sirke", "ratio": "1/2 ölçü", "note": "Az ekleyip tadını kontrol et"},
+    ],
+    "galeta unu": [
+        {"name": "Yulaf ezmesi", "ratio": "1:1", "note": "İnce çekerek kullan"},
+        {"name": "Mısır unu", "ratio": "1:1", "note": "Kaplama tariflerinde"},
+    ],
+}
+
+
+def substitutions_for(name):
+    return INGREDIENT_SUBSTITUTIONS.get(normalize_tr(name), [])
+
+
 
 def dinner_category_score(category):
     """Dinner suitability for recommendation only. Database is untouched."""
@@ -387,15 +437,52 @@ def recipe(recipe_id: int):
             result.get("instructions")
         )
 
-        result["ingredients"] = [
-            {
-                **dict(item),
-                "display_text": clean_ingredient_text(
-                    item["original_text"] or item["name"]
-                )
-            }
+        alternative_names = {
+            normalize_tr(alternative["name"])
             for item in ingredients
-        ]
+            for alternative in substitutions_for(
+                item["kiler_name"] or item["name"]
+            )
+        }
+
+        alternative_kiler = {}
+        if alternative_names:
+            placeholders = ",".join("?" for _ in alternative_names)
+            rows = db.execute(
+                f"""
+                SELECT id, name, name_normalized
+                FROM kiler_ingredients
+                WHERE name_normalized IN ({placeholders})
+                """,
+                tuple(sorted(alternative_names))
+            ).fetchall()
+            alternative_kiler = {
+                row["name_normalized"]: dict(row)
+                for row in rows
+            }
+
+        result["ingredients"] = []
+        for item in ingredients:
+            ingredient = dict(item)
+            alternatives = []
+
+            for suggestion in substitutions_for(
+                ingredient.get("kiler_name") or ingredient.get("name")
+            ):
+                match = alternative_kiler.get(normalize_tr(suggestion["name"]))
+                alternatives.append({
+                    **suggestion,
+                    "kiler_id": match["id"] if match else None,
+                    "name": match["name"] if match else suggestion["name"],
+                })
+
+            result["ingredients"].append({
+                **ingredient,
+                "display_text": clean_ingredient_text(
+                    ingredient["original_text"] or ingredient["name"]
+                ),
+                "alternatives": alternatives,
+            })
 
         return result
 
