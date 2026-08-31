@@ -139,7 +139,7 @@ function IngredientRow({ item, checked, onToggle, c }) {
 export default function ApiTarif() {
   const c = useTheme();
   const { id } = useLocalSearchParams();
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
   const kiler = state.kiler || {};
 
   const [recipe, setRecipe] = useState(null);
@@ -163,10 +163,27 @@ export default function ApiTarif() {
 
       const initialOwned = {};
 
+      const waterNames = new Set([
+        'su',
+        'sıcak su',
+        'soğuk su',
+        'ılık su',
+        'kaynar su',
+        'kaynamış su',
+        'içme suyu',
+      ]);
+
       (data.ingredients || []).forEach((ingredient, index) => {
+        const normalizedName = String(
+          ingredient.kiler_name || ingredient.name || ''
+        ).trim().toLocaleLowerCase('tr-TR');
+
         if (
-          ingredient.kiler_id != null &&
-          kiler[String(ingredient.kiler_id)]
+          waterNames.has(normalizedName) ||
+          (
+            ingredient.kiler_id != null &&
+            kiler[String(ingredient.kiler_id)]
+          )
         ) {
           initialOwned[index] = true;
         }
@@ -195,6 +212,23 @@ export default function ApiTarif() {
 
   const missingCount = ingredients.length - ownedCount;
 
+  const shoppingList = state.shoppingList || {};
+
+  const shoppingKey = (ingredient, index) =>
+    ingredient.kiler_id != null
+      ? String(ingredient.kiler_id)
+      : `raw:${ingredient.name || ingredient.original_text || index}`;
+
+  const missingIngredients = ingredients
+    .map((ingredient, index) => ({ ingredient, index }))
+    .filter(({ index }) => !owned[index]);
+
+  const allMissingAdded =
+    missingIngredients.length > 0 &&
+    missingIngredients.every(({ ingredient, index }) =>
+      Boolean(shoppingList[shoppingKey(ingredient, index)])
+    );
+
 
   const matchPercent = ingredients.length
     ? Math.round((ownedCount / ingredients.length) * 100)
@@ -222,6 +256,23 @@ export default function ApiTarif() {
 
   function clearAll() {
     setOwned({});
+  }
+
+
+  function addMissingToShoppingList() {
+    ingredients.forEach((ingredient, index) => {
+      if (owned[index]) return;
+
+      const id = shoppingKey(ingredient, index);
+
+      dispatch({
+        type: 'addShoppingItem',
+        id,
+        name: ingredient.display_text || ingredient.original_text || ingredient.name || ingredient.kiler_name || 'Malzeme',
+        quantity: ingredient.quantity ?? null,
+        unit: ingredient.unit ?? null,
+      });
+    });
   }
 
 
@@ -293,42 +344,76 @@ export default function ApiTarif() {
 {(recipe.is_vegan === 1 ||
         recipe.is_vegan === true ||
         recipe.is_vegetarian === 1 ||
-        recipe.is_vegetarian === true) ? (
+        recipe.is_vegetarian === true ||
+        recipe.is_low_glycemic === 1 ||
+        recipe.is_low_glycemic === true) ? (
         <View
           style={{
             flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: 8,
             marginTop: 10,
           }}
         >
-          <View
-            style={{
-              borderWidth: 1,
-              borderColor: recipe.is_vegan === 1 || recipe.is_vegan === true
-                ? '#86EFAC'
-                : '#FCD34D',
-              backgroundColor: recipe.is_vegan === 1 || recipe.is_vegan === true
-                ? '#DCFCE7'
-                : '#FEF3C7',
-              borderRadius: 999,
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-            }}
-          >
-            <Text
+          {(recipe.is_vegan === 1 ||
+            recipe.is_vegan === true ||
+            recipe.is_vegetarian === 1 ||
+            recipe.is_vegetarian === true) ? (
+            <View
               style={{
-                color: recipe.is_vegan === 1 || recipe.is_vegan === true
-                  ? '#166534'
-                  : '#92400E',
-                fontSize: 11,
-                fontWeight: '800',
-                letterSpacing: 0.5,
+                borderWidth: 1,
+                borderColor: recipe.is_vegan === 1 || recipe.is_vegan === true
+                  ? '#86EFAC'
+                  : '#FCD34D',
+                backgroundColor: recipe.is_vegan === 1 || recipe.is_vegan === true
+                  ? '#DCFCE7'
+                  : '#FEF3C7',
+                borderRadius: 999,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
               }}
             >
-              {recipe.is_vegan === 1 || recipe.is_vegan === true
-                ? 'VEGAN'
-                : 'VEJETARYEN'}
-            </Text>
-          </View>
+              <Text
+                style={{
+                  color: recipe.is_vegan === 1 || recipe.is_vegan === true
+                    ? '#166534'
+                    : '#92400E',
+                  fontSize: 11,
+                  fontWeight: '800',
+                  letterSpacing: 0.5,
+                }}
+              >
+                {recipe.is_vegan === 1 || recipe.is_vegan === true
+                  ? 'VEGAN'
+                  : 'VEJETARYEN'}
+              </Text>
+            </View>
+          ) : null}
+
+          {(recipe.is_low_glycemic === 1 ||
+            recipe.is_low_glycemic === true) ? (
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: '#F59E0B',
+                backgroundColor: '#FEF3C7',
+                borderRadius: 999,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+              }}
+            >
+              <Text
+                style={{
+                  color: '#92400E',
+                  fontSize: 11,
+                  fontWeight: '800',
+                  letterSpacing: 0.5,
+                }}
+              >
+                DÜŞÜK GLİSEMİK
+              </Text>
+            </View>
+          ) : null}
         </View>
       ) : null}
 
@@ -400,6 +485,34 @@ export default function ApiTarif() {
             ? 'Tüm malzemeler hazır.'
             : `${missingCount} malzeme eksik`}
         </Text>
+
+        <Pressable
+          onPress={addMissingToShoppingList}
+          disabled={missingCount === 0}
+          style={({ pressed }) => ({
+            backgroundColor: missingCount === 0 ? c.line : c.accent,
+            borderRadius: radius.s,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            marginTop: 14,
+            alignItems: 'center',
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Text
+            style={{
+              color: missingCount === 0 ? c.ink3 : c.onAccent,
+              fontWeight: '800',
+              fontSize: 14,
+            }}
+          >
+            {missingCount === 0
+              ? 'Eksik malzeme yok'
+              : allMissingAdded
+                ? '✓ Listeye eklendi'
+                : `${missingCount} eksik malzemeyi Listeye ekle`}
+          </Text>
+        </Pressable>
 
         <View
           style={{

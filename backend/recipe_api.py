@@ -200,7 +200,8 @@ def search_recipes(
     limit: int = Query(default=20, ge=1, le=100),
     diet: str | None = None,
     gluten_free: bool = False,
-    lactose_free: bool = False
+    lactose_free: bool = False,
+    low_glycemic: bool = False
 ):
     db = get_db()
 
@@ -212,6 +213,9 @@ def search_recipes(
             diet_sql = " AND r.is_vegan = 1"
         elif diet == "vegetarian":
             diet_sql = " AND r.is_vegetarian = 1"
+
+        if low_glycemic:
+            diet_sql += " AND r.is_low_glycemic = 1"
 
         if gluten_free:
             diet_sql += """
@@ -257,7 +261,8 @@ def search_recipes(
                 r.total_minutes,
                 r.servings,
                 r.is_vegan,
-                r.is_vegetarian
+                r.is_vegetarian,
+                r.is_low_glycemic
             FROM recipes_fts f
             JOIN recipes r ON r.id = f.rowid
             WHERE recipes_fts MATCH ?
@@ -400,7 +405,8 @@ def list_recipes(
     category: str | None = None,
     diet: str | None = None,
     gluten_free: bool = False,
-    lactose_free: bool = False
+    lactose_free: bool = False,
+    low_glycemic: bool = False
 ):
     db = get_db()
 
@@ -416,6 +422,9 @@ def list_recipes(
             where.append("is_vegan = 1")
         elif diet == "vegetarian":
             where.append("is_vegetarian = 1")
+
+        if low_glycemic:
+            where.append("is_low_glycemic = 1")
 
         if gluten_free:
             where.append("""
@@ -471,7 +480,8 @@ def list_recipes(
                 total_minutes,
                 servings,
                 is_vegan,
-                is_vegetarian
+                is_vegetarian,
+                is_low_glycemic
             FROM recipes
             {where_sql}
             ORDER BY id

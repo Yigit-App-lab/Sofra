@@ -53,6 +53,7 @@ export default function Tarifler() {
       state.dietPreference,
       state.glutenFree,
       state.lactoseFree,
+      state.lowGlycemic,
       selectedCategory
     ])
   );
@@ -69,7 +70,8 @@ export default function Tarifler() {
     q,
     state.dietPreference,
     state.glutenFree,
-    state.lactoseFree
+    state.lactoseFree,
+    state.lowGlycemic
   ]);
 
   async function loadCategories() {
@@ -100,6 +102,7 @@ export default function Tarifler() {
         diet: state.dietPreference,
         glutenFree: state.glutenFree,
         lactoseFree: state.lactoseFree,
+        lowGlycemic: state.lowGlycemic,
       });
 
       setRecipes(prev =>
@@ -128,7 +131,8 @@ export default function Tarifler() {
         50,
         state.dietPreference,
         state.glutenFree,
-        state.lactoseFree
+        state.lactoseFree,
+        state.lowGlycemic
       );
 
       setRecipes(data.recipes || []);
@@ -312,7 +316,7 @@ export default function Tarifler() {
         <View
           style={{
             alignSelf: 'flex-start',
-            marginBottom: space.m,
+            marginBottom: space.s,
             borderRadius: 8,
             paddingHorizontal: 14,
             paddingVertical: 8,
@@ -329,6 +333,31 @@ export default function Tarifler() {
             }}
           >
             ✓ Laktozsuz filtresi aktif
+          </Text>
+        </View>
+      ) : null}
+
+      {state.lowGlycemic ? (
+        <View
+          style={{
+            alignSelf: 'flex-start',
+            marginBottom: space.m,
+            borderRadius: 8,
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            backgroundColor: '#F59E0B',
+            borderWidth: 1,
+            borderColor: '#D97706',
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: '800',
+              color: '#FFFFFF',
+            }}
+          >
+            ✓ Düşük Glisemik filtresi aktif
           </Text>
         </View>
       ) : null}

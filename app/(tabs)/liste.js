@@ -1,56 +1,179 @@
-// "Liste" — the shopping list for the next few dinners, with a running total.
-// This is also the hook for delivery integration later: the list is already a
-// structured set of {ingredient, quantity, unit}, which is what a basket API wants.
 import React, { useMemo } from 'react';
-import { ScrollView, View, Text } from 'react-native';
-import Engine from '../../src/engine';
-import { REC } from '../../src/data';
-import { useStore, useEngineCtx } from '../../src/store';
-import { makeT, tl } from '../../src/i18n';
-import { useTheme, space } from '../../src/theme';
-import { Label, Body, LineItem, stateChip } from '../../src/ui';
+import {
+  ScrollView,
+  View,
+  Text,
+  Pressable,
+} from 'react-native';
+
+import { useStore } from '../../src/store';
+import { useTheme, space, radius } from '../../src/theme';
 
 export default function Liste() {
   const c = useTheme();
-  const { state } = useStore();
-  const t = makeT(state.langIndex);
-  const ctx = useEngineCtx();
+  const { state, dispatch } = useStore();
 
-  const meals = useMemo(() => Engine.recommend(REC, ctx, 3), [ctx]);
-  const list = useMemo(() => Engine.shoppingList(meals, ctx), [meals, ctx]);
+  const items = useMemo(
+    () => Object.values(state.shoppingList || {}),
+    [state.shoppingList]
+  );
 
-  if (!meals.length) {
-    return <View style={{ padding:space.xl }}><Body dim>{t('noneMatch')}</Body></View>;
-  }
+  const checkedCount = items.filter(x => x.checked).length;
 
-  const qty = (x) => {
-    if (x.unit === 'kg') return x.units < 1 ? `${Math.round(x.units*1000)} g` : `${x.units.toFixed(1)} kg`;
-    if (x.unit === 'L') return x.units < 1 ? `${Math.round(x.units*1000)} ml` : `${x.units.toFixed(1)} L`;
-    return `${Math.round(x.units*10)/10} ${t.code === 'en' ? '' : x.unit}`;
+  const qtyText = (item) => {
+    if (item.quantity == null && !item.unit) return '';
+    if (item.quantity == null) return String(item.unit || '');
+    return `${item.quantity}${item.unit ? ` ${item.unit}` : ''}`;
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding:space.l, paddingBottom:space.xl*2 }}>
-      <Label top={0}>{t('shopping')}</Label>
-      {meals.map((s) => (
-        <LineItem key={s.recipe.id} name={t.title(s.recipe)}
-          sub={`${s.recipe.minutes} ${t('min')}`}
-          value={`${tl(s.cost.perPortion)} ₺`} />
+    <ScrollView
+      style={{ backgroundColor: c.ground }}
+      contentContainerStyle={{
+        padding: space.l,
+        paddingBottom: space.xl * 2,
+      }}
+    >
+      <Text
+        style={{
+          color: c.ink,
+          fontSize: 28,
+          fontWeight: '800',
+          marginBottom: 6,
+        }}
+      >
+        Liste
+      </Text>
+
+      <Text
+        style={{
+          color: c.ink3,
+          fontSize: 14,
+          marginBottom: 22,
+        }}
+      >
+        {items.length
+          ? `${items.length} malzeme · ${checkedCount} tamamlandı`
+          : 'Alışveriş listen henüz boş.'}
+      </Text>
+
+      {items.map((item) => (
+        <View
+          key={String(item.id)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderBottomWidth: 1,
+            borderBottomColor: c.line,
+            paddingVertical: 12,
+          }}
+        >
+          <Pressable
+            onPress={() =>
+              dispatch({
+                type: 'toggleShoppingItem',
+                id: item.id,
+              })
+            }
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 7,
+              borderWidth: 1.5,
+              borderColor: item.checked ? c.accent : c.line,
+              backgroundColor: item.checked ? c.accent : c.surface,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: 12,
+            }}
+          >
+            {item.checked ? (
+              <Text
+                style={{
+                  color: c.onAccent,
+                  fontWeight: '800',
+                }}
+              >
+                ✓
+              </Text>
+            ) : null}
+          </Pressable>
+
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                color: c.ink,
+                fontSize: 15,
+                fontWeight: '600',
+                textDecorationLine: item.checked ? 'line-through' : 'none',
+              }}
+            >
+              {item.name}
+            </Text>
+
+            {qtyText(item) ? (
+              <Text
+                style={{
+                  color: c.ink3,
+                  fontSize: 13,
+                  marginTop: 3,
+                }}
+              >
+                {qtyText(item)}
+              </Text>
+            ) : null}
+          </View>
+
+          <Pressable
+            onPress={() =>
+              dispatch({
+                type: 'removeShoppingItem',
+                id: item.id,
+              })
+            }
+            style={({ pressed }) => ({
+              paddingHorizontal: 10,
+              paddingVertical: 7,
+              opacity: pressed ? 0.5 : 1,
+            })}
+          >
+            <Text
+              style={{
+                color: c.ink3,
+                fontSize: 18,
+                fontWeight: '700',
+              }}
+            >
+              ×
+            </Text>
+          </Pressable>
+        </View>
       ))}
 
-      <Label>{t('toBuyList')}  ·  {list.length}</Label>
-      {list.map((x) => (
-        <LineItem key={x.id} name={t.itemName(ctx.byId[x.id])} sub={qty(x)}
-          chips={stateChip(x.state, t)} value={`${tl(x.cost)} ₺`} />
-      ))}
-
-      <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'baseline',
-                     borderTopWidth:2, borderTopColor:c.ink, paddingTop:space.m, marginTop:space.s }}>
-        <Text style={{ color:c.ink, fontSize:16, fontWeight:'700' }}>{t('total')}</Text>
-        <Text style={{ color:c.accent, fontSize:21, fontWeight:'700', fontVariant:['tabular-nums'] }}>
-          {tl(list.total)} ₺
-        </Text>
-      </View>
+      {items.length ? (
+        <Pressable
+          onPress={() => dispatch({ type: 'clearShoppingList' })}
+          style={({ pressed }) => ({
+            marginTop: 24,
+            borderWidth: 1,
+            borderColor: c.line,
+            borderRadius: radius.s,
+            paddingVertical: 11,
+            alignItems: 'center',
+            opacity: pressed ? 0.65 : 1,
+          })}
+        >
+          <Text
+            style={{
+              color: c.ink,
+              fontSize: 14,
+              fontWeight: '700',
+            }}
+          >
+            Listeyi temizle
+          </Text>
+        </Pressable>
+      ) : null}
     </ScrollView>
   );
 }

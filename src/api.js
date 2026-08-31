@@ -5,7 +5,8 @@ export async function searchRecipes(
   limit = 30,
   diet = null,
   glutenFree = false,
-  lactoseFree = false
+  lactoseFree = false,
+  lowGlycemic = false
 ) {
   const params = new URLSearchParams({
     q: query,
@@ -22,6 +23,10 @@ export async function searchRecipes(
 
   if (lactoseFree) {
     params.set("lactose_free", "true");
+  }
+
+  if (lowGlycemic) {
+    params.set("low_glycemic", "true");
   }
 
   const response = await fetch(
@@ -74,6 +79,7 @@ export async function getRecipes({
   diet = null,
   glutenFree = false,
   lactoseFree = false,
+  lowGlycemic = false,
 } = {}) {
   const params = new URLSearchParams({
     limit: String(limit),
@@ -94,6 +100,10 @@ export async function getRecipes({
 
   if (lactoseFree) {
     params.set("lactose_free", "true");
+  }
+
+  if (lowGlycemic) {
+    params.set("low_glycemic", "true");
   }
 
   const response = await fetch(`${API_URL}/recipes?${params.toString()}`);

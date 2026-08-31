@@ -184,6 +184,23 @@ export default function Ben() {
         onChange={(v) => set('lactoseFree', v)}
       />
 
+      <View style={{ height:space.s }} />
+
+      <Choice
+        options={[
+          {
+            value:false,
+            label:t.code === 'en' ? 'Glycemic' : 'Glisemik'
+          },
+          {
+            value:true,
+            label:t.code === 'en' ? 'Low glycemic' : 'Düşük Glisemik'
+          },
+        ]}
+        value={Boolean(state.lowGlycemic)}
+        onChange={(v) => set('lowGlycemic', v)}
+      />
+
       <View style={{ height:space.l }} />
       <Body dim size={12}>{t('language')}</Body>
       <View style={{ height:space.s }} />
