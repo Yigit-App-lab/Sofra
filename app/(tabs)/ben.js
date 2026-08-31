@@ -85,9 +85,6 @@ export default function Ben() {
         <View style={{ marginTop:space.l }}><Body dim size={13.5}>{t('nothingYet')}</Body></View>
       )}
 
-      <Weights title={t.code === 'en' ? 'Ingredients' : 'Malzemeler'}
-               bucket={p.ingredients} limit={6} labelOf={(k) => t.itemName(ctx.byId[k]) || k} />
-
       {cooked.length > 0 && (
         <>
           <Label>{t('history')}</Label>
