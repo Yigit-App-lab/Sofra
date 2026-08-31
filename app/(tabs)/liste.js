@@ -12,6 +12,7 @@ import { useTheme, space, radius } from '../../src/theme';
 export default function Liste() {
   const c = useTheme();
   const { state, dispatch } = useStore();
+  const english = state.langIndex === 1;
 
   const items = useMemo(
     () => Object.values(state.shoppingList || {}),
@@ -42,7 +43,7 @@ export default function Liste() {
           marginBottom: 6,
         }}
       >
-        Liste
+        {english ? 'Shopping list' : 'Liste'}
       </Text>
 
       <Text
@@ -53,8 +54,12 @@ export default function Liste() {
         }}
       >
         {items.length
-          ? `${items.length} malzeme · ${checkedCount} tamamlandı`
-          : 'Alışveriş listen henüz boş.'}
+          ? english
+            ? `${items.length} items · ${checkedCount} completed`
+            : `${items.length} malzeme · ${checkedCount} tamamlandı`
+          : english
+            ? 'Your shopping list is empty.'
+            : 'Alışveriş listen henüz boş.'}
       </Text>
 
       {items.map((item) => (
@@ -170,7 +175,7 @@ export default function Liste() {
               fontWeight: '700',
             }}
           >
-            Listeyi temizle
+            {english ? 'Clear list' : 'Listeyi temizle'}
           </Text>
         </Pressable>
       ) : null}

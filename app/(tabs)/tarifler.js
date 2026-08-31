@@ -25,6 +25,7 @@ export default function Tarifler() {
   const c = useTheme();
   const router = useRouter();
   const { state } = useStore();
+  const english = state.langIndex === 1;
 
   const [q, setQ] = useState('');
   const [recipes, setRecipes] = useState([]);
@@ -55,6 +56,7 @@ export default function Tarifler() {
       state.lactoseFree,
       state.lowGlycemic,
       state.timeBudget,
+      state.langIndex,
       selectedCategory
     ])
   );
@@ -73,7 +75,8 @@ export default function Tarifler() {
     state.glutenFree,
     state.lactoseFree,
     state.lowGlycemic,
-    state.timeBudget
+    state.timeBudget,
+    state.langIndex
   ]);
 
   async function loadCategories() {
@@ -117,7 +120,7 @@ export default function Tarifler() {
       setOffset(nextOffset + (data.recipes?.length || 0));
     } catch (e) {
       console.error(e);
-      setError('Tarifler yüklenemedi.');
+      setError(english ? 'Recipes could not be loaded.' : 'Tarifler yüklenemedi.');
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -144,7 +147,7 @@ export default function Tarifler() {
       setHasMore(false);
     } catch (e) {
       console.error(e);
-      setError('Arama yapılamadı.');
+      setError(english ? 'Search failed.' : 'Arama yapılamadı.');
     } finally {
       setLoading(false);
     }
@@ -224,9 +227,9 @@ export default function Tarifler() {
             fontSize: 13,
           }}
         >
-          {item.category || 'Tarif'}
-          {minutes ? ` · ${minutes} dk` : ''}
-          {item.servings ? ` · ${item.servings} kişilik` : ''}
+          {item.category || (english ? 'Recipe' : 'Tarif')}
+          {minutes ? ` · ${minutes} ${english ? 'min' : 'dk'}` : ''}
+          {item.servings ? ` · ${item.servings} ${english ? 'servings' : 'kişilik'}` : ''}
         </Text>
       </Pressable>
     );
@@ -242,7 +245,7 @@ export default function Tarifler() {
           marginBottom: 4,
         }}
       >
-        Tarifler
+        {english ? 'Recipes' : 'Tarifler'}
       </Text>
 
       <Text
@@ -252,7 +255,7 @@ export default function Tarifler() {
           marginBottom: space.m,
         }}
       >
-        {total.toLocaleString('tr-TR')} tarif
+        {total.toLocaleString(english ? 'en-US' : 'tr-TR')} {english ? 'recipes' : 'tarif'}
       </Text>
 
       {state.dietPreference !== 'standard' ? (
@@ -285,8 +288,8 @@ export default function Tarifler() {
             }}
           >
             {state.dietPreference === 'vegan'
-              ? '✓ Vegan filtresi aktif'
-              : '✓ Vejetaryen filtresi aktif'}
+              ? english ? '✓ Vegan filter active' : '✓ Vegan filtresi aktif'
+              : english ? '✓ Vegetarian filter active' : '✓ Vejetaryen filtresi aktif'}
           </Text>
         </View>
       ) : null}
@@ -311,7 +314,7 @@ export default function Tarifler() {
               color: '#FFFFFF',
             }}
           >
-            ✓ Glutensiz filtresi aktif
+            {english ? '✓ Gluten-free filter active' : '✓ Glutensiz filtresi aktif'}
           </Text>
         </View>
       ) : null}
@@ -336,7 +339,7 @@ export default function Tarifler() {
               color: '#FFFFFF',
             }}
           >
-            ✓ Laktozsuz filtresi aktif
+            {english ? '✓ Lactose-free filter active' : '✓ Laktozsuz filtresi aktif'}
           </Text>
         </View>
       ) : null}
@@ -361,7 +364,7 @@ export default function Tarifler() {
               color: '#FFFFFF',
             }}
           >
-            ✓ Düşük Glisemik filtresi aktif
+            {english ? '✓ Low-glycemic filter active' : '✓ Düşük Glisemik filtresi aktif'}
           </Text>
         </View>
       ) : null}
@@ -385,7 +388,7 @@ export default function Tarifler() {
             color: c.ink2,
           }}
         >
-          ✓ En fazla {state.timeBudget} dk
+          {english ? `✓ Up to ${state.timeBudget} min` : `✓ En fazla ${state.timeBudget} dk`}
         </Text>
       </View>
 
@@ -399,7 +402,7 @@ export default function Tarifler() {
         <TextInput
           value={q}
           onChangeText={setQ}
-          placeholder="Tarif ara..."
+          placeholder={english ? 'Search recipes...' : 'Tarif ara...'}
           placeholderTextColor={c.ink3}
           returnKeyType="search"
           autoCorrect={false}
@@ -433,7 +436,7 @@ export default function Tarifler() {
                 fontWeight: '600',
               }}
             >
-              Temizle
+              {english ? 'Clear' : 'Temizle'}
             </Text>
           </Pressable>
         ) : null}
@@ -447,7 +450,7 @@ export default function Tarifler() {
           marginBottom: 8,
         }}
       >
-        Kategoriler
+        {english ? 'Categories' : 'Kategoriler'}
       </Text>
 
       <ScrollView
@@ -478,7 +481,7 @@ export default function Tarifler() {
               fontWeight: '600',
             }}
           >
-            Tümü
+            {english ? 'All' : 'Tümü'}
           </Text>
         </Pressable>
 
@@ -526,7 +529,7 @@ export default function Tarifler() {
           marginBottom: 10,
         }}
       >
-        {selectedCategory || 'Tüm Tarifler'}
+        {selectedCategory || (english ? 'All recipes' : 'Tüm Tarifler')}
       </Text>
     </View>
   );
@@ -575,7 +578,7 @@ export default function Tarifler() {
           <Text style={{ color: c.ink }}>{error}</Text>
         ) : (
           <Text style={{ color: c.ink3 }}>
-            Tarif bulunamadı.
+            {english ? 'No recipes found.' : 'Tarif bulunamadı.'}
           </Text>
         )
       }

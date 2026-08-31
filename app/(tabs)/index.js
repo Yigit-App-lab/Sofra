@@ -15,6 +15,7 @@ export default function Tonight() {
   const router = useRouter();
   const { state, dispatch } = useStore();
   const t = makeT(state.langIndex);
+  const english = t.code === 'en';
   const ctx = useEngineCtx();
 
   const [catalogueRecipes, setCatalogueRecipes] = useState([]);
@@ -143,7 +144,7 @@ export default function Tonight() {
               fontSize:21,
               fontWeight:'800'
             }}>
-              Kilerinden öneriler
+              {english ? 'Suggestions from your pantry' : 'Kilerinden öneriler'}
             </Text>
 
             <Text style={{
@@ -151,15 +152,17 @@ export default function Tonight() {
               fontSize:12.5,
               marginTop:4
             }}>
-              {kilerIds.length} malzemene ve zamanına göre
+              {english
+                ? `Based on ${kilerIds.length} ingredients and your time limit`
+                : `${kilerIds.length} malzemene ve zamanına göre`}
             </Text>
           </View>
 
           {catalogueLoading ? (
-            <Body dim>Tarifler hazırlanıyor…</Body>
+            <Body dim>{english ? 'Preparing recipes…' : 'Tarifler hazırlanıyor…'}</Body>
 
           ) : catalogueRecipes.length === 0 ? (
-            <Body dim>Uygun ek tarif bulunamadı.</Body>
+            <Body dim>{english ? 'No additional suitable recipes found.' : 'Uygun ek tarif bulunamadı.'}</Body>
 
           ) : (
             <>
@@ -191,7 +194,7 @@ export default function Tonight() {
                       letterSpacing:0.7,
                       marginBottom:7
                     }}>
-                      BUGÜN İÇİN İYİ SEÇİM
+                      {english ? 'A GOOD CHOICE FOR TODAY' : 'BUGÜN İÇİN İYİ SEÇİM'}
                     </Text>
 
                     <Text style={{
@@ -208,12 +211,12 @@ export default function Tonight() {
                       fontSize:12.5,
                       marginTop:6
                     }}>
-                      {r.category || 'Tarif'}
+                      {r.category || (english ? 'Recipe' : 'Tarif')}
                       {r.total_minutes != null
-                        ? ` · ${r.total_minutes} dk`
+                        ? ` · ${r.total_minutes} ${english ? 'min' : 'dk'}`
                         : ''}
                       {r.servings
-                        ? ` · ${r.servings} porsiyon`
+                        ? ` · ${r.servings} ${english ? 'servings' : 'porsiyon'}`
                         : ''}
                     </Text>
 
@@ -226,16 +229,16 @@ export default function Tonight() {
                     >
                       <Chip tone={ready ? "accent" : undefined}>
                         {ready
-                          ? 'Hazır'
-                          : `${r.missing_count} eksik`}
+                          ? english ? 'Ready' : 'Hazır'
+                          : `${r.missing_count} ${english ? 'missing' : 'eksik'}`}
                       </Chip>
 
                       <Chip>
-                        {r.matched_count} malzeme sende
+                        {r.matched_count} {english ? 'ingredients on hand' : 'malzeme sende'}
                       </Chip>
 
                       <Chip>
-                        %{Math.round(r.match_percent || 0)} eşleşme
+                        %{Math.round(r.match_percent || 0)} {english ? 'match' : 'eşleşme'}
                       </Chip>
                     </Row>
 
@@ -246,7 +249,7 @@ export default function Tonight() {
                         fontWeight:'700',
                         marginTop:10
                       }}>
-                        ✓ Ana malzemeler tamam
+                        {english ? '✓ Main ingredients ready' : '✓ Ana malzemeler tamam'}
                       </Text>
                     )}
 
@@ -256,7 +259,7 @@ export default function Tonight() {
                         fontSize:12.5,
                         marginTop:10
                       }}>
-                        {r.core_missing_count} ana malzeme eksik
+                        {r.core_missing_count} {english ? 'main ingredients missing' : 'ana malzeme eksik'}
                       </Text>
                     )}
                   </Pressable>
@@ -270,7 +273,7 @@ export default function Tonight() {
                   fontWeight:'700',
                   marginBottom:8
                 }}>
-                  Diğer uygun tarifler
+                  {english ? 'Other suitable recipes' : 'Diğer uygun tarifler'}
                 </Text>
               )}
 
@@ -310,9 +313,9 @@ export default function Tonight() {
                           fontSize:11.5,
                           marginTop:3
                         }}>
-                          {r.category || 'Tarif'}
+                          {r.category || (english ? 'Recipe' : 'Tarif')}
                           {r.total_minutes != null
-                            ? ` · ${r.total_minutes} dk`
+                            ? ` · ${r.total_minutes} ${english ? 'min' : 'dk'}`
                             : ''}
                         </Text>
                       </View>
@@ -324,8 +327,8 @@ export default function Tonight() {
                         marginLeft:10
                       }}>
                         {ready
-                          ? 'Hazır'
-                          : `${r.missing_count} eksik`}
+                          ? english ? 'Ready' : 'Hazır'
+                          : `${r.missing_count} ${english ? 'missing' : 'eksik'}`}
                       </Text>
                     </View>
 
@@ -334,7 +337,7 @@ export default function Tonight() {
                       fontSize:11.5,
                       marginTop:8
                     }}>
-                      {r.matched_count} sende · %{Math.round(r.match_percent || 0)} eşleşme
+                      {r.matched_count} {english ? 'on hand' : 'sende'} · %{Math.round(r.match_percent || 0)} {english ? 'match' : 'eşleşme'}
                     </Text>
                   </Pressable>
                 );

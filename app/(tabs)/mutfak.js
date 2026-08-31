@@ -44,15 +44,15 @@ function Pill({ label, selected, onPress }) {
 }
 
 
-function RecipeCard({ recipe, onPress }) {
+function RecipeCard({ recipe, onPress, english }) {
   const c = useTheme();
 
-  let status = 'Birkaç eksik';
+  let status = english ? 'A few missing' : 'Birkaç eksik';
 
   if (recipe.missing_count === 0) {
-    status = 'Hazır';
+    status = english ? 'Ready' : 'Hazır';
   } else if (recipe.missing_count === 1) {
-    status = '1 eksik';
+    status = english ? '1 missing' : '1 eksik';
   }
 
   const coreReady =
@@ -90,9 +90,9 @@ function RecipeCard({ recipe, onPress }) {
           marginBottom: 9,
         }}
       >
-        {recipe.category || 'Tarif'}
+        {recipe.category || (english ? 'Recipe' : 'Tarif')}
         {recipe.total_minutes != null
-          ? `  ·  ${recipe.total_minutes} dk`
+          ? `  ·  ${recipe.total_minutes} ${english ? 'min' : 'dk'}`
           : ''}
       </Text>
 
@@ -112,7 +112,7 @@ function RecipeCard({ recipe, onPress }) {
           }}
         >
           <Text style={{ color: c.ink2, fontSize: 12 }}>
-            %{Math.round(recipe.match_percent || 0)} eşleşme
+            %{Math.round(recipe.match_percent || 0)} {english ? 'match' : 'eşleşme'}
           </Text>
         </View>
 
@@ -125,7 +125,7 @@ function RecipeCard({ recipe, onPress }) {
           }}
         >
           <Text style={{ color: c.ink2, fontSize: 12 }}>
-            ✓ {recipe.matched_count} sende
+            ✓ {recipe.matched_count} {english ? 'on hand' : 'sende'}
           </Text>
         </View>
 
@@ -152,7 +152,7 @@ function RecipeCard({ recipe, onPress }) {
             marginTop: 9,
           }}
         >
-          Ana malzemeler tamam
+          {english ? 'Main ingredients ready' : 'Ana malzemeler tamam'}
         </Text>
       ) : recipe.core_missing_count > 0 ? (
         <Text
@@ -162,7 +162,7 @@ function RecipeCard({ recipe, onPress }) {
             marginTop: 9,
           }}
         >
-          {recipe.core_missing_count} ana malzeme eksik
+          {recipe.core_missing_count} {english ? 'main ingredients missing' : 'ana malzeme eksik'}
         </Text>
       ) : null}
     </Pressable>
@@ -174,6 +174,7 @@ export default function Kiler() {
   const c = useTheme();
   const router = useRouter();
   const { state, dispatch } = useStore();
+  const english = state.langIndex === 1;
 
   const [q, setQ] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -204,7 +205,7 @@ export default function Kiler() {
     }, q.trim() ? 250 : 0);
 
     return () => clearTimeout(timer);
-  }, [q]);
+  }, [q, state.langIndex]);
 
 
   useEffect(() => {
@@ -233,7 +234,7 @@ export default function Kiler() {
         console.error(e);
 
         if (!cancelled) {
-          setRecipeError('Tarif önerileri yüklenemedi.');
+          setRecipeError(english ? 'Recipe suggestions could not be loaded.' : 'Tarif önerileri yüklenemedi.');
         }
       } finally {
         if (!cancelled) {
@@ -247,7 +248,7 @@ export default function Kiler() {
     return () => {
       cancelled = true;
     };
-  }, [kilerIds, state.timeBudget]);
+  }, [kilerIds, state.timeBudget, state.langIndex]);
 
 
   async function loadIngredients(query) {
@@ -263,7 +264,7 @@ export default function Kiler() {
       setSuggestions(data.ingredients || []);
     } catch (e) {
       console.error(e);
-      setError('Malzemeler yüklenemedi.');
+      setError(english ? 'Ingredients could not be loaded.' : 'Malzemeler yüklenemedi.');
     } finally {
       setLoading(false);
     }
@@ -295,7 +296,7 @@ export default function Kiler() {
           marginBottom: 4,
         }}
       >
-        Kiler
+        {english ? 'Pantry' : 'Kiler'}
       </Text>
 
       <Text
@@ -305,13 +306,13 @@ export default function Kiler() {
           marginBottom: space.m,
         }}
       >
-        Evde bulunan malzemeleri ekle
+        {english ? 'Add ingredients you have at home' : 'Evde bulunan malzemeleri ekle'}
       </Text>
 
       <TextInput
         value={q}
         onChangeText={setQ}
-        placeholder="Malzeme ara..."
+        placeholder={english ? 'Search ingredients...' : 'Malzeme ara...'}
         placeholderTextColor={c.ink3}
         autoCorrect={false}
         style={{
@@ -342,11 +343,11 @@ export default function Kiler() {
             fontWeight: '700',
           }}
         >
-          Kilerimde
+          {english ? 'In my pantry' : 'Kilerimde'}
         </Text>
 
         <Text style={{ color: c.ink3, fontSize: 13 }}>
-          {mine.length} malzeme
+          {mine.length} {english ? 'ingredients' : 'malzeme'}
         </Text>
       </View>
 
@@ -359,7 +360,7 @@ export default function Kiler() {
       >
         {mine.length === 0 ? (
           <Text style={{ color: c.ink3, fontSize: 13 }}>
-            Henüz malzeme eklenmedi.
+            {english ? 'No ingredients added yet.' : 'Henüz malzeme eklenmedi.'}
           </Text>
         ) : (
           mine.map(item => (
@@ -382,7 +383,9 @@ export default function Kiler() {
           marginBottom: 10,
         }}
       >
-        {q.trim() ? 'Arama Sonuçları' : 'Sık Kullanılanlar'}
+        {q.trim()
+          ? english ? 'Search results' : 'Arama Sonuçları'
+          : english ? 'Frequently used' : 'Sık Kullanılanlar'}
       </Text>
 
       {loading ? (
@@ -428,7 +431,7 @@ export default function Kiler() {
             fontWeight: '800',
           }}
         >
-          Kilerimle Ne Yapabilirim?
+          {english ? 'What can I make with my pantry?' : 'Kilerimle Ne Yapabilirim?'}
         </Text>
 
         <Text
@@ -439,7 +442,7 @@ export default function Kiler() {
             marginBottom: 14,
           }}
         >
-          Elindeki malzemelere göre en uygun tarifler
+          {english ? 'Best recipes for what you have' : 'Elindeki malzemelere göre en uygun tarifler'}
         </Text>
 
         <View
@@ -461,13 +464,15 @@ export default function Kiler() {
               fontWeight: '700',
             }}
           >
-            ✓ En fazla {state.timeBudget} dk
+            {english ? `✓ Up to ${state.timeBudget} min` : `✓ En fazla ${state.timeBudget} dk`}
           </Text>
         </View>
 
         {!kilerIds.length ? (
           <Text style={{ color: c.ink3, fontSize: 13 }}>
-            Tarif önermek için Kiler'e birkaç malzeme ekle.
+            {english
+              ? 'Add a few pantry ingredients to get recipe suggestions.'
+              : "Tarif önermek için Kiler'e birkaç malzeme ekle."}
           </Text>
         ) : recipeLoading ? (
           <ActivityIndicator
@@ -481,13 +486,14 @@ export default function Kiler() {
           </Text>
         ) : recipes.length === 0 ? (
           <Text style={{ color: c.ink3, fontSize: 13 }}>
-            Uygun tarif bulunamadı.
+            {english ? 'No suitable recipes found.' : 'Uygun tarif bulunamadı.'}
           </Text>
         ) : (
           recipes.map(recipe => (
             <RecipeCard
               key={recipe.id}
               recipe={recipe}
+              english={english}
               onPress={() => router.push(`/api-tarif/${recipe.id}`)}
             />
           ))

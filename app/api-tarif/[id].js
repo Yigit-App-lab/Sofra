@@ -13,7 +13,7 @@ import { useStore } from '../../src/store';
 import { useTheme, space, radius } from '../../src/theme';
 
 
-function IngredientRow({ item, checked, onToggle, c }) {
+function IngredientRow({ item, checked, onToggle, c, english }) {
   const hasGluten =
     item.contains_gluten === 1 ||
     item.contains_gluten === true;
@@ -124,7 +124,7 @@ function IngredientRow({ item, checked, onToggle, c }) {
                     letterSpacing: 0.4,
                   }}
                 >
-                  LAKTOZ
+                  {english ? 'LACTOSE' : 'LAKTOZ'}
                 </Text>
               </View>
             ) : null}
@@ -140,6 +140,7 @@ export default function ApiTarif() {
   const c = useTheme();
   const { id } = useLocalSearchParams();
   const { state, dispatch } = useStore();
+  const english = state.langIndex === 1;
   const kiler = state.kiler || {};
 
   const [recipe, setRecipe] = useState(null);
@@ -151,7 +152,7 @@ export default function ApiTarif() {
 
   useEffect(() => {
     loadRecipe();
-  }, [id]);
+  }, [id, state.langIndex]);
 
 
   async function loadRecipe() {
@@ -193,7 +194,7 @@ export default function ApiTarif() {
       setOwned(initialOwned);
     } catch (e) {
       console.error(e);
-      setError('Tarif yüklenemedi.');
+      setError(english ? 'Recipe could not be loaded.' : 'Tarif yüklenemedi.');
     } finally {
       setLoading(false);
     }
@@ -268,7 +269,7 @@ export default function ApiTarif() {
       dispatch({
         type: 'addShoppingItem',
         id,
-        name: ingredient.display_text || ingredient.original_text || ingredient.name || ingredient.kiler_name || 'Malzeme',
+        name: ingredient.display_text || ingredient.original_text || ingredient.name || ingredient.kiler_name || (english ? 'Ingredient' : 'Malzeme'),
         quantity: ingredient.quantity ?? null,
         unit: ingredient.unit ?? null,
       });
@@ -302,7 +303,7 @@ export default function ApiTarif() {
         }}
       >
         <Text style={{ color: c.ink }}>
-          {error || 'Tarif bulunamadı.'}
+          {error || (english ? 'Recipe not found.' : 'Tarif bulunamadı.')}
         </Text>
       </View>
     );
@@ -385,7 +386,7 @@ export default function ApiTarif() {
               >
                 {recipe.is_vegan === 1 || recipe.is_vegan === true
                   ? 'VEGAN'
-                  : 'VEJETARYEN'}
+                  : english ? 'VEGETARIAN' : 'VEJETARYEN'}
               </Text>
             </View>
           ) : null}
@@ -410,7 +411,7 @@ export default function ApiTarif() {
                   letterSpacing: 0.5,
                 }}
               >
-                DÜŞÜK GLİSEMİK
+                {english ? 'LOW GLYCEMIC' : 'DÜŞÜK GLİSEMİK'}
               </Text>
             </View>
           ) : null}
@@ -424,9 +425,9 @@ export default function ApiTarif() {
           marginTop: 8,
         }}
       >
-        {recipe.category || 'Tarif'}
-        {minutes ? ` · ${minutes} dk` : ''}
-        {recipe.servings ? ` · ${recipe.servings} kişilik` : ''}
+        {recipe.category || (english ? 'Recipe' : 'Tarif')}
+        {minutes ? ` · ${minutes} ${english ? 'min' : 'dk'}` : ''}
+        {recipe.servings ? ` · ${recipe.servings} ${english ? 'servings' : 'kişilik'}` : ''}
       </Text>
 
 
@@ -461,7 +462,7 @@ export default function ApiTarif() {
             fontWeight: '700',
           }}
         >
-          Evde olan malzemeler
+          {english ? 'Ingredients you have' : 'Evde olan malzemeler'}
         </Text>
 
         <Text
@@ -471,7 +472,7 @@ export default function ApiTarif() {
             marginTop: 6,
           }}
         >
-          {ownedCount}/{ingredients.length} sende var · %{matchPercent} eşleşme
+          {ownedCount}/{ingredients.length} {english ? 'on hand' : 'sende var'} · %{matchPercent} {english ? 'match' : 'eşleşme'}
         </Text>
 
         <Text
@@ -482,8 +483,8 @@ export default function ApiTarif() {
           }}
         >
           {missingCount === 0
-            ? 'Tüm malzemeler hazır.'
-            : `${missingCount} malzeme eksik`}
+            ? english ? 'All ingredients are ready.' : 'Tüm malzemeler hazır.'
+            : `${missingCount} ${english ? 'ingredients missing' : 'malzeme eksik'}`}
         </Text>
 
         <Pressable
@@ -507,10 +508,12 @@ export default function ApiTarif() {
             }}
           >
             {missingCount === 0
-              ? 'Eksik malzeme yok'
+              ? english ? 'No missing ingredients' : 'Eksik malzeme yok'
               : allMissingAdded
-                ? '✓ Listeye eklendi'
-                : `${missingCount} eksik malzemeyi Listeye ekle`}
+                ? english ? '✓ Added to list' : '✓ Listeye eklendi'
+                : english
+                  ? `Add ${missingCount} missing ingredients to List`
+                  : `${missingCount} eksik malzemeyi Listeye ekle`}
           </Text>
         </Pressable>
 
@@ -538,7 +541,7 @@ export default function ApiTarif() {
                 fontSize: 13,
               }}
             >
-              Hepsi Var
+              {english ? 'I have all' : 'Hepsi Var'}
             </Text>
           </Pressable>
 
@@ -561,7 +564,7 @@ export default function ApiTarif() {
                 fontSize: 13,
               }}
             >
-              Temizle
+              {english ? 'Clear' : 'Temizle'}
             </Text>
           </Pressable>
         </View>
@@ -577,7 +580,7 @@ export default function ApiTarif() {
           marginBottom: 5,
         }}
       >
-        Malzemeler
+        {english ? 'Ingredients' : 'Malzemeler'}
       </Text>
 
 
@@ -588,6 +591,7 @@ export default function ApiTarif() {
           checked={Boolean(owned[index])}
           onToggle={() => toggleIngredient(index)}
           c={c}
+          english={english}
         />
       ))}
 
@@ -601,7 +605,7 @@ export default function ApiTarif() {
           marginBottom: 14,
         }}
       >
-        Hazırlanışı
+        {english ? 'Method' : 'Hazırlanışı'}
       </Text>
 
 
@@ -653,7 +657,7 @@ export default function ApiTarif() {
         ))
       ) : (
         <Text style={{ color: c.ink3 }}>
-          Hazırlanış bilgisi bulunamadı.
+          {english ? 'No preparation instructions found.' : 'Hazırlanış bilgisi bulunamadı.'}
         </Text>
       )}
     </ScrollView>

@@ -26,8 +26,8 @@ export default function TabsLayout() {
       sceneStyle:{ backgroundColor:c.ground },
     }}>
       <Tabs.Screen name="index"  options={{ title:t('tonight'), tabBarIcon:glyph('◐') }} />
-      <Tabs.Screen name="mutfak" options={{ title:"Kiler", tabBarIcon:glyph('▤') }} />
-      <Tabs.Screen name="tarifler" options={{ title:"Tarifler", tabBarIcon:glyph('⌕') }} />
+      <Tabs.Screen name="mutfak" options={{ title:t('pantry'), tabBarIcon:glyph('▤') }} />
+      <Tabs.Screen name="tarifler" options={{ title:state.langIndex === 1 ? 'Recipes' : 'Tarifler', tabBarIcon:glyph('⌕') }} />
       <Tabs.Screen name="pazar"  options={{ title:t('market'),  tabBarIcon:glyph('₺') }} />
       <Tabs.Screen name="liste"  options={{ title:t('list'),    tabBarIcon:glyph('✓') }} />
       <Tabs.Screen name="ben"    options={{ title:t('me'),      tabBarIcon:glyph('◇') }} />
