@@ -15,6 +15,10 @@ import sqlite3
 import unicodedata
 
 
+# Manually reviewed real recipes whose titles merely mention storage advice.
+REVIEWED_KEEP_IDS = {77109, 100886}
+
+
 def normalize(value) -> str:
     text = str(value or "").casefold().replace("ı", "i")
     return "".join(
@@ -24,6 +28,8 @@ def normalize(value) -> str:
 
 
 def classify(row: sqlite3.Row) -> tuple[str, str] | None:
+    if int(row["id"]) in REVIEWED_KEEP_IDS:
+        return None
     title = normalize(row["title"])
     instructions = str(row["instructions"] or "").strip()
     ingredient_count = int(row["ingredient_count"] or 0)
