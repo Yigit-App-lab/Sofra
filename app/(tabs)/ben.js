@@ -3,15 +3,17 @@
 // it is also the best debugging tool you will have.
 import React, { useMemo } from 'react';
 import { ScrollView, View, Text, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 import Engine from '../../src/engine';
 import { REC, recById } from '../../src/data';
 import { useStore, useEngineCtx, today } from '../../src/store';
 import { makeT, tl, LANGS } from '../../src/i18n';
 import { useTheme, space } from '../../src/theme';
-import { Label, Body, Card, LineItem, Choice, Chip, Divider } from '../../src/ui';
+import { Label, Body, Button, Card, LineItem, Choice, Chip, Divider } from '../../src/ui';
 
 function Stat({ label, value }) {
   const c = useTheme();
+  const router = useRouter();
   return (
     <View>
       <View style={{ flexDirection:'row', justifyContent:'space-between',
@@ -60,7 +62,6 @@ export default function Ben() {
   const set = (key, value) => dispatch({ type:'set', key, value });
 
   const cooked = Object.keys(p.cooked);
-  const liked = Object.keys(p.liked || {});
   const profileRecipeTitle = (id) => recById[id]
     ? t.title(recById[id])
     : (p.apiRecipes?.[id]?.title || id);
@@ -99,14 +100,10 @@ export default function Ben() {
         </>
       )}
 
-      {liked.length > 0 && (
-        <>
-          <Label>{t('likedRecipes')}</Label>
-          {liked.sort((a, b) => p.liked[b] - p.liked[a]).slice(0, 20).map((id) => (
-            <LineItem key={id} name={profileRecipeTitle(id)} />
-          ))}
-        </>
-      )}
+      <View style={{ height:space.l }} />
+      <Button kind="ghost" onPress={() => router.push('/begendiklerim')}>
+        {t('likedRecipes')} · {Object.keys(p.liked || {}).length}
+      </Button>
 
       <Label>{t('settings')}</Label>
       <Body dim size={12}>{t('household')}</Body>

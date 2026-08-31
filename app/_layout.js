@@ -48,6 +48,10 @@ function Shell() {
             headerBackTitle: '',
           }}
         />
+        <Stack.Screen
+          name="begendiklerim"
+          options={{ title: state.langIndex === 1 ? 'Liked recipes' : 'Beğendiklerim' }}
+        />
       </Stack>
     </>
   );
