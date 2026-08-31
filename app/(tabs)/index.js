@@ -187,7 +187,7 @@ export default function Tonight() {
       <View style={{ marginTop:space.l }}>
         {choice.recipes.map((r, index) => {
           const ready = r.missing_count === 0;
-          const hasCost = r.cost_per_portion != null;
+          const hasCost = r.cost_per_portion != null && (r.cost_coverage || 0) >= 0.7;
           const scale = state.household / (r.servings || 4);
           return (
             <Card key={r.id} style={{ marginBottom:space.m }}>

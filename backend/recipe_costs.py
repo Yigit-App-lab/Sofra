@@ -62,7 +62,11 @@ def load_catalog() -> tuple[dict, dict]:
 def parse_quantity(value) -> float | None:
     if isinstance(value, (int, float)):
         return float(value) if value >= 0 else None
-    text = str(value or "").strip().replace(",", ".")
+    text = normalize(value)
+    word_quantities = {"yarim": 0.5, "ceyrek": 0.25, "bir": 1.0}
+    if text in word_quantities:
+        return word_quantities[text]
+    text = text.replace(",", ".")
     mixed = re.match(r"^(\d+)\s+(\d+)\s*/\s*(\d+)$", text)
     if mixed and int(mixed.group(3)):
         return int(mixed.group(1)) + int(mixed.group(2)) / int(mixed.group(3))
@@ -76,14 +80,14 @@ def parse_quantity(value) -> float | None:
 def quantity_and_unit(quantity, recipe_unit, original_text) -> tuple[float | None, str]:
     """Recover quantity/unit when the source parser damaged `1. 5 kilo`."""
     text = normalize(original_text)
-    broken_decimal = re.search(r"\b(\d+)\.\s+(\d+)\b", text)
+    broken_decimal = re.search(r"\b(\d+)[.,]\s+(\d+)\b", text)
     q = (float(f"{broken_decimal.group(1)}.{broken_decimal.group(2)}")
          if broken_decimal else parse_quantity(quantity))
     unit = normalize(recipe_unit)
     if not unit:
         unit_patterns = (
             (r"\b(kilo|kilogram|kg)\b", "kg"),
-            (r"\b(gr|gram)\b", "gram"),
+            (r"\b(g|gr|gram)\b", "gram"),
             (r"\b(adet|tane)\b", "adet"),
             (r"\bdis\b", "diş"),
             (r"\byemek kasigi\b", "yemek kaşığı"),
@@ -91,6 +95,8 @@ def quantity_and_unit(quantity, recipe_unit, original_text) -> tuple[float | Non
             (r"\bcay kasigi\b", "çay kaşığı"),
             (r"\bsu bardagi\b", "su bardağı"),
             (r"\bcay bardagi\b", "çay bardağı"),
+            (r"\bpaket\b", "paket"),
+            (r"\bdilim\b", "dilim"),
             (r"\bbutun tavuk\b", "adet"),
         )
         for pattern, inferred in unit_patterns:
@@ -120,8 +126,21 @@ def consumed_units(quantity, recipe_unit, item) -> float | None:
     priced_unit = item.get("unit")
     if priced_unit in ("adet", "demet"):
         accepted = ("adet", "tane") if priced_unit == "adet" else ("demet",)
-        return q if unit in accepted or not unit else None
-    if unit in ("kg", "kilogram"): return q
+        if unit in accepted or not unit:
+            return q
+        default_grams = {
+            "brokoli": 500, "domates": 180, "patlican": 250,
+            "kabak": 250, "havuc": 100, "patates": 180,
+            "sogan": 120, "limon": 120,
+        }.get(item.get("id"))
+        if default_grams and unit in ("g", "gr", "gram"):
+            return q / default_grams
+        if default_grams and unit in ("kg", "kilogram"):
+            return q * 1000 / default_grams
+        return None
+    # Imported household recipes occasionally label gram amounts as kilograms
+    # (for example, "300 kg kıyma"). No normal recipe needs 20+ kg of one item.
+    if unit in ("kg", "kilogram"): return q / 1000 if q >= 20 else q
     if unit in ("g", "gr", "gram"): return q / 1000
     if unit in ("l", "lt", "litre", "liter"): return q
     if unit in ("ml", "mililitre"): return q / 1000
@@ -140,6 +159,18 @@ def consumed_units(quantity, recipe_unit, item) -> float | None:
         }.get(item.get("id"))
         grams = item.get("gramsPerUnit") or default_grams
         return q * float(grams) / 1000 if grams else None
+    if unit in ("paket", "paketi"):
+        package_grams = {
+            "tavuk_gogus": 500, "tavuk_but": 500, "sucuk": 200,
+            "ton_baligi": 160,
+        }.get(item.get("id"))
+        return q * package_grams / 1000 if package_grams else None
+    if unit == "dilim":
+        slice_grams = {"sucuk": 10}.get(item.get("id"))
+        return q * slice_grams / 1000 if slice_grams else None
+    if not unit:
+        piece_grams = {"tavuk_gogus": 250, "tavuk_but": 250}.get(item.get("id"))
+        return q * piece_grams / 1000 if piece_grams else None
     if unit in ("dis", "dis sarimsak") and item.get("id") == "sarimsak":
         return q * 0.004
     return None
@@ -179,12 +210,16 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
             quantity, recipe_unit = quantity_and_unit(
                 row["quantity"], row["unit"], row["original_text"]
             )
-            if quantity is None:
-                continue
-            eligible += 1
             item = find_catalog_item(raw_name, row["original_text"], by_name)
             if not item:
                 continue
+            # A missing protein amount must reduce confidence instead of letting
+            # bread/sauce make a meat recipe look fully priced and very cheap.
+            if quantity is None:
+                if item.get("kind") == "protein":
+                    eligible += 1
+                continue
+            eligible += 1
             units = consumed_units(quantity, recipe_unit, item)
             if units is None:
                 continue

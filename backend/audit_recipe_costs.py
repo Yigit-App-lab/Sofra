@@ -18,7 +18,8 @@ except ImportError:
     from recipe_costs import safely_attach_recipe_costs
 
 
-BROKEN_DECIMAL = re.compile(r"\b\d+\.\s+\d+\b")
+BROKEN_DECIMAL = re.compile(r"\b\d+[.,]\s+\d+\b")
+IMPLAUSIBLE_KG = re.compile(r"\b(?:[2-9]\d|\d{3,})\s*(?:kg|kilo(?:gram)?)\b", re.IGNORECASE)
 UNIT_IN_TEXT = re.compile(
     r"\b(kg|kilo|kilogram|gr|gram|adet|tane|litre|lt|ml|"
     r"yemek kaşığı|tatlı kaşığı|çay kaşığı|su bardağı|çay bardağı)\b",
@@ -56,6 +57,8 @@ def audit(db, city: str, recipe_limit: int) -> list[dict]:
         flags = []
         if BROKEN_DECIMAL.search(text):
             flags.append("broken_decimal")
+        if IMPLAUSIBLE_KG.search(text):
+            flags.append("implausible_kilograms")
         if row["unit"] is None and row["quantity"] is not None and UNIT_IN_TEXT.search(text):
             flags.append("unit_missing_but_present_in_text")
         for flag in flags:
