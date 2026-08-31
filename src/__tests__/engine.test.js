@@ -62,6 +62,14 @@ t('every month has produce at its peak in every region', () => {
 });
 
 console.log('\nthe price model');
+t('a live market observation overrides the seasonal estimate', () => {
+  const seasonal = E.unitPrice(byId.domates, 'marmara', 1, reg.regions);
+  const live = E.unitPrice(byId.domates, 'marmara', 1, reg.regions, {
+    domates: { average: 42.5, unit: 'kg' }
+  });
+  eq(live, 42.5);
+  ok(live !== seasonal);
+});
 t('the tomato winter premium matches the government series', () => {
   // TEPGE 2024 producer prices: 11.91 TL/kg July vs 21.28 February = ratio 1.787
   const jul = E.unitPrice(byId.domates, 'marmara', 7, reg.regions);

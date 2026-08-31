@@ -12,7 +12,7 @@ import { Label, Body, LineItem, stateChip, Chip } from '../../src/ui';
 
 export default function Pazar() {
 
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
   const t = makeT(state.langIndex);
   const ctx = useEngineCtx();
   const [live, setLive] = useState(null);
@@ -20,15 +20,20 @@ export default function Pazar() {
 
   useEffect(() => {
     let active = true;
-    const produce = list
-      .filter((x) => ['sebze', 'meyve', 'yesillik'].includes(x.item.kind))
+    const produce = ING
+      .filter((item) => ['sebze', 'meyve', 'yesillik'].includes(item.kind))
       .slice(0, 18)
-      .map((x) => ({ id:x.item.id, name:x.item.names.tr, unit:x.item.unit }));
+      .map((item) => ({ id:item.id, name:item.names.tr, unit:item.unit }));
     getMarketPrices(state.city, produce)
-      .then((result) => { if (active) setLive(result); })
+      .then((result) => {
+        if (active) {
+          setLive(result);
+          dispatch({ type:'setMarketPrices', value:result });
+        }
+      })
       .catch(() => { if (active) setLive(null); });
     return () => { active = false; };
-  }, [state.city, list]);
+  }, [state.city, dispatch]);
 
   const cheap = list.filter((x) => x.factor < 1);
   const dear = list.filter((x) => x.factor > 1.2);

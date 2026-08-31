@@ -38,6 +38,7 @@ const initial = {
   // Persistent shopping list.
   // Keys are ingredient IDs stored as strings.
   shoppingList: {},
+  marketPriceSnapshot: null,
 
   profile: Engine.emptyProfile(),
 };
@@ -112,6 +113,21 @@ function reducer(s, a) {
     case 'clearShoppingList':
       return { ...s, shoppingList: {} };
 
+    case 'setMarketPrices': {
+      const previous = s.marketPriceSnapshot;
+      if (!previous || previous.city !== a.value?.city) {
+        return { ...s, marketPriceSnapshot: a.value };
+      }
+      const items = Object.fromEntries(
+        (previous.items || []).map((item) => [item.id, item])
+      );
+      (a.value.items || []).forEach((item) => { items[item.id] = item; });
+      return {
+        ...s,
+        marketPriceSnapshot: { ...previous, ...a.value, items:Object.values(items) },
+      };
+    }
+
     case 'feedback': {
       // Engine.learn mutates in place, so clone first — React needs a new object.
       const profile = JSON.parse(JSON.stringify(s.profile));
@@ -159,6 +175,11 @@ export function useStore() {
 /** The context object the engine needs. Memoised — it is rebuilt on every render. */
 export function useEngineCtx() {
   const { state } = useStore();
+  const priceOverrides = useMemo(() => {
+    const snapshot = state.marketPriceSnapshot;
+    if (!snapshot || snapshot.city !== state.city) return {};
+    return Object.fromEntries((snapshot.items || []).map((item) => [item.id, item]));
+  }, [state.marketPriceSnapshot, state.city]);
   return useMemo(() => ({
     byId,
     regions: REGIONS,
@@ -171,6 +192,9 @@ export function useEngineCtx() {
     meatless: state.meatless,
     skill: state.skill,
     day: today(),
+    priceOverrides,
+    priceSnapshot: state.marketPriceSnapshot,
   }), [state.city, state.pantry, state.profile, state.timeBudget,
-       state.maxPerPortion, state.meatless, state.skill]);
+       state.maxPerPortion, state.meatless, state.skill, state.marketPriceSnapshot,
+       priceOverrides]);
 }

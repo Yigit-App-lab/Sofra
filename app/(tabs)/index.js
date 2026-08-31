@@ -2,12 +2,12 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Engine from '../../src/engine';
-import { REC, byId } from '../../src/data';
+import { ING, REC, byId } from '../../src/data';
 import { useStore, useEngineCtx } from '../../src/store';
 import { makeT, tl } from '../../src/i18n';
 import { useTheme, space, radius } from '../../src/theme';
 import { Body, Button, Card, Chip, Price, Row, Title, stateChip } from '../../src/ui';
-import { getSeasonalRecipes, getTonightRecipes } from '../../src/api';
+import { getMarketPrices, getSeasonalRecipes, getTonightRecipes } from '../../src/api';
 
 function ChoiceButton({ number, title, subtitle, onPress, disabled }) {
   const c = useTheme();
@@ -32,7 +32,7 @@ function ChoiceButton({ number, title, subtitle, onPress, disabled }) {
 export default function Tonight() {
   const c = useTheme();
   const router = useRouter();
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
   const t = makeT(state.langIndex);
   const english = t.code === 'en';
   const ctx = useEngineCtx();
@@ -45,8 +45,27 @@ export default function Tonight() {
     [state.kiler]
   );
 
-  function recommendRandom() {
-    if (!ranked.length) {
+  async function recommendRandom() {
+    setLoading(true);
+    setError(null);
+    let currentRanked = ranked;
+    try {
+      const produce = ING
+        .filter((item) => ['sebze', 'meyve', 'yesillik'].includes(item.kind))
+        .map((item) => ({ id:item.id, name:item.names.tr, unit:item.unit }));
+      const snapshot = await getMarketPrices(state.city, produce);
+      dispatch({ type:'setMarketPrices', value:snapshot });
+      const priceOverrides = Object.fromEntries(
+        (snapshot.items || []).map((item) => [item.id, item])
+      );
+      currentRanked = Engine.recommend(REC, { ...ctx, priceOverrides });
+    } catch (e) {
+      // Live data improves the ranking but must never block dinner offline.
+      console.warn('Market prices unavailable; using seasonal estimates:', e);
+    } finally {
+      setLoading(false);
+    }
+    if (!currentRanked.length) {
       setChoice(null);
       setError(t('noneMatch'));
       return;
@@ -54,8 +73,11 @@ export default function Tonight() {
     const previousIds = new Set(
       choice?.kind === 'local' ? choice.results.map(item => item.recipe.id) : []
     );
-    const candidates = ranked.filter(item => !previousIds.has(item.recipe.id));
-    const pool = candidates.length ? candidates : ranked;
+    // Keep the surprise, but only inside the best current cost/fit band so
+    // today's market prices materially affect which dinners can be selected.
+    const leading = currentRanked.slice(0, Math.min(12, currentRanked.length));
+    const candidates = leading.filter(item => !previousIds.has(item.recipe.id));
+    const pool = candidates.length ? candidates : leading;
     const results = [...pool]
       .sort(() => Math.random() - 0.5)
       .slice(0, 3);

@@ -43,7 +43,9 @@ export default function Tarif() {
       {r.ingredients.map((ri) => {
         const it = ctx.byId[ri.id];
         const st = Engine.stateOf(it, ctx.region, ctx.month, ctx.regions);
-        const lineCost = Engine.unitsConsumed(ri, it) * Engine.unitPrice(it, ctx.region, ctx.month, ctx.regions);
+        const lineCost = Engine.unitsConsumed(ri, it) * Engine.unitPrice(
+          it, ctx.region, ctx.month, ctx.regions, ctx.priceOverrides
+        );
         return (
           <LineItem key={ri.id}
             name={t.itemName(it)}

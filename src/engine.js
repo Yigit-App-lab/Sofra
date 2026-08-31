@@ -92,8 +92,18 @@
    * annual average first — otherwise a tomato recorded at its August low would be
    * discounted twice when the app is asked about August.
    */
-  function unitPrice(item, region, month, regions) {
+  function livePriceFor(item, priceOverrides) {
+    var observed = priceOverrides && item && priceOverrides[item.id];
+    if (typeof observed === 'number') return observed > 0 ? observed : null;
+    if (!observed || observed.unit !== item.unit) return null;
+    var value = Number(observed.average);
+    return isFinite(value) && value > 0 ? value : null;
+  }
+
+  function unitPrice(item, region, month, regions, priceOverrides) {
     if (!item) return 0;
+    var live = livePriceFor(item, priceOverrides);
+    if (live != null) return live;
     var observedFactor = factorFor(item, region, item.priceMonth || month, regions) || 1;
     var annualAverage = item.price / observedFactor;
     return annualAverage * factorFor(item, region, month, regions);
@@ -155,13 +165,14 @@
       var item = ctx.byId[ri.id];
       if (!item) continue;
       var units = unitsConsumed(ri, item);
-      var price = unitPrice(item, ctx.region, ctx.month, ctx.regions);
+      var livePrice = livePriceFor(item, ctx.priceOverrides);
+      var price = unitPrice(item, ctx.region, ctx.month, ctx.regions, ctx.priceOverrides);
       var cost = units * price;
       total += cost;
       lines.push({
         id: ri.id, cost: cost, units: units, unitPrice: price,
         state: stateOf(item, ctx.region, ctx.month, ctx.regions),
-        source: item.source, kind: item.kind
+        source: livePrice != null ? 'marketfiyati.org.tr' : item.source, kind: item.kind
       });
     }
     lines.sort(function (a, b) { return b.cost - a.cost; });
@@ -496,7 +507,7 @@
       var st = stateOf(it, ctx.region, ctx.month, ctx.regions);
       out.push({
         item: it, state: st,
-        price: unitPrice(it, ctx.region, ctx.month, ctx.regions),
+        price: unitPrice(it, ctx.region, ctx.month, ctx.regions, ctx.priceOverrides),
         factor: factorFor(it, ctx.region, ctx.month, ctx.regions)
       });
     }
@@ -524,7 +535,7 @@
     });
     var list = Object.keys(map).map(function (k) {
       var e = map[k], item = ctx.byId[k];
-      e.unitPrice = unitPrice(item, ctx.region, ctx.month, ctx.regions);
+      e.unitPrice = unitPrice(item, ctx.region, ctx.month, ctx.regions, ctx.priceOverrides);
       e.cost = e.units * e.unitPrice;
       e.state = stateOf(item, ctx.region, ctx.month, ctx.regions);
       return e;
@@ -549,7 +560,7 @@
 
   var api = {
     STATE: STATE, FACTOR: FACTOR, WEIGHTS: WEIGHTS, MEASURE: MEASURE, BAND: BAND,
-    stateOf: stateOf, factorFor: factorFor, unitPrice: unitPrice, dailyJitter: dailyJitter,
+    stateOf: stateOf, factorFor: factorFor, livePriceFor: livePriceFor, unitPrice: unitPrice, dailyJitter: dailyJitter,
     unitsConsumed: unitsConsumed, costOf: costOf, costByMonth: costByMonth,
     emptyProfile: emptyProfile, learn: learn, tasteScore: tasteScore,
     signatureIngredients: signatureIngredients, pantryFit: pantryFit,
