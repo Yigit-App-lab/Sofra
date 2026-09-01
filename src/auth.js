@@ -37,6 +37,8 @@ export function friendlyAuthError(error, english = false) {
     'auth/weak-password': ['Şifre en az 8 karakter olmalı.', 'Password must be at least 8 characters.'],
     'auth/network-request-failed': ['İnternet bağlantınızı kontrol edin.', 'Check your internet connection.'],
     'auth/operation-not-allowed': ['Bu giriş yöntemi Firebase’de etkin değil.', 'This sign-in method is not enabled in Firebase.'],
+    'auth/configuration-not-found': ['Firebase Authentication henüz etkinleştirilmemiş.', 'Firebase Authentication has not been enabled yet.'],
+    'auth/too-many-requests': ['Çok fazla deneme yapıldı. Biraz bekleyip tekrar deneyin.', 'Too many attempts. Wait a moment and try again.'],
   };
   const pair = messages[code];
   return pair ? pair[english ? 1 : 0] : (english ? 'Sign-in failed. Please try again.' : 'Giriş yapılamadı. Lütfen tekrar deneyin.');

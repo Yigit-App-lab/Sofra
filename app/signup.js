@@ -17,11 +17,15 @@ export default function SignupScreen() {
   const english = state.langIndex === 1;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const valid = EMAIL.test(email.trim()) && password.length >= 8;
+  const passwordsMatch = password === confirmPassword;
+  const valid = EMAIL.test(email.trim()) && password.length >= 8 && passwordsMatch;
 
   async function signup() {
+    setTouched(true);
     if (!valid) return;
     try {
       setBusy(true); setError('');
@@ -44,8 +48,23 @@ export default function SignupScreen() {
           <TextInput value={email} onChangeText={setEmail} style={inputStyle} autoCapitalize="none"
             keyboardType="email-address" textContentType="emailAddress" accessibilityLabel={english ? 'Email address' : 'E-posta adresi'} />
           <Text style={{ color:c.ink2, fontWeight:'600', marginTop:space.m }}>{english ? 'Password' : 'Şifre'}</Text>
-          <TextInput value={password} onChangeText={setPassword} style={inputStyle} secureTextEntry
+          <TextInput value={password} onChangeText={setPassword} onBlur={() => setTouched(true)} style={inputStyle} secureTextEntry
             textContentType="newPassword" accessibilityLabel={english ? 'Password, at least 8 characters' : 'Şifre, en az 8 karakter'} />
+          <Text style={{ color:c.ink2, fontWeight:'600', marginTop:space.m }}>
+            {english ? 'Confirm password' : 'Şifreyi tekrar yaz'}
+          </Text>
+          <TextInput value={confirmPassword} onChangeText={setConfirmPassword} onBlur={() => setTouched(true)} style={inputStyle} secureTextEntry
+            textContentType="newPassword" accessibilityLabel={english ? 'Confirm password' : 'Şifreyi tekrar yaz'} />
+          {touched && password.length < 8 ? (
+            <Text style={{ color:c.pricey, fontSize:13, marginTop:space.s }}>
+              {english ? 'Password must be at least 8 characters.' : 'Şifre en az 8 karakter olmalı.'}
+            </Text>
+          ) : null}
+          {touched && password.length >= 8 && !passwordsMatch ? (
+            <Text style={{ color:c.pricey, fontSize:13, marginTop:space.s }}>
+              {english ? 'Passwords do not match.' : 'Şifreler aynı değil.'}
+            </Text>
+          ) : null}
           {error ? <Text style={{ color:c.pricey, fontSize:13, marginTop:space.m }}>{error}</Text> : null}
           <Button style={{ marginTop:space.l }} disabled={!valid || busy} loading={busy}
             accessibilityLabel={english ? 'Create account' : 'Hesap oluştur'} onPress={signup}>
