@@ -1,7 +1,7 @@
 // The shared components. Keeping them here is what lets each screen stay short
 // enough to read in one sitting.
 import React from 'react';
-import { Text, View, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { ActivityIndicator, Text, View, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useTheme, radius, space } from './theme';
 
 export function Title({ children, size = 21 }) {
@@ -56,16 +56,20 @@ export function Chip({ children, tone = 'plain' }) {
   );
 }
 
-export function Button({ children, onPress, kind = 'primary', style, disabled = false }) {
+export function Button({ children, onPress, kind = 'primary', style, disabled = false,
+  loading = false, accessibilityLabel }) {
   const c = useTheme();
   const p = kind === 'primary';
   return (
     <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled }}
       style={({ pressed }) => [{ backgroundColor: p ? c.accent : c.surface2,
         borderRadius:radius.m, paddingVertical:13, paddingHorizontal:16,
         alignItems:'center', opacity: disabled ? 0.55 : pressed ? 0.8 : 1 }, style]}>
-      <Text style={{ color: p ? c.onAccent : c.ink2, fontSize:15, fontWeight:'700' }}>{children}</Text>
+      {loading
+        ? <ActivityIndicator color={p ? c.onAccent : c.ink2} />
+        : <Text style={{ color: p ? c.onAccent : c.ink2, fontSize:15, fontWeight:'700' }}>{children}</Text>}
     </Pressable>
   );
 }

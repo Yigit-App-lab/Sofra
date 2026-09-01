@@ -1,15 +1,26 @@
 // Root layout. Everything the whole app needs is wired up exactly once, here.
 import React, { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { StoreProvider, useStore } from '../src/store';
+import { AuthProvider, useAuth } from '../src/auth';
 import { useTheme } from '../src/theme';
 import { configureDailyReminder } from '../src/notifications';
 
 function Shell() {
   const c = useTheme();
   const { state } = useStore();
+  const { user, ready:authReady } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+  const onAuthScreen = segments[0] === 'login' || segments[0] === 'signup';
+
+  useEffect(() => {
+    if (!state.ready || !authReady) return;
+    if (!user && !onAuthScreen) router.replace('/login');
+    if (user && onAuthScreen) router.replace('/(tabs)');
+  }, [state.ready, authReady, user, onAuthScreen, router]);
 
   useEffect(() => {
     if (!state.ready) return;
@@ -22,7 +33,9 @@ function Shell() {
     });
   }, [state.ready, state.dailyReminder, state.shoppingList, state.langIndex]);
 
-  if (!state.ready) return <View style={{ flex:1, backgroundColor:c.ground }} />;
+  if (!state.ready || !authReady || (!user && !onAuthScreen)) {
+    return <View style={{ flex:1, backgroundColor:c.ground }} />;
+  }
   return (
     <>
       <StatusBar style="auto" />
@@ -33,6 +46,8 @@ function Shell() {
         headerTitleStyle:{ fontWeight:'700' },
         contentStyle:{ backgroundColor:c.ground },
       }}>
+        <Stack.Screen name="login" options={{ headerShown:false }} />
+        <Stack.Screen name="signup" options={{ headerShown:false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown:false }} />
         <Stack.Screen
           name="api-tarif/[id]"
@@ -58,5 +73,5 @@ function Shell() {
 }
 
 export default function RootLayout() {
-  return <StoreProvider><Shell /></StoreProvider>;
+  return <AuthProvider><StoreProvider><Shell /></StoreProvider></AuthProvider>;
 }
