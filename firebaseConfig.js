@@ -21,6 +21,13 @@ export const firebaseConfig = {
 export const GOOGLE_WEB_CLIENT_ID =
   '1093576749212-iigsuh62qcbfivsjoror6v75rbmpjgo9.apps.googleusercontent.com';
 
+// Native OAuth clients registered for Sofra. Android is matched by package name
+// and signing-certificate SHA-1; iOS must also be supplied to Google Sign-In.
+export const GOOGLE_ANDROID_CLIENT_ID =
+  '1093576749212-1lvognimlleeg66d1cepqmqh0gd26874.apps.googleusercontent.com';
+export const GOOGLE_IOS_CLIENT_ID =
+  '1093576749212-kd7pauhk24giumbl2jc83s0qgdkioa85.apps.googleusercontent.com';
+
 export const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 let firebaseAuth;

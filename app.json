@@ -38,10 +38,22 @@
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "CFBundleLocalizations": [
+          "tr",
+          "en"
+        ]
       }
     },
     "android": {
       "package": "com.yberktas.sofra"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "26f296d7-c19d-4d0a-8300-56f1069f07a9"
+      }
     }
   }
 }

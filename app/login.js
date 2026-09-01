@@ -12,7 +12,7 @@ import {
   GoogleAuthProvider, OAuthProvider, sendPasswordResetEmail,
   signInWithCredential, signInWithEmailAndPassword,
 } from 'firebase/auth';
-import { auth, GOOGLE_WEB_CLIENT_ID } from '../firebaseConfig';
+import { auth, GOOGLE_IOS_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from '../firebaseConfig';
 import { friendlyAuthError } from '../src/auth';
 import { useStore } from '../src/store';
 import { useTheme, radius, space } from '../src/theme';
@@ -102,7 +102,10 @@ export default function LoginScreen() {
   function googleLogin() {
     run(async () => {
       const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
-      GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
+      GoogleSignin.configure({
+        webClientId: GOOGLE_WEB_CLIENT_ID,
+        iosClientId: GOOGLE_IOS_CLIENT_ID,
+      });
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog:true });
       const response = await GoogleSignin.signIn();
       const idToken = response?.data?.idToken || response?.idToken;
