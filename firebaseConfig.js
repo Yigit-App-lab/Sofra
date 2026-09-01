@@ -6,14 +6,15 @@ import {
   initializeAuth,
 } from 'firebase/auth';
 
-// Replace these values with the Web app configuration from Firebase Console.
+// Firebase Web app configuration for the Sofra project.
 export const firebaseConfig = {
-  apiKey: 'REPLACE_WITH_FIREBASE_API_KEY',
-  authDomain: 'REPLACE_WITH_PROJECT_ID.firebaseapp.com',
-  projectId: 'REPLACE_WITH_PROJECT_ID',
-  storageBucket: 'REPLACE_WITH_PROJECT_ID.firebasestorage.app',
-  messagingSenderId: 'REPLACE_WITH_MESSAGING_SENDER_ID',
-  appId: 'REPLACE_WITH_FIREBASE_APP_ID',
+  apiKey: 'AIzaSyBxILIOMXjMbGDz7z-7syVfaxFmt4HZ8D0',
+  authDomain: 'sofra-a8a90.firebaseapp.com',
+  projectId: 'sofra-a8a90',
+  storageBucket: 'sofra-a8a90.firebasestorage.app',
+  messagingSenderId: '167919551577',
+  appId: '1:167919551577:web:e882906622fddbb628dd48',
+  measurementId: 'G-XF9Q1P13M3',
 };
 
 // Firebase uses the Web OAuth client ID when exchanging a Google ID token.
