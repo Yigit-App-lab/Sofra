@@ -64,6 +64,7 @@ export default function Ben() {
   const set = (key, value) => dispatch({ type:'set', key, value });
 
   const cooked = Object.keys(p.cooked);
+  const likedCount = Object.keys(p.liked || {}).length;
   const profileRecipeTitle = (id) => recById[id]
     ? t.title(recById[id])
     : cleanRecipeTitle(p.apiRecipes?.[id]?.title || id);
@@ -92,14 +93,14 @@ export default function Ben() {
       </Card>
       <Card>
         <Stat label={t('cookedN')} value={cooked.length} />
-        <Stat label={t('signalsN')} value={p.events} />
+        <Stat label={t('signalsN')} value={likedCount} />
         <Stat label={t('pantryN')}
               value={Object.keys(state.kiler || {}).length} />
         <Stat label={t('favCat')} value={fav} />
         <Stat label={t('avgCost')} value={`${tl(avg)} ₺`} />
       </Card>
 
-      {p.events === 0 && (
+      {likedCount === 0 && (
         <View style={{ marginTop:space.l }}><Body dim size={13.5}>{t('nothingYet')}</Body></View>
       )}
 
@@ -115,7 +116,7 @@ export default function Ben() {
 
       <View style={{ height:space.l }} />
       <Button kind="ghost" onPress={() => router.push('/begendiklerim')}>
-        {t('likedRecipes')} · {Object.keys(p.liked || {}).length}
+        {t('likedRecipes')} · {likedCount}
       </Button>
 
       <Label>{t('settings')}</Label>
