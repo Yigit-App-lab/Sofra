@@ -1,9 +1,11 @@
 // "Ben" — what the app has learned, plus every setting. Showing people the model
 // is what makes personalisation feel like a service rather than surveillance, and
 // it is also the best debugging tool you will have.
-import React, { useMemo } from 'react';
-import { ScrollView, View, Text, Pressable } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Alert, ScrollView, View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../firebaseConfig';
 import Engine from '../../src/engine';
 import { REC, recById } from '../../src/data';
 import { useStore, useEngineCtx, today } from '../../src/store';
@@ -58,6 +60,7 @@ export default function Ben() {
   const router = useRouter();
   const { state, dispatch } = useStore();
   const { user } = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
   const t = makeT(state.langIndex);
   const ctx = useEngineCtx();
   const p = state.profile;
@@ -77,6 +80,34 @@ export default function Ben() {
     const all = Engine.recommend(REC, ctx);
     return all.length ? all.reduce((s, x) => s + x.cost.perPortion, 0) / all.length : 0;
   }, [ctx]);
+
+  function confirmSignOut() {
+    Alert.alert(
+      t.code === 'en' ? 'Log out?' : 'Çıkış yapılsın mı?',
+      t.code === 'en'
+        ? 'Your synced profile will be available when you log in again.'
+        : 'Eşitlenen profilin tekrar giriş yaptığında hazır olacak.',
+      [
+        { text:t.code === 'en' ? 'Cancel' : 'Vazgeç', style:'cancel' },
+        {
+          text:t.code === 'en' ? 'Log out' : 'Çıkış Yap',
+          style:'destructive',
+          onPress:async () => {
+            try {
+              setSigningOut(true);
+              await signOut(auth);
+            } catch (error) {
+              setSigningOut(false);
+              Alert.alert(
+                t.code === 'en' ? 'Could not log out' : 'Çıkış yapılamadı',
+                t.code === 'en' ? 'Please try again.' : 'Lütfen tekrar deneyin.'
+              );
+            }
+          },
+        },
+      ]
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={{ padding:space.l, paddingBottom:space.xl*2 }}>
@@ -239,6 +270,13 @@ export default function Ben() {
           {t('resetProfile')}
         </Text>
       </Pressable>
+
+      <View style={{ height:space.xl }} />
+      <Button kind="ghost" disabled={signingOut} loading={signingOut}
+        accessibilityLabel={t.code === 'en' ? 'Log out' : 'Çıkış yap'}
+        onPress={confirmSignOut}>
+        {t.code === 'en' ? 'Log Out' : 'Çıkış Yap'}
+      </Button>
     </ScrollView>
   );
 }

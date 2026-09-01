@@ -264,10 +264,12 @@ export function StoreProvider({ children }) {
     if (!state.ready || !uid || state.ownerUid !== uid) return;
     const data = userDataFromState(state);
     const clientUpdatedAt = Date.now();
+    // Always save locally immediately. Cloud writes are debounced, but signing
+    // out right after a change must never discard that change on this device.
+    AsyncStorage.setItem(userKey(uid), JSON.stringify({ data, clientUpdatedAt })).catch(() => {});
     const timer = setTimeout(async () => {
       dispatch({ type:'syncing' });
       try {
-        await AsyncStorage.setItem(userKey(uid), JSON.stringify({ data, clientUpdatedAt }));
         await writeCloudUserState(uid, data, clientUpdatedAt);
         dispatch({ type:'synced' });
       } catch (error) {
