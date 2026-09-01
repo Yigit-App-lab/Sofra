@@ -2,7 +2,7 @@
 // is what makes personalisation feel like a service rather than surveillance, and
 // it is also the best debugging tool you will have.
 import React, { useMemo, useState } from 'react';
-import { Alert, ScrollView, View, Text, Pressable } from 'react-native';
+import { ScrollView, View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
@@ -61,6 +61,8 @@ export default function Ben() {
   const { state, dispatch } = useStore();
   const { user } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [signOutError, setSignOutError] = useState('');
   const t = makeT(state.langIndex);
   const ctx = useEngineCtx();
   const p = state.profile;
@@ -81,32 +83,15 @@ export default function Ben() {
     return all.length ? all.reduce((s, x) => s + x.cost.perPortion, 0) / all.length : 0;
   }, [ctx]);
 
-  function confirmSignOut() {
-    Alert.alert(
-      t.code === 'en' ? 'Log out?' : 'Çıkış yapılsın mı?',
-      t.code === 'en'
-        ? 'Your synced profile will be available when you log in again.'
-        : 'Eşitlenen profilin tekrar giriş yaptığında hazır olacak.',
-      [
-        { text:t.code === 'en' ? 'Cancel' : 'Vazgeç', style:'cancel' },
-        {
-          text:t.code === 'en' ? 'Log out' : 'Çıkış Yap',
-          style:'destructive',
-          onPress:async () => {
-            try {
-              setSigningOut(true);
-              await signOut(auth);
-            } catch (error) {
-              setSigningOut(false);
-              Alert.alert(
-                t.code === 'en' ? 'Could not log out' : 'Çıkış yapılamadı',
-                t.code === 'en' ? 'Please try again.' : 'Lütfen tekrar deneyin.'
-              );
-            }
-          },
-        },
-      ]
-    );
+  async function performSignOut() {
+    try {
+      setSigningOut(true);
+      setSignOutError('');
+      await signOut(auth);
+    } catch (error) {
+      setSigningOut(false);
+      setSignOutError(t.code === 'en' ? 'Could not log out. Please try again.' : 'Çıkış yapılamadı. Lütfen tekrar deneyin.');
+    }
   }
 
   return (
@@ -274,9 +259,30 @@ export default function Ben() {
       <View style={{ height:space.xl }} />
       <Button kind="ghost" disabled={signingOut} loading={signingOut}
         accessibilityLabel={t.code === 'en' ? 'Log out' : 'Çıkış yap'}
-        onPress={confirmSignOut}>
+        onPress={() => { setSignOutError(''); setShowSignOutConfirm(true); }}>
         {t.code === 'en' ? 'Log Out' : 'Çıkış Yap'}
       </Button>
+      {showSignOutConfirm ? (
+        <Card style={{ marginTop:space.m }}>
+          <Body>{t.code === 'en' ? 'Log out?' : 'Çıkış yapılsın mı?'}</Body>
+          <Body dim size={13} style={{ marginTop:space.xs }}>
+            {t.code === 'en'
+              ? 'Your synced profile will be available when you log in again.'
+              : 'Eşitlenen profilin tekrar giriş yaptığında hazır olacak.'}
+          </Body>
+          {signOutError ? <Text style={{ color:c.pricey, fontSize:13, marginTop:space.s }}>{signOutError}</Text> : null}
+          <View style={{ flexDirection:'row', gap:space.s, marginTop:space.m }}>
+            <Button kind="ghost" style={{ flex:1 }} disabled={signingOut}
+              onPress={() => setShowSignOutConfirm(false)}>
+              {t.code === 'en' ? 'Cancel' : 'Vazgeç'}
+            </Button>
+            <Button style={{ flex:1 }} disabled={signingOut} loading={signingOut}
+              onPress={performSignOut}>
+              {t.code === 'en' ? 'Log Out' : 'Çıkış Yap'}
+            </Button>
+          </View>
+        </Card>
+      ) : null}
     </ScrollView>
   );
 }
