@@ -19,7 +19,7 @@ export const firebaseConfig = {
 
 // Firebase uses the Web OAuth client ID when exchanging a Google ID token.
 export const GOOGLE_WEB_CLIENT_ID =
-  'REPLACE_WITH_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com';
+  '1093576749212-iigsuh62qcbfivsjoror6v75rbmpjgo9.apps.googleusercontent.com';
 
 export const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
