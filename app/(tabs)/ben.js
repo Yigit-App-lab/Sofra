@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import Engine from '../../src/engine';
 import { REC, recById } from '../../src/data';
 import { useStore, useEngineCtx, today } from '../../src/store';
+import { useAuth } from '../../src/auth';
 import { makeT, tl, LANGS, cleanRecipeTitle } from '../../src/i18n';
 import { useTheme, space } from '../../src/theme';
 import { Label, Body, Button, Card, LineItem, Choice, Chip, Divider } from '../../src/ui';
@@ -56,6 +57,7 @@ export default function Ben() {
   const c = useTheme();
   const router = useRouter();
   const { state, dispatch } = useStore();
+  const { user } = useAuth();
   const t = makeT(state.langIndex);
   const ctx = useEngineCtx();
   const p = state.profile;
@@ -77,6 +79,17 @@ export default function Ben() {
 
   return (
     <ScrollView contentContainerStyle={{ padding:space.l, paddingBottom:space.xl*2 }}>
+      <Card style={{ marginBottom:space.m }}>
+        <Body size={13}>{user?.email || (t.code === 'en' ? 'Signed-in account' : 'Oturum açılan hesap')}</Body>
+        <View style={{ height:4 }} />
+        <Body dim size={12}>
+          {state.syncStatus === 'error'
+            ? (t.code === 'en' ? 'Saved on this phone · cloud sync unavailable' : 'Bu telefona kaydedildi · bulut eşitleme kullanılamıyor')
+            : state.syncStatus === 'syncing' || state.syncStatus === 'loading'
+              ? (t.code === 'en' ? 'Syncing your profile…' : 'Profilin eşitleniyor…')
+              : (t.code === 'en' ? 'Profile synced across your devices' : 'Profilin cihazların arasında eşitlendi')}
+        </Body>
+      </Card>
       <Card>
         <Stat label={t('cookedN')} value={cooked.length} />
         <Stat label={t('signalsN')} value={p.events} />

@@ -15,12 +15,13 @@ function Shell() {
   const router = useRouter();
   const segments = useSegments();
   const onAuthScreen = segments[0] === 'login' || segments[0] === 'signup';
+  const storeReadyForUser = state.ready && state.ownerUid === (user?.uid || null);
 
   useEffect(() => {
-    if (!state.ready || !authReady) return;
+    if (!storeReadyForUser || !authReady) return;
     if (!user && !onAuthScreen) router.replace('/login');
     if (user && onAuthScreen) router.replace('/(tabs)');
-  }, [state.ready, authReady, user, onAuthScreen, router]);
+  }, [storeReadyForUser, authReady, user, onAuthScreen, router]);
 
   useEffect(() => {
     if (!state.ready) return;
@@ -33,7 +34,7 @@ function Shell() {
     });
   }, [state.ready, state.dailyReminder, state.shoppingList, state.langIndex]);
 
-  if (!state.ready || !authReady || (!user && !onAuthScreen)) {
+  if (!storeReadyForUser || !authReady || (!user && !onAuthScreen)) {
     return <View style={{ flex:1, backgroundColor:c.ground }} />;
   }
   return (

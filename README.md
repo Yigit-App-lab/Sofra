@@ -1,6 +1,8 @@
 # Sofra — çalışan uygulama / runnable app
 
-Türkçe varsayılan, iOS hedefli, sunucusuz. Bütün maliyet hesabı telefonda.
+Türkçe varsayılan, iOS hedefli. Maliyet hesabı telefonda; Firebase Authentication
+ve Firestore kullanıcı hesabı, kiler, tercihler ve tarif geri bildirimlerini
+cihazlar arasında eşitler.
 
 ## Bugün, ücretsiz, kendi iPhone'unuzda çalıştırmak
 
@@ -110,14 +112,20 @@ Her biri sonraki için gereken şeyi öğretecek sırada:
 5. **`src/engine.js`** — `WEIGHTS.cost` değerini 0,25'ten 0,45'e çıkarın. Uygulama
    fiyata çok daha fazla takar. Geri alın. Ürünün merkezî ayarını anladınız.
 
+## Bulut hesabı
+
+Firebase Authentication e-posta, Google ve Apple girişini sağlar. Firestore yalnızca
+oturum açmış kullanıcının kendi `users/{uid}` yoluna erişmesine izin verir. Dil,
+bildirim tercihi ve pazar fiyatı önbelleği cihazda kalır; kiler, filtreler, alışveriş
+listesi ve tarif geri bildirimleri kullanıcı hesabıyla eşitlenir.
+
 ## Bilerek olmayan şeyler
 
-Hesap yok. Sunucu yok. Analitik yok. Bildirim yok. Fotoğraf yükleme yok.
+Analitik, reklam ve fotoğraf yükleme yok.
 
 Her biri bir haftalık iş ve bir uyum yükümlülüğü, ve hiçbiri "bu akşam ne pişireyim,
 kaça gelir" sorusunu daha iyi cevaplamıyor. Sunucuyu, gerçek bir kullanıcı iki
 telefon arasında senkron isteyince ekleyin. Öncesinde değil.
 
-**Not:** hesap olmadığı için Apple 5.1.1(v) hesap silme akışı gerekmiyor ve App
-Privacy bildiriminde muhtemelen "Data Not Collected" diyeceksiniz. Analitik veya
-reklam eklerseniz bu değişir.
+**Not:** Hesap silme akışı ve App Privacy beyanı App Store gönderiminden önce
+tamamlanmalıdır. Analitik veya reklam eklenirse gizlilik beyanı yeniden değerlendirilmelidir.

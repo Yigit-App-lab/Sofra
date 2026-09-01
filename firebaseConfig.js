@@ -5,6 +5,7 @@ import {
   getReactNativePersistence,
   initializeAuth,
 } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 // Firebase Web app configuration for the Sofra project.
 export const firebaseConfig = {
@@ -41,3 +42,4 @@ try {
 }
 
 export const auth = firebaseAuth;
+export const db = getFirestore(firebaseApp);

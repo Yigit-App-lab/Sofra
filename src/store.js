@@ -1,19 +1,22 @@
-// State and persistence. One React context, one AsyncStorage key.
-//
-// No accounts, no server: nothing this app does needs either. That also means no
-// login screen, no password reset, no Apple 5.1.1 account-deletion flow, and a
-// privacy policy that is one honest paragraph.
 import React, { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Engine from './engine';
 import { byId, cityRec, REGIONS } from './data';
 import { deviceLangIndex } from './i18n';
+import { useAuth } from './auth';
+import { readCloudUserState, userDataFromState, writeCloudUserState } from './cloudStore';
 
-const KEY = 'sofra.tr.v1';
+const LEGACY_KEY = 'sofra.tr.v1';
+const MIGRATION_OWNER_KEY = 'sofra.tr.v2.migrationOwner';
+const userKey = (uid) => `sofra.tr.v2.user.${uid}`;
 export const PRICING_CITY = 'İstanbul';
 
 const initial = {
   ready: false,
+  ownerUid: null,
+  syncStatus: 'idle',
+  syncError: null,
+  clientUpdatedAt: 0,
   langIndex: 0,
   city: PRICING_CITY,
   timeBudget: 60,
@@ -59,6 +62,13 @@ export function apiRecipeForLearning(recipe) {
 
 function reducer(s, a) {
   switch (a.type) {
+    case 'beginUser':
+      return {
+        ...initial,
+        langIndex: s.langIndex,
+        ownerUid: a.uid,
+        syncStatus: a.uid ? 'loading' : 'idle',
+      };
     case 'hydrate': {
       const profile = { ...s.profile, ...(a.value?.profile || {}) };
       const hydrated = { ...(a.value || {}) };
@@ -69,8 +79,15 @@ function reducer(s, a) {
           profile.liked[id] = item.day || today();
         }
       });
-      return { ...s, ...hydrated, profile, city:PRICING_CITY, ready:true };
+      return {
+        ...s, ...hydrated, profile, city:PRICING_CITY, ready:true,
+        ownerUid:a.uid, syncStatus:a.uid ? 'synced' : 'idle', syncError:null,
+        clientUpdatedAt:Number(a.clientUpdatedAt || 0),
+      };
     }
+    case 'syncing': return { ...s, syncStatus:'syncing', syncError:null };
+    case 'synced': return { ...s, syncStatus:'synced', syncError:null };
+    case 'syncError': return { ...s, syncStatus:'error', syncError:a.message || 'sync-failed' };
     case 'set': return a.key === 'city' ? { ...s, city:PRICING_CITY } : { ...s, [a.key]: a.value };
     case 'togglePantry': {
       const pantry = { ...s.pantry };
@@ -190,24 +207,86 @@ const Ctx = createContext(null);
 
 export function StoreProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initial);
+  const { user, ready:authReady } = useAuth();
 
   useEffect(() => {
+    if (!authReady) return;
+    const uid = user?.uid || null;
+    let cancelled = false;
+    dispatch({ type:'beginUser', uid });
     (async () => {
       try {
-        const raw = await AsyncStorage.getItem(KEY);
-        dispatch({ type:'hydrate', value: { langIndex: deviceLangIndex(), ...(raw ? JSON.parse(raw) : {}) } });
+        const deviceRaw = await AsyncStorage.getItem('sofra.tr.v2.device');
+        const device = deviceRaw ? JSON.parse(deviceRaw) : {};
+        if (!uid) {
+          if (!cancelled) dispatch({
+            type:'hydrate', uid:null,
+            value:{ langIndex:deviceLangIndex(), ...device },
+          });
+          return;
+        }
+
+        const [localRaw, cloud, migrationOwner, legacyRaw] = await Promise.all([
+          AsyncStorage.getItem(userKey(uid)),
+          readCloudUserState(uid).catch(() => null),
+          AsyncStorage.getItem(MIGRATION_OWNER_KEY),
+          AsyncStorage.getItem(LEGACY_KEY),
+        ]);
+        const localEnvelope = localRaw ? JSON.parse(localRaw) : null;
+        let value = null;
+        let clientUpdatedAt = 0;
+
+        if (localEnvelope && Number(localEnvelope.clientUpdatedAt || 0) >= Number(cloud?.clientUpdatedAt || 0)) {
+          value = localEnvelope.data;
+          clientUpdatedAt = Number(localEnvelope.clientUpdatedAt || 0);
+        } else if (cloud?.data) {
+          value = cloud.data;
+          clientUpdatedAt = Number(cloud.clientUpdatedAt || 0);
+        } else if (!migrationOwner && legacyRaw) {
+          value = JSON.parse(legacyRaw);
+          clientUpdatedAt = Date.now();
+          await AsyncStorage.setItem(MIGRATION_OWNER_KEY, uid);
+        }
+
+        if (!cancelled) dispatch({
+          type:'hydrate', uid, clientUpdatedAt,
+          value:{ langIndex:deviceLangIndex(), ...device, ...(value || {}) },
+        });
       } catch (e) {
-        // A corrupt store must never brick the app.
-        dispatch({ type:'hydrate', value: { langIndex: deviceLangIndex() } });
+        if (!cancelled) dispatch({ type:'hydrate', uid, value:{ langIndex:deviceLangIndex() } });
       }
     })();
-  }, []);
+    return () => { cancelled = true; };
+  }, [authReady, user?.uid]);
+
+  useEffect(() => {
+    const uid = user?.uid;
+    if (!state.ready || !uid || state.ownerUid !== uid) return;
+    const data = userDataFromState(state);
+    const clientUpdatedAt = Date.now();
+    const timer = setTimeout(async () => {
+      dispatch({ type:'syncing' });
+      try {
+        await AsyncStorage.setItem(userKey(uid), JSON.stringify({ data, clientUpdatedAt }));
+        await writeCloudUserState(uid, data, clientUpdatedAt);
+        dispatch({ type:'synced' });
+      } catch (error) {
+        dispatch({ type:'syncError', message:error?.code || error?.message });
+      }
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [
+    state.ready, state.ownerUid, user?.uid,
+    state.timeBudget, state.maxPerPortion, state.meatless, state.dietPreference,
+    state.glutenFree, state.lactoseFree, state.lowGlycemic, state.skill,
+    state.pantry, state.kiler, state.shoppingList, state.profile,
+  ]);
 
   useEffect(() => {
     if (!state.ready) return;
-    const { ready, ...persist } = state;
-    AsyncStorage.setItem(KEY, JSON.stringify(persist)).catch(() => {});
-  }, [state]);
+    const device = { langIndex:state.langIndex, dailyReminder:state.dailyReminder };
+    AsyncStorage.setItem('sofra.tr.v2.device', JSON.stringify(device)).catch(() => {});
+  }, [state.ready, state.langIndex, state.dailyReminder]);
 
   const value = useMemo(() => ({ state, dispatch }), [state]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
