@@ -18,8 +18,8 @@ function reminderBody(shoppingList, english) {
 
   if (!pending.length) {
     return english
-      ? "Today's recipe recommendation is ready. Open Sofra to see it."
-      : 'Bugünün tarif önerisi hazır. Görmek için Sofra’yı aç.';
+      ? "Dinner made easier: your seasonal, budget-friendly picks are ready."
+      : 'Akşam yemeğini kolaylaştıralım: mevsimlik, bütçene uygun önerilerin hazır.';
   }
 
   const names = pending.slice(0, 3).map((item) => item.name).join(', ');
@@ -31,8 +31,8 @@ function reminderBody(shoppingList, english) {
     : names;
 
   return english
-    ? `To buy: ${listSummary}. Today's recipe recommendation is ready.`
-    : `Alınacaklar: ${listSummary}. Bugünün tarif önerisi hazır.`;
+    ? `Your list: ${listSummary}. Open Sofra and choose tonight's meal.`
+    : `Listende: ${listSummary}. Sofra’yı aç, bu akşamın yemeğini seç.`;
 }
 
 async function cancelExistingDailyReminders() {
@@ -52,6 +52,7 @@ export async function configureDailyReminder({
   enabled,
   shoppingList,
   langIndex,
+  hour = 17,
 }) {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
@@ -61,30 +62,30 @@ export async function configureDailyReminder({
   }
 
   await cancelExistingDailyReminders();
-  if (!enabled) return false;
+  if (!enabled) return { scheduled:false, permission:'disabled' };
 
   let permission = await Notifications.getPermissionsAsync();
   if (permission.status !== 'granted') {
     permission = await Notifications.requestPermissionsAsync();
   }
-  if (permission.status !== 'granted') return false;
+  if (permission.status !== 'granted') return { scheduled:false, permission:permission.status };
 
   const english = langIndex === 1;
 
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: english ? 'Sofra · Daily recommendation' : 'Sofra · Günlük öneri',
+      title: english ? 'What shall we cook today?' : 'Bugün ne pişirsek?',
       body: reminderBody(shoppingList, english),
       sound: 'default',
-      data: { type: DAILY_TYPE },
+      data: { type: DAILY_TYPE, url:'sofra:///' },
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour: 11,
+      hour,
       minute: 0,
       ...(Platform.OS === 'android' ? { channelId: CHANNEL_ID } : {}),
     },
   });
 
-  return true;
+  return { scheduled:true, permission:'granted' };
 }

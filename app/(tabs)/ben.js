@@ -2,7 +2,7 @@
 // is what makes personalisation feel like a service rather than surveillance, and
 // it is also the best debugging tool you will have.
 import React, { useMemo, useState } from 'react';
-import { ScrollView, View, Text, Pressable } from 'react-native';
+import { Linking, ScrollView, View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
@@ -135,25 +135,57 @@ export default function Ben() {
         {t('likedRecipes')} · {likedCount}
       </Button>
 
+      <View style={{ height:space.s }} />
+      <Button kind="ghost" onPress={() => set('onboardingComplete', false)}>
+        {t.code === 'en' ? 'What can Sofra do?' : 'Sofra ile neler yapabilirim?'}
+      </Button>
+
       <Label>{t('settings')}</Label>
       <Body dim size={12}>{t('timeBudget')} · {state.timeBudget} {t('min')}</Body>
       <View style={{ height:space.s }} />
       <Choice options={[20,30,45,60,90].map((m) => ({ value:m, label:`${m}` }))}
               value={state.timeBudget} onChange={(v) => set('timeBudget', v)} />
 
-      <View style={{ height:space.l }} />
-      <Body dim size={12}>
-        {t.code === 'en' ? 'Daily reminder · 11:00' : 'Günlük hatırlatma · 11:00'}
-      </Body>
-      <View style={{ height:space.s }} />
-      <Choice
-        options={[
-          { value:false, label:t.code === 'en' ? 'Off' : 'Kapalı' },
-          { value:true, label:t.code === 'en' ? 'On' : 'Açık' },
-        ]}
-        value={Boolean(state.dailyReminder)}
-        onChange={(v) => set('dailyReminder', v)}
-      />
+      <Card style={{ marginTop:space.l }}>
+        <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center' }}>
+          <View style={{ flex:1, paddingRight:space.m }}>
+            <Body size={15}>{t.code === 'en' ? 'Daily dinner reminder' : 'Günlük yemek hatırlatması'}</Body>
+            <Body dim size={12} style={{ marginTop:3 }}>
+              {t.code === 'en'
+                ? 'Your recommendations and shopping list, at the right time.'
+                : 'Önerilerin ve alışveriş listen, doğru zamanda yanında.'}
+            </Body>
+          </View>
+          <Choice
+            options={[
+              { value:false, label:t.code === 'en' ? 'Off' : 'Kapalı' },
+              { value:true, label:t.code === 'en' ? 'On' : 'Açık' },
+            ]}
+            value={Boolean(state.dailyReminder)}
+            onChange={(v) => set('dailyReminder', v)}
+          />
+        </View>
+        {state.dailyReminder ? (
+          <View style={{ marginTop:space.m }}>
+            <Body dim size={12}>{t.code === 'en' ? 'Reminder time' : 'Hatırlatma saati'}</Body>
+            <View style={{ height:space.s }} />
+            <Choice options={[11,17,19].map((hour) => ({ value:hour, label:`${String(hour).padStart(2, '0')}:00` }))}
+              value={state.reminderHour || 17} onChange={(value) => set('reminderHour', value)} />
+          </View>
+        ) : null}
+        {['denied', 'blocked'].includes(state.reminderStatus) ? (
+          <View style={{ marginTop:space.m }}>
+            <Text style={{ color:c.pricey, fontSize:12.5 }}>
+              {t.code === 'en' ? 'Notifications are disabled in device settings.' : 'Bildirim izni cihaz ayarlarında kapalı.'}
+            </Text>
+            <Pressable onPress={() => Linking.openSettings()} style={{ marginTop:space.s }}>
+              <Text style={{ color:c.accent, fontSize:13, fontWeight:'700' }}>
+                {t.code === 'en' ? 'Open settings' : 'Ayarları aç'}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+      </Card>
 
       <View style={{ height:space.l }} />
       <Body dim size={12}>{t('budget')} · {state.maxPerPortion} ₺</Body>

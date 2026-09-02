@@ -10,18 +10,27 @@ import { configureDailyReminder } from '../src/notifications';
 
 function Shell() {
   const c = useTheme();
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
   const { user, ready:authReady } = useAuth();
   const router = useRouter();
   const segments = useSegments();
   const onAuthScreen = segments[0] === 'login' || segments[0] === 'signup';
+  const onOnboarding = segments[0] === 'onboarding';
   const storeReadyForUser = state.ready && state.ownerUid === (user?.uid || null);
 
   useEffect(() => {
     if (!storeReadyForUser || !authReady) return;
+    if (!state.onboardingComplete) {
+      if (!onOnboarding) router.replace('/onboarding');
+      return;
+    }
+    if (onOnboarding) {
+      router.replace(user ? '/(tabs)' : '/login');
+      return;
+    }
     if (!user && !onAuthScreen) router.replace('/login');
     if (user && onAuthScreen) router.replace('/(tabs)');
-  }, [storeReadyForUser, authReady, user, onAuthScreen, router]);
+  }, [storeReadyForUser, authReady, state.onboardingComplete, user, onAuthScreen, onOnboarding, router]);
 
   useEffect(() => {
     if (!state.ready) return;
@@ -29,12 +38,21 @@ function Shell() {
       enabled: Boolean(state.dailyReminder),
       shoppingList: state.shoppingList || {},
       langIndex: state.langIndex,
+      hour: state.reminderHour || 17,
+    }).then((result) => {
+      dispatch({ type:'set', key:'reminderStatus', value:result.permission });
+      if (state.dailyReminder && !result.scheduled) {
+        dispatch({ type:'set', key:'dailyReminder', value:false });
+      }
     }).catch((error) => {
       console.warn('Daily reminder could not be scheduled', error);
+      dispatch({ type:'set', key:'reminderStatus', value:'error' });
     });
-  }, [state.ready, state.dailyReminder, state.shoppingList, state.langIndex]);
+  }, [state.ready, state.dailyReminder, state.reminderHour, state.shoppingList, state.langIndex, dispatch]);
 
-  if (!storeReadyForUser || !authReady || (!user && !onAuthScreen)) {
+  if (!storeReadyForUser || !authReady ||
+      (!state.onboardingComplete && !onOnboarding) ||
+      (state.onboardingComplete && !user && !onAuthScreen)) {
     return <View style={{ flex:1, backgroundColor:c.ground }} />;
   }
   return (
@@ -49,6 +67,7 @@ function Shell() {
       }}>
         <Stack.Screen name="login" options={{ headerShown:false }} />
         <Stack.Screen name="signup" options={{ headerShown:false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown:false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown:false }} />
         <Stack.Screen
           name="api-tarif/[id]"

@@ -18,6 +18,7 @@ const initial = {
   syncError: null,
   clientUpdatedAt: 0,
   langIndex: 0,
+  onboardingComplete: false,
   city: PRICING_CITY,
   timeBudget: 60,
   maxPerPortion: 120,
@@ -27,6 +28,8 @@ const initial = {
   lactoseFree: false,
   lowGlycemic: false,
   dailyReminder: false,
+  reminderHour: 17,
+  reminderStatus: 'idle',
   skill: 1,
   // A plausible Turkish store cupboard, so the first launch is not an empty screen.
   pantry: {
@@ -286,9 +289,14 @@ export function StoreProvider({ children }) {
 
   useEffect(() => {
     if (!state.ready) return;
-    const device = { langIndex:state.langIndex, dailyReminder:state.dailyReminder };
+    const device = {
+      langIndex:state.langIndex,
+      onboardingComplete:state.onboardingComplete,
+      dailyReminder:state.dailyReminder,
+      reminderHour:state.reminderHour,
+    };
     AsyncStorage.setItem('sofra.tr.v2.device', JSON.stringify(device)).catch(() => {});
-  }, [state.ready, state.langIndex, state.dailyReminder]);
+  }, [state.ready, state.langIndex, state.onboardingComplete, state.dailyReminder, state.reminderHour]);
 
   const value = useMemo(() => ({ state, dispatch }), [state]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

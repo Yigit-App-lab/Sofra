@@ -2,8 +2,6 @@
 //
 // No screen contains a literal Turkish word — everything goes through t(). That
 // discipline costs nothing now and is what makes a second market possible later.
-import { getLocales } from 'expo-localization';
-
 export const LANGS = [{ code:'tr', label:'Türkçe' }, { code:'en', label:'English' }];
 
 const S = {
@@ -64,10 +62,9 @@ export const MONTHS = [
   ['Tem','Jul'],['Ağu','Aug'],['Eyl','Sep'],['Eki','Oct'],['Kas','Nov'],['Ara','Dec'],
 ];
 
-/** Turkish first: if the phone is not set to a language we ship, default to Turkish. */
+/** Sofra always starts in Turkish. Users can explicitly switch to English. */
 export function deviceLangIndex() {
-  const tags = getLocales().map((l) => (l.languageCode || '').toLowerCase());
-  return tags[0] === 'en' ? 1 : 0;
+  return 0;
 }
 
 export function makeT(i) {
