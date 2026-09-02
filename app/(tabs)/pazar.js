@@ -8,7 +8,7 @@ import { getMarketPrices } from '../../src/api';
 import { useStore, useEngineCtx, PRICING_CITY } from '../../src/store';
 import { makeT, tl } from '../../src/i18n';
 import { space } from '../../src/theme';
-import { Label, Body, LineItem, stateChip, Chip } from '../../src/ui';
+import { Label, Body, LineItem, stateChip, Chip, ScreenBackdrop } from '../../src/ui';
 
 export default function Pazar() {
 
@@ -68,7 +68,9 @@ export default function Pazar() {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding:space.l, paddingBottom:space.xl*2 }}>
+    <ScreenBackdrop source={require('../../assets/onboarding/pazar-sofra.png')}>
+    <ScrollView style={{ backgroundColor:'transparent' }}
+      contentContainerStyle={{ padding:space.l, paddingBottom:space.xl*2 }}>
       <Body dim size={12.5}>
         {t.month(ctx.month)} · {PRICING_CITY} · {ctx.regions[ctx.region][t.code === 'en' ? 'en' : 'tr']}
       </Body>
@@ -100,5 +102,6 @@ export default function Pazar() {
         </>
       )}
     </ScrollView>
+    </ScreenBackdrop>
   );
 }

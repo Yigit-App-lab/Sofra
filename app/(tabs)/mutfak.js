@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { useStore } from '../../src/store';
 import { getKilerIngredients, getTonightRecipes } from '../../src/api';
 import { useTheme, space, radius } from '../../src/theme';
+import { ScreenBackdrop } from '../../src/ui';
 
 
 function Pill({ label, selected, onPress }) {
@@ -311,7 +312,9 @@ export default function Kiler() {
 
 
   return (
+    <ScreenBackdrop source={require('../../assets/onboarding/kitchen-sofra.png')}>
     <ScrollView
+      style={{ backgroundColor:'transparent' }}
       contentContainerStyle={{
         padding: space.l,
         paddingBottom: space.xl * 2,
@@ -567,5 +570,6 @@ export default function Kiler() {
         )}
       </View>
     </ScrollView>
+    </ScreenBackdrop>
   );
 }
