@@ -18,6 +18,7 @@ const initial = {
   syncError: null,
   clientUpdatedAt: 0,
   langIndex: 0,
+  languageDefaultVersion: 1,
   onboardingComplete: false,
   city: PRICING_CITY,
   timeBudget: 60,
@@ -221,10 +222,18 @@ export function StoreProvider({ children }) {
       try {
         const deviceRaw = await AsyncStorage.getItem('sofra.tr.v2.device');
         const device = deviceRaw ? JSON.parse(deviceRaw) : {};
+        const migratedLanguage = Number(device.languageDefaultVersion || 0) >= 1;
+        const deviceSettings = {
+          ...device,
+          // Existing installs are moved to Turkish once. A later explicit
+          // language choice is preserved because version 1 is then persisted.
+          langIndex:migratedLanguage ? Number(device.langIndex || 0) : 0,
+          languageDefaultVersion:1,
+        };
         if (!uid) {
           if (!cancelled) dispatch({
             type:'hydrate', uid:null,
-            value:{ langIndex:deviceLangIndex(), ...device },
+            value:{ langIndex:deviceLangIndex(), ...deviceSettings },
           });
           return;
         }
@@ -253,7 +262,7 @@ export function StoreProvider({ children }) {
 
         if (!cancelled) dispatch({
           type:'hydrate', uid, clientUpdatedAt,
-          value:{ langIndex:deviceLangIndex(), ...device, ...(value || {}) },
+          value:{ langIndex:deviceLangIndex(), ...(value || {}), ...deviceSettings },
         });
       } catch (e) {
         if (!cancelled) dispatch({ type:'hydrate', uid, value:{ langIndex:deviceLangIndex() } });
@@ -291,6 +300,7 @@ export function StoreProvider({ children }) {
     if (!state.ready) return;
     const device = {
       langIndex:state.langIndex,
+      languageDefaultVersion:1,
       onboardingComplete:state.onboardingComplete,
       dailyReminder:state.dailyReminder,
       reminderHour:state.reminderHour,
