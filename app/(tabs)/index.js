@@ -6,7 +6,7 @@ import { ING, REC, byId } from '../../src/data';
 import { useStore, useEngineCtx, PRICING_CITY } from '../../src/store';
 import { makeT, tl } from '../../src/i18n';
 import { useTheme, space, radius } from '../../src/theme';
-import { Body, Button, Card, Chip, Price, Row, Title, stateChip } from '../../src/ui';
+import { Body, Button, Card, Chip, Price, Row, ScreenBackdrop, Title, stateChip } from '../../src/ui';
 import { getMarketPrices, getSeasonalRecipes, getTonightRecipes } from '../../src/api';
 
 function ChoiceButton({ number, title, subtitle, onPress, disabled }) {
@@ -248,7 +248,9 @@ export default function Tonight() {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding:space.l, paddingBottom:space.xl * 2 }}>
+    <ScreenBackdrop source={require('../../assets/onboarding/family-sofra.png')}>
+    <ScrollView style={{ backgroundColor:'transparent' }}
+      contentContainerStyle={{ padding:space.l, paddingBottom:space.xl * 2 }}>
       <View style={{ marginBottom:space.l }}>
         <Title size={28}>{english ? 'What shall we cook tonight?' : 'Bu akşam ne pişirelim?'}</Title>
       </View>
@@ -278,5 +280,6 @@ export default function Tonight() {
       {!loading && choice?.kind === 'local' ? renderLocalResult() : null}
       {!loading && choice?.kind === 'api' ? renderApiResult() : null}
     </ScrollView>
+    </ScreenBackdrop>
   );
 }

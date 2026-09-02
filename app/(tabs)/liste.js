@@ -8,6 +8,7 @@ import {
 
 import { useStore } from '../../src/store';
 import { useTheme, space, radius } from '../../src/theme';
+import { ScreenBackdrop } from '../../src/ui';
 
 export default function Liste() {
   const c = useTheme();
@@ -28,8 +29,9 @@ export default function Liste() {
   };
 
   return (
+    <ScreenBackdrop source={require('../../assets/onboarding/market-sofra.png')}>
     <ScrollView
-      style={{ backgroundColor: c.ground }}
+      style={{ backgroundColor:'transparent' }}
       contentContainerStyle={{
         padding: space.l,
         paddingBottom: space.xl * 2,
@@ -180,5 +182,6 @@ export default function Liste() {
         </Pressable>
       ) : null}
     </ScrollView>
+    </ScreenBackdrop>
   );
 }

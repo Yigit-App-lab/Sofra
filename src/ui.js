@@ -1,7 +1,7 @@
 // The shared components. Keeping them here is what lets each screen stay short
 // enough to read in one sitting.
 import React from 'react';
-import { ActivityIndicator, Text, View, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { ActivityIndicator, Image, Text, View, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useTheme, radius, space } from './theme';
 
 export function Title({ children, size = 21 }) {
@@ -27,6 +27,19 @@ export function Card({ children, style }) {
   return (
     <View style={[{ backgroundColor:c.surface, borderColor:c.line, borderWidth:1,
                     borderRadius:radius.l, padding:space.l }, style]}>{children}</View>
+  );
+}
+
+export function ScreenBackdrop({ source, children, opacity = 0.14 }) {
+  const c = useTheme();
+  const imageOpacity = c.ground === '#EAEEEC' ? opacity : Math.min(opacity, 0.08);
+  return (
+    <View style={{ flex:1, backgroundColor:c.ground }}>
+      <Image source={source} resizeMode="cover" pointerEvents="none"
+        accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+        style={[StyleSheet.absoluteFillObject, { width:'100%', height:'100%', opacity:imageOpacity }]} />
+      {children}
+    </View>
   );
 }
 

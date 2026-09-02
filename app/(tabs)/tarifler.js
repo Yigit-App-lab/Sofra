@@ -18,6 +18,7 @@ import {
 
 import { useTheme, space, radius } from '../../src/theme';
 import { useStore } from '../../src/store';
+import { ScreenBackdrop } from '../../src/ui';
 
 const PAGE_SIZE = 30;
 
@@ -546,22 +547,25 @@ export default function Tarifler() {
 
   if (loading && recipes.length === 0) {
     return (
+      <ScreenBackdrop source={require('../../assets/onboarding/cook-sofra.png')}>
       <View
         style={{
           flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: c.ground,
+          backgroundColor: 'transparent',
         }}
       >
         <ActivityIndicator size="large" color={c.accent} />
       </View>
+      </ScreenBackdrop>
     );
   }
 
   return (
+    <ScreenBackdrop source={require('../../assets/onboarding/cook-sofra.png')}>
     <FlatList
-      style={{ backgroundColor: c.ground }}
+      style={{ backgroundColor:'transparent' }}
       contentContainerStyle={{
         padding: space.l,
         paddingBottom: space.xl * 2,
@@ -598,5 +602,6 @@ export default function Tarifler() {
         )
       }
     />
+    </ScreenBackdrop>
   );
 }
