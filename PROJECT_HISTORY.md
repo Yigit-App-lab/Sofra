@@ -65,3 +65,10 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
 2. Tamamlanan kutular işaretlenir.
 3. Önemli kararlar, dağıtımlar, denetim sonuçları ve yedek yolları bu dosyaya eklenir.
 4. Canlı veritabanı değişiklikleri her zaman önce kuru deneme ve yedekle uygulanır.
+
+## Mobil build yöntemi
+
+- Aktif iOS geliştirme ve sık ekran değişiklikleri için `development` build kullanılır.
+- Development build bir kez kurulduktan sonra JavaScript değişiklikleri Metro üzerinden test edilir.
+- `preview` build yalnızca kararlı kontrol noktalarında, uygulamayı Metro olmadan test etmek için üretilir.
+- Android testleri şimdilik ertelendi; değişiklikler toplandıktan sonra yeni Android build alınır.
