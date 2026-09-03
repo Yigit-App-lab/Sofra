@@ -1917,6 +1917,78 @@
    "priceMonth": 8,
    "source": "tahmin",
    "cls": "kiler"
+  },
+  {
+   "id": "galeta_unu",
+   "names": {"tr": "Galeta unu", "en": "Breadcrumbs"},
+   "kind": "tahil", "unit": "kg", "price": 102.7,
+   "priceMonth": 9, "source": "market", "cls": "kiler",
+   "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10
+  },
+  {
+   "id": "mayonez",
+   "names": {"tr": "Mayonez", "en": "Mayonnaise"},
+   "kind": "kiler", "unit": "kg", "price": 297.94,
+   "priceMonth": 9, "source": "market", "cls": "kiler",
+   "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10
+  },
+  {
+   "id": "soya_sosu",
+   "names": {"tr": "Soya sosu", "en": "Soy sauce"},
+   "kind": "kiler", "unit": "L", "price": 439.95,
+   "priceMonth": 9, "source": "market", "cls": "kiler",
+   "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10
+  },
+  {
+   "id": "hardal",
+   "names": {"tr": "Hardal", "en": "Mustard"},
+   "kind": "kiler", "unit": "kg", "price": 427.24,
+   "priceMonth": 9, "source": "market", "cls": "kiler",
+   "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10
+  },
+  {
+   "id": "karbonat",
+   "names": {"tr": "Karbonat", "en": "Baking soda"},
+   "kind": "baharat", "unit": "kg", "price": 130.37,
+   "priceMonth": 9, "source": "market", "cls": "kiler",
+   "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10
+  },
+  {
+   "id": "ketcap",
+   "names": {"tr": "Ketçap", "en": "Ketchup"},
+   "kind": "kiler", "unit": "kg", "price": 179.81,
+   "priceMonth": 9, "source": "market", "cls": "kiler",
+   "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10
+  },
+  {
+   "id": "kori",
+   "names": {"tr": "Köri", "en": "Curry powder"},
+   "kind": "baharat", "unit": "kg", "price": 800.0,
+   "priceMonth": 9, "source": "market", "cls": "kiler",
+   "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 100, "maxUnitPrice": 3000,
+   "excludeTitleWords": ["noodle", "çeşnili", "sos"]
+  },
+  {
+   "id": "kornison_tursu",
+   "names": {"tr": "Kornişon turşu", "en": "Gherkin pickles"},
+   "kind": "kiler", "unit": "kg", "price": 239.59,
+   "priceMonth": 9, "source": "market", "cls": "kiler",
+   "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10
+  },
+  {
+   "id": "nar_eksisi",
+   "names": {"tr": "Nar ekşisi", "en": "Pomegranate molasses"},
+   "kind": "kiler", "unit": "L", "price": 549.27,
+   "priceMonth": 9, "source": "market", "cls": "kiler",
+   "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10
+  },
+  {
+   "id": "milfoy",
+   "names": {"tr": "Milföy", "en": "Puff pastry"},
+   "kind": "tahil", "unit": "kg", "price": 155.06,
+   "priceMonth": 9, "source": "market", "cls": "kiler",
+   "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10,
+   "marketQuery": "Milföy hamuru"
   }
  ]
 }

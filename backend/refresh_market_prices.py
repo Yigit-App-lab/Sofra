@@ -27,12 +27,15 @@ def produce_items() -> list[dict]:
     return [
         {
             "id": item["id"],
-            "name": item["names"]["tr"],
+            "name": item.get("marketQuery") or item["names"]["tr"],
             "unit": item.get("unit", "kg"),
-            "kind": item.get("kind", "produce"),
+            "kind": item.get("marketKind") or item.get("kind", "produce"),
+            "excludeTitleWords": item.get("excludeTitleWords", []),
+            "minUnitPrice": item.get("minUnitPrice", 0),
+            "maxUnitPrice": item.get("maxUnitPrice", 10000),
         }
         for item in data.get("items", [])
-        if item.get("kind") in TRACKED_KINDS
+        if item.get("kind") in TRACKED_KINDS or item.get("marketTracked")
     ]
 
 

@@ -55,6 +55,55 @@ class MarketPriceTests(unittest.TestCase):
         result = aggregate_search_response(response, "kıyma", "kg", "protein")
         self.assertEqual(result["average"], 699.9)
 
+    def test_accepts_branded_packaged_food(self):
+        response = {"content": [{
+            "title": "Migros Galeta Unu 250 Gr",
+            "brand": "Migros",
+            "productDepotInfoList": [
+                {"marketAdi": "migros", "unitPrice": "119,60 ₺/kg"},
+            ],
+        }]}
+        result = aggregate_search_response(
+            response, "galeta unu", "kg", "packaged"
+        )
+        self.assertEqual(result["average"], 119.6)
+
+    def test_packaged_food_excludes_similar_product(self):
+        response = {"content": [
+            {
+                "title": "Noodlex Köri Çeşnili Noodle 70 Gr",
+                "brand": "Noodlex",
+                "productDepotInfoList": [
+                    {"marketAdi": "market", "unitPrice": "400,00 ₺/kg"},
+                ],
+            },
+            {
+                "title": "Edalı Köri Baharat 100 Gr",
+                "brand": "Edalı",
+                "productDepotInfoList": [
+                    {"marketAdi": "market", "unitPrice": "800,00 ₺/kg"},
+                ],
+            },
+        ]}
+        result = aggregate_search_response(
+            response, "köri", "kg", "packaged", ["noodle", "çeşnili"]
+        )
+        self.assertEqual(result["average"], 800.0)
+
+    def test_packaged_food_rejects_implausible_unit_price(self):
+        response = {"content": [{
+            "title": "Edalı Köri Baharat 100 Gr",
+            "brand": "Edalı",
+            "productDepotInfoList": [
+                {"marketAdi": "bad", "unitPrice": "1,15 ₺/kg"},
+                {"marketAdi": "good", "unitPrice": "640,00 ₺/kg"},
+            ],
+        }]}
+        result = aggregate_search_response(
+            response, "köri", "kg", "packaged", [], 100, 3000
+        )
+        self.assertEqual(result["average"], 640.0)
+
 
 if __name__ == "__main__":
     unittest.main()

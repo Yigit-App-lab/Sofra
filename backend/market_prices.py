@@ -100,20 +100,32 @@ def _matching_product(title: str, query: str) -> bool:
     return bool(query_words) and all(word in title_words for word in query_words)
 
 
-def aggregate_search_response(data: dict, query: str, unit: str, kind: str = "produce") -> dict | None:
+def aggregate_search_response(
+    data: dict,
+    query: str,
+    unit: str,
+    kind: str = "produce",
+    exclude_title_words: list[str] | None = None,
+    min_unit_price: float = 0,
+    max_unit_price: float = 10000,
+) -> dict | None:
     """Aggregate one comparable observation per market, with outlier trimming."""
     by_market: dict[str, list[float]] = {}
     for product in data.get("content") or []:
-        if not _matching_product(product.get("title", ""), query):
+        title = product.get("title", "")
+        if not _matching_product(title, query):
+            continue
+        normalized_title = normalize(title)
+        if any(normalize(word) in normalized_title for word in (exclude_title_words or [])):
             continue
         # Produce on Market Fiyati is catalogued as unbranded. Requiring that
         # marker excludes chips, sauces, juices and preserves without a brittle
         # list of every processed-food word.
-        if kind != "protein" and normalize(product.get("brand")) != "markasiz":
+        if kind not in ("protein", "packaged") and normalize(product.get("brand")) != "markasiz":
             continue
         for depot in product.get("productDepotInfoList") or []:
             value = normalized_unit_price(depot, unit)
-            if value is None:
+            if value is None or not min_unit_price <= value <= max_unit_price:
                 continue
             market = normalize(depot.get("marketAdi") or depot.get("marketName") or "unknown")
             by_market.setdefault(market, []).append(value)
@@ -192,11 +204,14 @@ def get_market_prices(items: list[dict], city: str) -> dict:
         cached_items = cache.setdefault("items", {})
 
     pending = []
-    for item in items[:80]:
+    for item in items[:120]:
         item_id = str(item.get("id") or "")
         query = str(item.get("name") or "").strip()
         unit = str(item.get("unit") or "kg")
         kind = str(item.get("kind") or "produce")
+        exclude_title_words = list(item.get("excludeTitleWords") or [])
+        min_unit_price = float(item.get("minUnitPrice") or 0)
+        max_unit_price = float(item.get("maxUnitPrice") or 10000)
         if not item_id or not query:
             continue
         key = f"{normalize(city)}:{item_id}:{unit}"
@@ -210,11 +225,18 @@ def get_market_prices(items: list[dict], city: str) -> dict:
         if cached and age is not None and age < CACHE_TTL_SECONDS:
             results.append({**cached, "id": item_id, "fresh": True})
             continue
-        pending.append((item_id, query, unit, kind, key, cached))
+        pending.append((
+            item_id, query, unit, kind, exclude_title_words,
+            min_unit_price, max_unit_price, key, cached,
+        ))
 
     def fetch_one(entry):
-        item_id, query, unit, kind, key, cached = entry
-        aggregate = aggregate_search_response(_search(query, city), query, unit, kind)
+        (item_id, query, unit, kind, exclude_title_words,
+         min_unit_price, max_unit_price, key, cached) = entry
+        aggregate = aggregate_search_response(
+            _search(query, city), query, unit, kind, exclude_title_words,
+            min_unit_price, max_unit_price,
+        )
         return item_id, unit, key, cached, aggregate
 
     # Bounded concurrency keeps the first daily refresh practical without
@@ -222,7 +244,7 @@ def get_market_prices(items: list[dict], city: str) -> dict:
     with ThreadPoolExecutor(max_workers=min(6, max(1, len(pending)))) as pool:
         futures = {pool.submit(fetch_one, entry): entry for entry in pending}
         for future in as_completed(futures):
-            item_id, _, _, _, _, cached = futures[future]
+            item_id, _, _, _, _, _, _, _, cached = futures[future]
             try:
                 item_id, unit, key, cached, aggregate = future.result()
                 if aggregate:

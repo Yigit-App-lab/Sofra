@@ -241,6 +241,10 @@ def consumed_units(quantity, recipe_unit, item) -> float | None:
         package_grams = {
             "tavuk_gogus": 500, "tavuk_but": 500, "sucuk": 200,
             "ton_baligi": 160,
+            "galeta_unu": 250, "mayonez": 500, "soya_sosu": 250,
+            "hardal": 250, "karbonat": 5, "ketcap": 650,
+            "kori": 100, "kornison_tursu": 680, "nar_eksisi": 250,
+            "milfoy": 500,
         }.get(item.get("id"))
         return q * package_grams / 1000 if package_grams else None
     if unit == "kangal" and item.get("id") == "sucuk":

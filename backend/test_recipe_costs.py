@@ -34,6 +34,16 @@ class RecipeCostTests(unittest.TestCase):
             consumed_units(2, "paket", {"unit": "kg"})
         )
 
+    def test_converts_known_packaged_food_to_catalogue_units(self):
+        self.assertEqual(
+            consumed_units(2, "paket", {"id": "milfoy", "unit": "kg"}),
+            1.0,
+        )
+        self.assertEqual(
+            consumed_units(1, "paket", {"id": "soya_sosu", "unit": "L"}),
+            0.25,
+        )
+
     def test_parses_serving_range_without_crashing(self):
         self.assertEqual(parse_quantity("4-6 kişilik"), 4)
 
