@@ -30,6 +30,14 @@
           "iosUrlScheme": "com.googleusercontent.apps.1093576749212-kd7pauhk24giumbl2jc83s0qgdkioa85"
         }
       ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
       "expo-apple-authentication"
     ],
     "ios": {
