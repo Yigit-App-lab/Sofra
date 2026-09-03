@@ -1,6 +1,6 @@
 import React from 'react';
 import ProfileRecipeList from '../src/ProfileRecipeList';
 
-export default function Begendiklerim() {
-  return <ProfileRecipeList kind="liked" />;
+export default function Pisirdiklerim() {
+  return <ProfileRecipeList kind="cooked" />;
 }

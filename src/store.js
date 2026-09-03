@@ -204,6 +204,37 @@ function reducer(s, a) {
       }
       return { ...s, profile };
     }
+    case 'removeFeedback': {
+      const profile = JSON.parse(JSON.stringify(s.profile));
+      const id = String(a.id);
+      const feedback = { ...(profile.feedback || {}) };
+      const previous = feedback[id] || {};
+      const item = {
+        liked: Boolean(previous.liked || previous.event === 'liked'),
+        cooked: Boolean(previous.cooked || previous.event === 'cooked'),
+        disliked: Boolean(previous.disliked || previous.event === 'disliked'),
+        day: previous.day || today(),
+      };
+
+      if (a.kind === 'liked') {
+        profile.liked = { ...(profile.liked || {}) };
+        delete profile.liked[id];
+        item.liked = false;
+      } else if (a.kind === 'cooked') {
+        profile.cooked = { ...(profile.cooked || {}) };
+        delete profile.cooked[id];
+        item.cooked = false;
+      } else if (a.kind === 'disliked') {
+        profile.skips = { ...(profile.skips || {}) };
+        delete profile.skips[id];
+        item.disliked = false;
+      }
+
+      if (item.liked || item.cooked || item.disliked) feedback[id] = item;
+      else delete feedback[id];
+      profile.feedback = feedback;
+      return { ...s, profile };
+    }
     case 'resetProfile': return { ...s, profile: Engine.emptyProfile() };
     default: return s;
   }

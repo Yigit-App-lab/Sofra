@@ -92,6 +92,14 @@ function Shell() {
           name="begendiklerim"
           options={{ title: state.langIndex === 1 ? 'Liked recipes' : 'Beğendiklerim' }}
         />
+        <Stack.Screen
+          name="pisirdiklerim"
+          options={{ title: state.langIndex === 1 ? 'Cooked recipes' : 'Pişirdiklerim' }}
+        />
+        <Stack.Screen
+          name="bana-gore-degil"
+          options={{ title: state.langIndex === 1 ? 'Not for me' : 'Bana göre değil' }}
+        />
       </Stack>
     </>
   );

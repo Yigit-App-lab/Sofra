@@ -7,12 +7,12 @@ import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
 import Engine from '../../src/engine';
-import { REC, recById } from '../../src/data';
-import { useStore, useEngineCtx, today } from '../../src/store';
+import { REC } from '../../src/data';
+import { useStore, useEngineCtx } from '../../src/store';
 import { useAuth } from '../../src/auth';
-import { makeT, tl, LANGS, cleanRecipeTitle } from '../../src/i18n';
+import { makeT, tl, LANGS } from '../../src/i18n';
 import { useTheme, space } from '../../src/theme';
-import { Label, Body, Button, Card, LineItem, Choice, Chip, Divider } from '../../src/ui';
+import { Label, Body, Button, Card, Choice, Divider } from '../../src/ui';
 
 function Stat({ label, value }) {
   const c = useTheme();
@@ -70,9 +70,8 @@ export default function Ben() {
 
   const cooked = Object.keys(p.cooked);
   const likedCount = Object.keys(p.liked || {}).length;
-  const profileRecipeTitle = (id) => recById[id]
-    ? t.title(recById[id])
-    : cleanRecipeTitle(p.apiRecipes?.[id]?.title || id);
+  const dislikedCount = Object.values(p.feedback || {})
+    .filter((item) => item?.disliked || item?.event === 'disliked').length;
   const fav = useMemo(() => {
     let best = null, bw = 0;
     Object.keys(p.cuisines).forEach((k) => { if (p.cuisines[k].w > bw) { bw = p.cuisines[k].w; best = k; } });
@@ -143,19 +142,17 @@ export default function Ben() {
         <View style={{ marginTop:space.l }}><Body dim size={13.5}>{t('nothingYet')}</Body></View>
       )}
 
-      {cooked.length > 0 && (
-        <>
-          <Label>{t('history')}</Label>
-          {cooked.sort((a, b) => p.cooked[b] - p.cooked[a]).slice(0, 10).map((id) => (
-            <LineItem key={id} name={profileRecipeTitle(id)}
-              chips={<Chip>{today() - p.cooked[id]}{t.code === 'en' ? 'd' : ' gün'}</Chip>} />
-          ))}
-        </>
-      )}
-
       <View style={{ height:space.l }} />
       <Button kind="ghost" onPress={() => router.push('/begendiklerim')}>
         {t('likedRecipes')} · {likedCount}
+      </Button>
+      <View style={{ height:space.s }} />
+      <Button kind="ghost" onPress={() => router.push('/pisirdiklerim')}>
+        {t.code === 'en' ? 'Cooked recipes' : 'Pişirdiklerim'} · {cooked.length}
+      </Button>
+      <View style={{ height:space.s }} />
+      <Button kind="ghost" onPress={() => router.push('/bana-gore-degil')}>
+        {t.code === 'en' ? 'Not for me' : 'Bana göre değil'} · {dislikedCount}
       </Button>
 
       <View style={{ height:space.s }} />
