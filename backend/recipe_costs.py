@@ -288,6 +288,8 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
         missing_required_protein = False
         missing_required_ingredient = False
         missing_ingredient_names = []
+        unmapped_ingredient_names = []
+        missing_quantity_names = []
         mapped_ids = set()
         protein_kg = 0.0
         ingredients = grouped.get(recipe["id"], [])
@@ -314,6 +316,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                     eligible += 1
                     missing_required_protein = True
                     missing_ingredient_names.append(raw_name or raw_text)
+                    unmapped_ingredient_names.append(raw_name or raw_text)
                 elif quantity is not None and not re.search(
                     r"\b(tuz|karabiber|pul biber|kirmizi biber|baharat|"
                     r"istege gore|arzuya gore|uzeri icin)\b",
@@ -324,6 +327,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                     # coverage and publish the cost of only the sauce/garnish.
                     eligible += 1
                     missing_ingredient_names.append(raw_name or raw_text)
+                    unmapped_ingredient_names.append(raw_name or raw_text)
                 continue
             # Missing main ingredients reduce confidence. Missing protein is a
             # hard stop: publishing the sauce cost as a chicken/beef meal cost
@@ -332,6 +336,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 if item.get("kind") in ("protein", "sut", "tahil", "sebze", "meyve"):
                     eligible += 1
                     missing_ingredient_names.append(raw_name)
+                    missing_quantity_names.append(raw_name)
                     item_title = normalize(item.get("names", {}).get("tr") or item.get("id"))
                     if item_title and item_title in recipe_title:
                         missing_required_ingredient = True
@@ -359,6 +364,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
         ):
             missing_required_ingredient = True
             missing_ingredient_names.append("biber")
+            unmapped_ingredient_names.append("biber")
             eligible += 1
         servings = effective_servings(
             recipe.get("servings"), recipe.get("title"), protein_kg
@@ -394,6 +400,8 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
         recipe["cost_servings"] = servings
         recipe["cost_unavailable_reason"] = unavailable_reason
         recipe["cost_missing_ingredients"] = sorted(set(missing_ingredient_names))[:8]
+        recipe["cost_unmapped_ingredients"] = sorted(set(unmapped_ingredient_names))[:8]
+        recipe["cost_missing_quantities"] = sorted(set(missing_quantity_names))[:8]
 
 
 def safely_attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
@@ -414,4 +422,6 @@ def safely_attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 ),
                 "cost_unavailable_reason": "cost_enrichment_failed",
                 "cost_missing_ingredients": [],
+                "cost_unmapped_ingredients": [],
+                "cost_missing_quantities": [],
             })

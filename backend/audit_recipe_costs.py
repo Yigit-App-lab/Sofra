@@ -107,6 +107,7 @@ def audit(db, city: str, recipe_limit: int) -> list[dict]:
                 "cost_per_portion": "", "cost_total": "", "coverage": "",
                 "meal_role": "", "issue": flag, "ingredient_text": text,
                 "cost_unavailable_reason": "", "missing_ingredients": "",
+                "unmapped_ingredients": "", "missing_quantities": "",
             })
 
     # High-risk first trial: recipes mapped to protein ingredients.
@@ -140,6 +141,12 @@ def audit(db, city: str, recipe_limit: int) -> list[dict]:
                     "missing_ingredients": " | ".join(
                         recipe.get("cost_missing_ingredients") or []
                     ),
+                    "unmapped_ingredients": " | ".join(
+                        recipe.get("cost_unmapped_ingredients") or []
+                    ),
+                    "missing_quantities": " | ".join(
+                        recipe.get("cost_missing_quantities") or []
+                    ),
                 })
     return findings
 
@@ -164,6 +171,7 @@ def main() -> int:
     fields = ["recipe_id", "title", "cost_per_portion", "cost_total",
               "coverage", "meal_role", "issue", "ingredient_text",
               "cost_unavailable_reason", "missing_ingredients"]
+    fields.extend(["unmapped_ingredients", "missing_quantities"])
     with output.open("w", newline="", encoding="utf-8-sig") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
@@ -177,14 +185,22 @@ def main() -> int:
         item["cost_unavailable_reason"] or "unknown" for item in unavailable
     )
     missing_ingredients = Counter()
+    unmapped_ingredients = Counter()
+    missing_quantities = Counter()
     for item in unavailable:
         for name in filter(None, item["missing_ingredients"].split(" | ")):
             missing_ingredients[name] += 1
+        for name in filter(None, item["unmapped_ingredients"].split(" | ")):
+            unmapped_ingredients[name] += 1
+        for name in filter(None, item["missing_quantities"].split(" | ")):
+            missing_quantities[name] += 1
     print(json.dumps({
         "output": str(output), "finding_count": len(findings),
         "counts": counts,
         "unavailable_reasons": dict(unavailable_reasons.most_common()),
         "top_missing_ingredients": dict(missing_ingredients.most_common(25)),
+        "top_unmapped_ingredients": dict(unmapped_ingredients.most_common(25)),
+        "top_missing_quantities": dict(missing_quantities.most_common(25)),
     }, ensure_ascii=False, indent=2))
     return 0
 

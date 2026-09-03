@@ -132,6 +132,8 @@ class RecipeCostTests(unittest.TestCase):
         self.assertIsNone(recipe["cost_per_portion"])
         self.assertEqual(recipe["cost_unavailable_reason"], "coverage_under_70_percent")
         self.assertEqual(recipe["cost_missing_ingredients"], ["bilinmeyen sos"])
+        self.assertEqual(recipe["cost_unmapped_ingredients"], ["bilinmeyen sos"])
+        self.assertEqual(recipe["cost_missing_quantities"], [])
 
 
 if __name__ == "__main__":
