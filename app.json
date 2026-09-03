@@ -43,6 +43,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yberktas.sofra",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false

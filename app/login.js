@@ -75,10 +75,22 @@ export default function LoginScreen() {
     ? (english ? 'Use at least 8 characters.' : 'En az 8 karakter kullanın.') : '';
   const valid = EMAIL.test(email.trim()) && password.length >= 8;
 
-  async function run(action) {
+  async function run(action, provider = 'email') {
     try { setBusy(true); setMessage(''); await action(); router.replace('/(tabs)'); }
     catch (error) {
-      if (error?.code !== 'ERR_REQUEST_CANCELED' && error?.code !== '1001') setMessage(friendlyAuthError(error, english));
+      if (error?.code !== 'ERR_REQUEST_CANCELED' && error?.code !== '1001') {
+        if (provider === 'apple' && error?.code === 'auth/invalid-credential') {
+          setMessage(english
+            ? 'Apple sign-in could not be verified. Please try again.'
+            : 'Apple ile giriş doğrulanamadı. Lütfen tekrar deneyin.');
+        } else if (provider === 'google' && error?.code === 'auth/invalid-credential') {
+          setMessage(english
+            ? 'Google sign-in could not be verified. Please try again.'
+            : 'Google ile giriş doğrulanamadı. Lütfen tekrar deneyin.');
+        } else {
+          setMessage(friendlyAuthError(error, english));
+        }
+      }
     } finally { setBusy(false); }
   }
 
@@ -116,7 +128,7 @@ export default function LoginScreen() {
       const idToken = response?.data?.idToken || response?.idToken;
       if (!idToken) throw new Error('Google did not return an ID token');
       await signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
-    });
+    }, 'google');
   }
 
   function appleLogin() {
@@ -130,7 +142,7 @@ export default function LoginScreen() {
       });
       const credential = new OAuthProvider('apple.com').credential({ idToken:result.identityToken, rawNonce });
       await signInWithCredential(auth, credential);
-    });
+    }, 'apple');
   }
 
   return (
