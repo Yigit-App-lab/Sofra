@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -108,8 +109,13 @@ def quantity_and_unit(quantity, recipe_unit, original_text) -> tuple[float | Non
     """Recover quantity/unit when the source parser damaged `1. 5 kilo`."""
     text = normalize(original_text)
     broken_decimal = re.search(r"\b(\d+)[.,]\s+(\d+)\b", text)
-    q = (float(f"{broken_decimal.group(1)}.{broken_decimal.group(2)}")
-         if broken_decimal else parse_quantity(quantity))
+    leading_fraction = re.match(r"^(?:\d+\s+)?\d+\s*/\s*\d+", text)
+    if broken_decimal:
+        q = float(f"{broken_decimal.group(1)}.{broken_decimal.group(2)}")
+    elif leading_fraction:
+        q = parse_quantity(leading_fraction.group(0))
+    else:
+        q = parse_quantity(quantity)
     if q is None:
         # The importer frequently left quantity/unit columns empty although the
         # intact source text still says "2 adet" or "yarım paket".
@@ -138,6 +144,21 @@ def quantity_and_unit(quantity, recipe_unit, original_text) -> tuple[float | Non
                 unit = inferred
                 break
     return q, unit
+
+
+def effective_servings(value, title="") -> int | float:
+    """Convert suspicious piece-yield counts into approximate people served."""
+    servings = parse_quantity(value) or 2
+    servings = max(1, servings)
+    # Imported sources sometimes store "30 adet köfte" as 30 servings. Sofra
+    # displays person cost, so treat large yields as roughly four pieces/person.
+    piece_yield_title = re.search(
+        r"\b(?:kofte|dolma|sarma|mucver|falafel|nugget|lokma|top)",
+        normalize(title),
+    )
+    if servings > 12 and piece_yield_title:
+        return max(2, math.ceil(servings / 4))
+    return servings
 
 
 def find_catalog_item(name, original_text, by_name):
@@ -313,8 +334,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 live_count += 1
                 if observation.get("observed_at"):
                     observed_dates.append(observation["observed_at"])
-        servings = parse_quantity(recipe.get("servings")) or 2
-        servings = max(1, servings)
+        servings = effective_servings(recipe.get("servings"), recipe.get("title"))
         coverage = priced / eligible if eligible else 0
         # A few imported rows contain zero or placeholder quantities. Publishing
         # 0.0 TL or a small priced fragment is worse than admitting that the
@@ -340,6 +360,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
         recipe["cost_coverage"] = round(coverage, 2)
         recipe["cost_live_count"] = live_count
         recipe["cost_observed_at"] = max(observed_dates) if observed_dates else None
+        recipe["cost_servings"] = servings
         recipe["cost_unavailable_reason"] = unavailable_reason
         recipe["cost_missing_ingredients"] = sorted(set(missing_ingredient_names))[:8]
 
@@ -357,6 +378,9 @@ def safely_attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 "cost_coverage": 0,
                 "cost_live_count": 0,
                 "cost_observed_at": None,
+                "cost_servings": effective_servings(
+                    recipe.get("servings"), recipe.get("title")
+                ),
                 "cost_unavailable_reason": "cost_enrichment_failed",
                 "cost_missing_ingredients": [],
             })

@@ -2,12 +2,12 @@ import unittest
 
 try:
     from .recipe_costs import (
-        attach_recipe_costs, consumed_units, find_catalog_item, load_catalog, parse_quantity,
+        attach_recipe_costs, consumed_units, effective_servings, find_catalog_item, load_catalog, parse_quantity,
         quantity_and_unit,
     )
 except ImportError:
     from recipe_costs import (
-        attach_recipe_costs, consumed_units, find_catalog_item, load_catalog, parse_quantity,
+        attach_recipe_costs, consumed_units, effective_servings, find_catalog_item, load_catalog, parse_quantity,
         quantity_and_unit,
     )
 
@@ -53,6 +53,16 @@ class RecipeCostTests(unittest.TestCase):
         quantity, unit = quantity_and_unit("1", None, "1. 5 kilo kuşbaşı")
         self.assertEqual(quantity, 1.5)
         self.assertEqual(unit, "kg")
+
+    def test_original_fraction_overrides_broken_imported_quantity(self):
+        self.assertEqual(quantity_and_unit("1", None, "1/3 demet maydanoz")[0], 1 / 3)
+
+    def test_large_piece_yields_become_people_served(self):
+        self.assertEqual(effective_servings(30, "İçli Köfte"), 8)
+        self.assertEqual(effective_servings(25, "Ödemiş Köftesi"), 7)
+        self.assertEqual(effective_servings(13, "Tavuklu Topalak Köfte"), 4)
+        self.assertEqual(effective_servings(30, "Kurabiye"), 30)
+        self.assertEqual(effective_servings(6, "Köfte"), 6)
 
     def test_recovers_whole_chicken_as_a_piece(self):
         quantity, unit = quantity_and_unit("1", None, "1 bütün tavuk")

@@ -193,7 +193,7 @@ export default function Tonight() {
         {choice.recipes.map((r, index) => {
           const ready = r.missing_count === 0;
           const hasCost = r.cost_per_portion != null && (r.cost_coverage || 0) >= 0.7;
-          const servings = r.servings || 2;
+          const servings = r.cost_servings || r.servings || 2;
           return (
             <Card key={r.id} style={{ marginBottom:space.m }}>
               <Text style={{ color:c.accent, fontSize:11, fontWeight:'800', letterSpacing:0.7 }}>

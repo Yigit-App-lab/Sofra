@@ -319,8 +319,11 @@ export default function ApiTarif() {
   const minutes =
     recipe.total_minutes ||
     ((recipe.prep_minutes || 0) + (recipe.cook_minutes || 0));
-  const servings = recipe.servings || 2;
+  const servings = recipe.cost_servings || recipe.servings || 2;
   const servingsDefaulted = !recipe.servings;
+  const servingsEstimated = Boolean(
+    recipe.cost_servings && Number(recipe.cost_servings) !== Number(recipe.servings)
+  );
   const hasCost =
     recipe.cost_total != null &&
     recipe.cost_per_portion != null &&
@@ -446,7 +449,11 @@ export default function ApiTarif() {
         {recipe.category || (english ? 'Recipe' : 'Tarif')}
         {minutes ? ` · ${minutes} ${english ? 'min' : 'dk'}` : ''}
         {` · ${servings} ${english ? 'servings' : 'kişilik'}`}
-        {servingsDefaulted ? (english ? ' (default)' : ' (varsayılan)') : ''}
+        {servingsDefaulted
+          ? (english ? ' (default)' : ' (varsayılan)')
+          : servingsEstimated
+            ? (english ? ' (estimated)' : ' (tahmini)')
+            : ''}
       </Text>
 
       <View

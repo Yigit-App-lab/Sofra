@@ -55,7 +55,7 @@ const RecipeRow = memo(function RecipeRow({ item, english, onOpen }) {
       <Text style={{ color: c.ink3, fontSize: 13 }}>
         {item.category || (english ? 'Recipe' : 'Tarif')}
         {minutes ? ` · ${minutes} ${english ? 'min' : 'dk'}` : ''}
-        {item.servings ? ` · ${item.servings} ${english ? 'servings' : 'kişilik'}` : ''}
+        {(item.cost_servings || item.servings) ? ` · ${item.cost_servings || item.servings} ${english ? 'servings' : 'kişilik'}` : ''}
       </Text>
     </Pressable>
   );
