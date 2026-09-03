@@ -13,9 +13,9 @@ const PAGES = [
   },
   {
     image:require('../assets/onboarding/cook-sofra.png'),
-    title:'Sana uygun tarifleri bul',
-    body:'Süre, bütçe ve beslenme tercihlerini belirle. Beğendim, Pişirdim ve Bana göre değil seçimlerinle Sofra seni tanısın.',
-    note:'Sana özel öneriler · Tekrara düşmeyen akşamlar',
+    title:'Filtrelerle sana uygun tarifleri bul',
+    body:'Süre ve bütçeni belirle; etsiz, vejetaryen, vegan, glutensiz, laktozsuz veya düşük glisemik filtrelerini seç. Tercihlerini istediğin zaman Profilim’den değiştirebilirsin.',
+    note:'Kontrol sende',
   },
   {
     image:require('../assets/onboarding/market-sofra.png'),
