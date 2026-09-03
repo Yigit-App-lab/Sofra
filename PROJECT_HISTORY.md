@@ -28,6 +28,12 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
 - Beğendiklerim ayrı profil ekranında gösteriliyor.
 - Bana göre değil listesini gösterme ve geri alma sonraki işler arasında.
 
+## Tasarım ve tanıtım
+
+- İlk açılış tanıtımı dört sayfaya genişletildi.
+- Süre/bütçe kontrolleri ile beslenme filtreleri ayrı sayfalarda açıklanıyor.
+- Tanıtım sayfaları düğmenin yanında sağa/sola kaydırma hareketiyle de değiştirilebiliyor.
+
 ## Tarif verisi
 
 - Yemek olmayan saklama, dondurma ve et/tavuk suyu hazırlama kayıtları silinmek yerine karantinaya alındı.
@@ -59,4 +65,3 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
 2. Tamamlanan kutular işaretlenir.
 3. Önemli kararlar, dağıtımlar, denetim sonuçları ve yedek yolları bu dosyaya eklenir.
 4. Canlı veritabanı değişiklikleri her zaman önce kuru deneme ve yedekle uygulanır.
-

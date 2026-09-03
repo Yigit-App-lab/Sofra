@@ -69,8 +69,8 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
 
 - [x] Bu Akşam, Tarifler ve Liste için arka plan görselleri
 - [x] Arka plan görsellerinin görünürlüğünü artırma
-- [ ] İlk açılış tanıtımını geliştirme
-- [ ] İlk girişte filtrelerin ne yaptığını açıklama
+- [x] İlk açılış tanıtımını dört sayfalı ve kaydırılabilir hale getirme
+- [x] İlk girişte filtrelerin ne yaptığını açıklama
 - [ ] Varsayılan Türkçe dilini temiz kurulumda yeniden doğrulama
 - [ ] Günlük hatırlatma deneyimini geliştirme
 - [ ] Uygulama ikonu ve açılış ekranı
@@ -88,4 +88,3 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
 - [ ] Play Internal Testing
 - [ ] Push notification yapılandırması
 - [ ] App Store ve Google Play yayın öncesi kontrolü
-
