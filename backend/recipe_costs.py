@@ -232,6 +232,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
         eligible = 0
         observed_dates = []
         missing_required_protein = False
+        missing_ingredient_names = []
         ingredients = grouped.get(recipe["id"], [])
         for row in ingredients:
             raw_name = normalize(row["kiler_name"] or row["name"])
@@ -255,6 +256,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 if is_unmapped_protein and not is_stock_or_flavouring:
                     eligible += 1
                     missing_required_protein = True
+                    missing_ingredient_names.append(raw_name or raw_text)
                 elif quantity is not None and not re.search(
                     r"\b(tuz|karabiber|pul biber|kirmizi biber|baharat|"
                     r"istege gore|arzuya gore|uzeri icin)\b",
@@ -264,6 +266,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                     # denominator. Ignoring it used to produce misleading 100%
                     # coverage and publish the cost of only the sauce/garnish.
                     eligible += 1
+                    missing_ingredient_names.append(raw_name or raw_text)
                 continue
             # Missing main ingredients reduce confidence. Missing protein is a
             # hard stop: publishing the sauce cost as a chicken/beef meal cost
@@ -273,6 +276,7 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                     eligible += 1
                 if item.get("kind") == "protein":
                     missing_required_protein = True
+                    missing_ingredient_names.append(raw_name)
                 continue
             eligible += 1
             units = consumed_units(quantity, recipe_unit, item)
@@ -298,11 +302,23 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
             and coverage >= 0.70
             and not missing_required_protein
         )
+        if usable_cost:
+            unavailable_reason = None
+        elif missing_required_protein:
+            unavailable_reason = "missing_required_protein"
+        elif priced == 0:
+            unavailable_reason = "no_priced_ingredients"
+        elif coverage < 0.70:
+            unavailable_reason = "coverage_under_70_percent"
+        else:
+            unavailable_reason = "total_below_minimum"
         recipe["cost_total"] = round(total, 2) if usable_cost else None
         recipe["cost_per_portion"] = round(total / servings, 2) if usable_cost else None
         recipe["cost_coverage"] = round(coverage, 2)
         recipe["cost_live_count"] = live_count
         recipe["cost_observed_at"] = max(observed_dates) if observed_dates else None
+        recipe["cost_unavailable_reason"] = unavailable_reason
+        recipe["cost_missing_ingredients"] = sorted(set(missing_ingredient_names))[:8]
 
 
 def safely_attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
@@ -318,4 +334,6 @@ def safely_attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 "cost_coverage": 0,
                 "cost_live_count": 0,
                 "cost_observed_at": None,
+                "cost_unavailable_reason": "cost_enrichment_failed",
+                "cost_missing_ingredients": [],
             })

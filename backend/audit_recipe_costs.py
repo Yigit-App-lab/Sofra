@@ -105,6 +105,7 @@ def audit(db, city: str, recipe_limit: int) -> list[dict]:
                 "recipe_id": row["id"], "title": row["title"],
                 "cost_per_portion": "", "cost_total": "", "coverage": "",
                 "meal_role": "", "issue": flag, "ingredient_text": text,
+                "cost_unavailable_reason": "", "missing_ingredients": "",
             })
 
     # High-risk first trial: recipes mapped to protein ingredients.
@@ -134,6 +135,10 @@ def audit(db, city: str, recipe_limit: int) -> list[dict]:
                     "coverage": recipe.get("cost_coverage"),
                     "meal_role": meal_role(recipe),
                     "issue": flag, "ingredient_text": "",
+                    "cost_unavailable_reason": recipe.get("cost_unavailable_reason") or "",
+                    "missing_ingredients": " | ".join(
+                        recipe.get("cost_missing_ingredients") or []
+                    ),
                 })
     return findings
 
@@ -156,7 +161,8 @@ def main() -> int:
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     fields = ["recipe_id", "title", "cost_per_portion", "cost_total",
-              "coverage", "meal_role", "issue", "ingredient_text"]
+              "coverage", "meal_role", "issue", "ingredient_text",
+              "cost_unavailable_reason", "missing_ingredients"]
     with output.open("w", newline="", encoding="utf-8-sig") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
