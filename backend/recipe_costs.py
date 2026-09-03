@@ -146,7 +146,7 @@ def quantity_and_unit(quantity, recipe_unit, original_text) -> tuple[float | Non
     return q, unit
 
 
-def effective_servings(value, title="") -> int | float:
+def effective_servings(value, title="", protein_kg=0) -> int | float:
     """Convert suspicious piece-yield counts into approximate people served."""
     servings = parse_quantity(value) or 2
     servings = max(1, servings)
@@ -157,7 +157,16 @@ def effective_servings(value, title="") -> int | float:
         normalize(title),
     )
     if servings > 12 and piece_yield_title:
-        return max(2, math.ceil(servings / 4))
+        servings = max(2, math.ceil(servings / 4))
+    protein_forward_title = re.search(
+        r"\b(?:tavuk|hindi|dana|kuzu|kiyma|kusbasi|bonfile|biftek|"
+        r"antrikot|balik|somon|levrek|cipura|hamsi|karides|kalamar)",
+        normalize(title),
+    )
+    if protein_forward_title and protein_kg > 0 and protein_kg / servings < 0.06:
+        # A source yield such as "5 şiş" is sometimes imported as five people.
+        # Do not advertise a main protein dish as five portions of 25 g chicken.
+        servings = max(2, math.floor(protein_kg / 0.06))
     return servings
 
 
@@ -270,13 +279,17 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
         grouped[row["recipe_id"]].append(row)
 
     for recipe in recipes:
+        recipe_title = normalize(recipe.get("title"))
         total = 0.0
         priced = 0
         live_count = 0
         eligible = 0
         observed_dates = []
         missing_required_protein = False
+        missing_required_ingredient = False
         missing_ingredient_names = []
+        mapped_ids = set()
+        protein_kg = 0.0
         ingredients = grouped.get(recipe["id"], [])
         for row in ingredients:
             raw_name = normalize(row["kiler_name"] or row["name"])
@@ -318,14 +331,20 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
             if quantity is None:
                 if item.get("kind") in ("protein", "sut", "tahil", "sebze", "meyve"):
                     eligible += 1
+                    missing_ingredient_names.append(raw_name)
+                    item_title = normalize(item.get("names", {}).get("tr") or item.get("id"))
+                    if item_title and item_title in recipe_title:
+                        missing_required_ingredient = True
                 if item.get("kind") == "protein":
                     missing_required_protein = True
-                    missing_ingredient_names.append(raw_name)
                 continue
             eligible += 1
             units = consumed_units(quantity, recipe_unit, item)
             if units is None:
                 continue
+            mapped_ids.add(item.get("id"))
+            if item.get("kind") == "protein" and item.get("unit") == "kg":
+                protein_kg += units
             observation = get_cached_price(item["id"], item["unit"], city)
             unit_price = observation["average"] if observation else item["price"]
             total += units * float(unit_price)
@@ -334,7 +353,16 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 live_count += 1
                 if observation.get("observed_at"):
                     observed_dates.append(observation["observed_at"])
-        servings = effective_servings(recipe.get("servings"), recipe.get("title"))
+        if re.search(r"\bbiber\w*\s+dolma", recipe_title) and not any(
+            item_id in mapped_ids for item_id in
+            ("biber_dolmalik", "biber_sivri", "biber_aci", "biber_kirmizi")
+        ):
+            missing_required_ingredient = True
+            missing_ingredient_names.append("biber")
+            eligible += 1
+        servings = effective_servings(
+            recipe.get("servings"), recipe.get("title"), protein_kg
+        )
         coverage = priced / eligible if eligible else 0
         # A few imported rows contain zero or placeholder quantities. Publishing
         # 0.0 TL or a small priced fragment is worse than admitting that the
@@ -344,11 +372,14 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
             and total >= 0.05
             and coverage >= 0.70
             and not missing_required_protein
+            and not missing_required_ingredient
         )
         if usable_cost:
             unavailable_reason = None
         elif missing_required_protein:
             unavailable_reason = "missing_required_protein"
+        elif missing_required_ingredient:
+            unavailable_reason = "missing_required_ingredient"
         elif priced == 0:
             unavailable_reason = "no_priced_ingredients"
         elif coverage < 0.70:
@@ -379,7 +410,7 @@ def safely_attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 "cost_live_count": 0,
                 "cost_observed_at": None,
                 "cost_servings": effective_servings(
-                    recipe.get("servings"), recipe.get("title")
+                    recipe.get("servings"), recipe.get("title"), 0
                 ),
                 "cost_unavailable_reason": "cost_enrichment_failed",
                 "cost_missing_ingredients": [],

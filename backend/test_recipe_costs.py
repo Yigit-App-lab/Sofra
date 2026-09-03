@@ -64,6 +64,10 @@ class RecipeCostTests(unittest.TestCase):
         self.assertEqual(effective_servings(30, "Kurabiye"), 30)
         self.assertEqual(effective_servings(6, "Köfte"), 6)
 
+    def test_tiny_protein_yield_is_not_treated_as_many_people(self):
+        self.assertEqual(effective_servings(5, "Tavuk Çöp Şiş", 0.125), 2)
+        self.assertEqual(effective_servings(7, "Tavuk Yemeği", 0.5), 7)
+
     def test_recovers_whole_chicken_as_a_piece(self):
         quantity, unit = quantity_and_unit("1", None, "1 bütün tavuk")
         self.assertEqual(quantity, 1)
