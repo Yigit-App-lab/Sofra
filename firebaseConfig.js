@@ -20,14 +20,14 @@ export const firebaseConfig = {
 
 // Firebase uses the Web OAuth client ID when exchanging a Google ID token.
 export const GOOGLE_WEB_CLIENT_ID =
-  '1093576749212-iigsuh62qcbfivsjoror6v75rbmpjgo9.apps.googleusercontent.com';
+  '167919551577-nolrtu7oi0oqsv2n02mo76ais9rjcvss.apps.googleusercontent.com';
 
 // Native OAuth clients registered for Sofra. Android is matched by package name
 // and signing-certificate SHA-1; iOS must also be supplied to Google Sign-In.
 export const GOOGLE_ANDROID_CLIENT_ID =
-  '1093576749212-1lvognimlleeg66d1cepqmqh0gd26874.apps.googleusercontent.com';
+  '167919551577-ki40qf7ng3853ms7ci8ah1plc1l8gk6a.apps.googleusercontent.com';
 export const GOOGLE_IOS_CLIENT_ID =
-  '1093576749212-kd7pauhk24giumbl2jc83s0qgdkioa85.apps.googleusercontent.com';
+  '167919551577-qfj5eq2dou44st2tjlfnb68lod059305.apps.googleusercontent.com';
 
 export const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 

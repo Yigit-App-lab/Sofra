@@ -27,7 +27,7 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.1093576749212-kd7pauhk24giumbl2jc83s0qgdkioa85"
+          "iosUrlScheme": "com.googleusercontent.apps.167919551577-qfj5eq2dou44st2tjlfnb68lod059305"
         }
       ],
       [
@@ -56,7 +56,8 @@
       }
     },
     "android": {
-      "package": "com.yberktas.sofra"
+      "package": "com.yberktas.sofra",
+      "googleServicesFile": "./google-services.json"
     },
     "extra": {
       "router": {},
