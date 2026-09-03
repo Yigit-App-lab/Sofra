@@ -128,7 +128,8 @@ def quantity_and_unit(quantity, recipe_unit, original_text) -> tuple[float | Non
             (r"\bcay bardagi\b", "çay bardağı"),
             (r"\b(ml|mililitre)\b", "ml"),
             (r"\b(litre|liter|lt)\b", "litre"),
-            (r"\b(paket|kangal)\b", "paket"),
+            (r"\bpaket\b", "paket"),
+            (r"\bkangal\b", "kangal"),
             (r"\bdilim\b", "dilim"),
             (r"\bbutun tavuk\b", "adet"),
         )
@@ -207,6 +208,10 @@ def consumed_units(quantity, recipe_unit, item) -> float | None:
             "ton_baligi": 160,
         }.get(item.get("id"))
         return q * package_grams / 1000 if package_grams else None
+    if unit == "kangal" and item.get("id") == "sucuk":
+        # Retail weights vary, so use a conservative 400 g reference kangal.
+        # This makes "yarım kangal" 200 g instead of treating it as half a pack.
+        return q * 0.4
     if unit == "dilim":
         slice_grams = {
             "sucuk": 10, "pastirma": 15, "somon": 200, "levrek": 200,

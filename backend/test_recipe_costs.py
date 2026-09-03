@@ -74,6 +74,12 @@ class RecipeCostTests(unittest.TestCase):
             quantity_and_unit(None, None, "yarım paket sucuk"),
             (0.5, "paket"),
         )
+        quantity, unit = quantity_and_unit(None, None, "yarım kangal sucuk")
+        self.assertEqual((quantity, unit), (0.5, "kangal"))
+        self.assertEqual(
+            consumed_units(quantity, unit, {"id": "sucuk", "unit": "kg"}),
+            0.2,
+        )
 
     def test_prices_antrikot_by_weight_or_piece(self):
         _, by_name = load_catalog()
