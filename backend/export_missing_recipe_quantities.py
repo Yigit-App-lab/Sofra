@@ -56,7 +56,7 @@ def main() -> int:
         if not placeholders:
             continue
         source_rows = db.execute(f"""
-            SELECT r.id AS recipe_id, r.title, r.servings,
+            SELECT r.id AS recipe_id, r.title, r.servings, r.instructions,
                    ri.rowid AS ingredient_rowid, ri.quantity, ri.unit,
                    ri.original_text, i.name, ki.name AS kiler_name
             FROM recipes r
@@ -70,6 +70,13 @@ def main() -> int:
             WHERE r.id IN ({placeholders})
             ORDER BY r.id, ri.rowid
         """, batch).fetchall()
+        full_ingredients = {}
+        for row in source_rows:
+            text = str(row["original_text"] or row["name"] or "").strip()
+            if text:
+                recipe_ingredients = full_ingredients.setdefault(row["recipe_id"], [])
+                if text not in recipe_ingredients:
+                    recipe_ingredients.append(text)
         for row in source_rows:
             raw_name = normalize(row["kiler_name"] or row["name"])
             item = find_catalog_item(raw_name, row["original_text"], by_name)
@@ -89,6 +96,8 @@ def main() -> int:
                 "ingredient_name": row["name"],
                 "catalog_item": item.get("names", {}).get("tr") or item.get("id"),
                 "original_text": row["original_text"],
+                "full_ingredients": "\n".join(full_ingredients.get(row["recipe_id"], [])),
+                "instructions": row["instructions"],
                 "current_quantity": row["quantity"],
                 "current_unit": row["unit"],
                 "reviewed_quantity": "",
@@ -104,6 +113,7 @@ def main() -> int:
     fields = list(rows[0]) if rows else [
         "priority", "recipe_id", "recipe_title", "recipe_servings",
         "ingredient_rowid", "ingredient_name", "catalog_item", "original_text",
+        "full_ingredients", "instructions",
         "current_quantity", "current_unit", "reviewed_quantity", "reviewed_unit",
         "expert_note", "review_status",
     ]
