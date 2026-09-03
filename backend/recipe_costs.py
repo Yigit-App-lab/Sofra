@@ -66,6 +66,11 @@ def load_catalog() -> tuple[dict, dict]:
         "yumurta sarisi": "yumurta",
         "yumurta beyazi": "yumurta",
         "lavas": "yufka",
+        "lahana": "lahana_beyaz",
+        "bezelye": "bezelye_taze",
+        "sivi yagi": "aycicek_yagi",
+        "kasik un": "un",
+        "kasik tereyag": "tereyagi",
     }
     for alias, item_id in aliases.items():
         if item_id in by_id:
@@ -312,6 +317,11 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 is_stock_or_flavouring = re.search(
                     r"\b(suyu|bulyon|cesni|aroma|tablet)\b", raw_text
                 )
+                if is_stock_or_flavouring:
+                    # Stock quantities must never be priced as the equivalent
+                    # weight of raw chicken/beef. Treat them like water until a
+                    # dedicated stock product exists in the catalogue.
+                    continue
                 if is_unmapped_protein and not is_stock_or_flavouring:
                     eligible += 1
                     missing_required_protein = True

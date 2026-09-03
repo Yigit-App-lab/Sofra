@@ -107,6 +107,9 @@ class RecipeCostTests(unittest.TestCase):
         self.assertEqual(find_catalog_item("kapya biber", "", by_name)["id"], "biber_kirmizi")
         self.assertEqual(find_catalog_item("yumurta sarısı", "", by_name)["id"], "yumurta")
         self.assertEqual(find_catalog_item("lavaş", "", by_name)["id"], "yufka")
+        self.assertEqual(find_catalog_item("lahana", "", by_name)["id"], "lahana_beyaz")
+        self.assertEqual(find_catalog_item("sıvı yağı", "", by_name)["id"], "aycicek_yagi")
+        self.assertEqual(find_catalog_item("kaşık un", "", by_name)["id"], "un")
 
     def test_unknown_measured_ingredients_reduce_cost_confidence(self):
         import sqlite3
