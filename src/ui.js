@@ -30,9 +30,9 @@ export function Card({ children, style }) {
   );
 }
 
-export function ScreenBackdrop({ source, children, opacity = 0.14 }) {
+export function ScreenBackdrop({ source, children, opacity = 0.20 }) {
   const c = useTheme();
-  const imageOpacity = c.ground === '#EAEEEC' ? opacity : Math.min(opacity, 0.08);
+  const imageOpacity = c.ground === '#EAEEEC' ? opacity : Math.min(opacity, 0.12);
   return (
     <View style={{ flex:1, backgroundColor:c.ground }}>
       <Image source={source} resizeMode="cover" pointerEvents="none"

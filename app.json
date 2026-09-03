@@ -49,6 +49,9 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
         "CFBundleLocalizations": [
           "tr",
           "en"
