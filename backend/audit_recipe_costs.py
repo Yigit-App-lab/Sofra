@@ -6,6 +6,7 @@ Designed for the VPS database. It never updates recipe data.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import csv
 import json
 from pathlib import Path
@@ -171,9 +172,19 @@ def main() -> int:
     counts = {}
     for item in findings:
         counts[item["issue"]] = counts.get(item["issue"], 0) + 1
+    unavailable = [item for item in findings if item["issue"] == "cost_unavailable"]
+    unavailable_reasons = Counter(
+        item["cost_unavailable_reason"] or "unknown" for item in unavailable
+    )
+    missing_ingredients = Counter()
+    for item in unavailable:
+        for name in filter(None, item["missing_ingredients"].split(" | ")):
+            missing_ingredients[name] += 1
     print(json.dumps({
         "output": str(output), "finding_count": len(findings),
         "counts": counts,
+        "unavailable_reasons": dict(unavailable_reasons.most_common()),
+        "top_missing_ingredients": dict(missing_ingredients.most_common(25)),
     }, ensure_ascii=False, indent=2))
     return 0
 
