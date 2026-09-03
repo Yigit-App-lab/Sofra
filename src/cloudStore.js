@@ -1,4 +1,4 @@
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 
 export const USER_FIELDS = [
@@ -32,4 +32,8 @@ export async function writeCloudUserState(uid, data, clientUpdatedAt) {
     clientUpdatedAt,
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function deleteCloudUserState(uid) {
+  await deleteDoc(userStateRef(uid));
 }

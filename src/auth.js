@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, reload } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 
 const AuthContext = createContext(null);
@@ -7,14 +7,23 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
+  const [, setRevision] = useState(0);
 
   useEffect(() => onAuthStateChanged(auth, (nextUser) => {
     setUser(nextUser);
     setReady(true);
   }), []);
 
+  async function refreshUser() {
+    if (!auth.currentUser) return null;
+    await reload(auth.currentUser);
+    setUser(auth.currentUser);
+    setRevision((value) => value + 1);
+    return auth.currentUser;
+  }
+
   return (
-    <AuthContext.Provider value={{ user, ready }}>
+    <AuthContext.Provider value={{ user, ready, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -39,6 +48,7 @@ export function friendlyAuthError(error, english = false) {
     'auth/operation-not-allowed': ['Bu giriş yöntemi Firebase’de etkin değil.', 'This sign-in method is not enabled in Firebase.'],
     'auth/configuration-not-found': ['Firebase Authentication henüz etkinleştirilmemiş.', 'Firebase Authentication has not been enabled yet.'],
     'auth/too-many-requests': ['Çok fazla deneme yapıldı. Biraz bekleyip tekrar deneyin.', 'Too many attempts. Wait a moment and try again.'],
+    'auth/requires-recent-login': ['Güvenlik için çıkış yapıp tekrar giriş yaptıktan sonra yeniden deneyin.', 'For security, log out, sign in again, and retry.'],
   };
   const pair = messages[code];
   return pair ? pair[english ? 1 : 0] : (english ? 'Sign-in failed. Please try again.' : 'Giriş yapılamadı. Lütfen tekrar deneyin.');

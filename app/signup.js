@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 import { friendlyAuthError } from '../src/auth';
 import { useStore } from '../src/store';
@@ -29,7 +29,10 @@ export default function SignupScreen() {
     if (!valid) return;
     try {
       setBusy(true); setError('');
-      await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      // Account creation must still succeed if email delivery is temporarily
+      // unavailable; the account screen lets the user resend the message.
+      await sendEmailVerification(credential.user).catch(() => {});
       router.replace('/(tabs)');
     } catch (nextError) { setError(friendlyAuthError(nextError, english)); }
     finally { setBusy(false); }

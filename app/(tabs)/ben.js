@@ -106,6 +106,17 @@ export default function Ben() {
               ? (t.code === 'en' ? 'Syncing your profile…' : 'Profilin eşitleniyor…')
               : (t.code === 'en' ? 'Profile synced across your devices' : 'Profilin cihazların arasında eşitlendi')}
         </Body>
+        {user?.providerData?.some((provider) => provider.providerId === 'password') && !user.emailVerified ? (
+          <Text style={{ color:c.pricey, fontSize:12.5, marginTop:space.s }}>
+            {t.code === 'en' ? 'Your email address is not verified.' : 'E-posta adresin henüz doğrulanmadı.'}
+          </Text>
+        ) : null}
+        <Pressable onPress={() => router.push('/account')} style={{ marginTop:space.m }}
+          accessibilityRole="button" accessibilityLabel={t.code === 'en' ? 'Account and security' : 'Hesap ve güvenlik'}>
+          <Text style={{ color:c.accent, fontSize:13.5, fontWeight:'700' }}>
+            {t.code === 'en' ? 'Account & security' : 'Hesap ve güvenlik'}
+          </Text>
+        </Pressable>
       </Card>
       <Card>
         <Stat label={t('cookedN')} value={cooked.length} />

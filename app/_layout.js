@@ -67,6 +67,10 @@ function Shell() {
       }}>
         <Stack.Screen name="login" options={{ headerShown:false }} />
         <Stack.Screen name="signup" options={{ headerShown:false }} />
+        <Stack.Screen
+          name="account"
+          options={{ title: state.langIndex === 1 ? 'Account & security' : 'Hesap ve güvenlik' }}
+        />
         <Stack.Screen name="onboarding" options={{ headerShown:false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown:false }} />
         <Stack.Screen
