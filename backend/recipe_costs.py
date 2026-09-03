@@ -255,6 +255,15 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                 if is_unmapped_protein and not is_stock_or_flavouring:
                     eligible += 1
                     missing_required_protein = True
+                elif quantity is not None and not re.search(
+                    r"\b(tuz|karabiber|pul biber|kirmizi biber|baharat|"
+                    r"istege gore|arzuya gore|uzeri icin)\b",
+                    raw_text,
+                ):
+                    # An unmapped, measured ingredient still belongs in the
+                    # denominator. Ignoring it used to produce misleading 100%
+                    # coverage and publish the cost of only the sauce/garnish.
+                    eligible += 1
                 continue
             # Missing main ingredients reduce confidence. Missing protein is a
             # hard stop: publishing the sauce cost as a chicken/beef meal cost
@@ -279,12 +288,19 @@ def attach_recipe_costs(db, recipes: list[dict], city: str) -> None:
                     observed_dates.append(observation["observed_at"])
         servings = parse_quantity(recipe.get("servings")) or 2
         servings = max(1, servings)
+        coverage = priced / eligible if eligible else 0
         # A few imported rows contain zero or placeholder quantities. Publishing
-        # 0.0 TL is worse than admitting that the price could not be calculated.
-        usable_cost = priced > 0 and total >= 0.05 and not missing_required_protein
+        # 0.0 TL or a small priced fragment is worse than admitting that the
+        # estimate is unavailable. Only sufficiently covered estimates reach UI.
+        usable_cost = (
+            priced > 0
+            and total >= 0.05
+            and coverage >= 0.70
+            and not missing_required_protein
+        )
         recipe["cost_total"] = round(total, 2) if usable_cost else None
         recipe["cost_per_portion"] = round(total / servings, 2) if usable_cost else None
-        recipe["cost_coverage"] = round(priced / eligible, 2) if eligible else 0
+        recipe["cost_coverage"] = round(coverage, 2)
         recipe["cost_live_count"] = live_count
         recipe["cost_observed_at"] = max(observed_dates) if observed_dates else None
 
