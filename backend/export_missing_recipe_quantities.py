@@ -92,6 +92,7 @@ def main() -> int:
                 "recipe_id": row["recipe_id"],
                 "recipe_title": row["title"],
                 "recipe_servings": row["servings"],
+                "reviewed_servings": "",
                 "ingredient_rowid": row["ingredient_rowid"],
                 "ingredient_name": row["name"],
                 "catalog_item": item.get("names", {}).get("tr") or item.get("id"),
@@ -111,7 +112,7 @@ def main() -> int:
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     fields = list(rows[0]) if rows else [
-        "priority", "recipe_id", "recipe_title", "recipe_servings",
+        "priority", "recipe_id", "recipe_title", "recipe_servings", "reviewed_servings",
         "ingredient_rowid", "ingredient_name", "catalog_item", "original_text",
         "full_ingredients", "instructions",
         "current_quantity", "current_unit", "reviewed_quantity", "reviewed_unit",
