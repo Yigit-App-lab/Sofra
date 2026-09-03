@@ -8,12 +8,14 @@ import { readCloudUserState, userDataFromState, writeCloudUserState } from './cl
 
 const LEGACY_KEY = 'sofra.tr.v1';
 const MIGRATION_OWNER_KEY = 'sofra.tr.v2.migrationOwner';
+const GUEST_KEY = 'sofra.tr.v2.guest';
 const userKey = (uid) => `sofra.tr.v2.user.${uid}`;
 export const PRICING_CITY = 'İstanbul';
 
 const initial = {
   ready: false,
   ownerUid: null,
+  guestMode: false,
   syncStatus: 'idle',
   syncError: null,
   clientUpdatedAt: 0,
@@ -231,9 +233,11 @@ export function StoreProvider({ children }) {
           languageDefaultVersion:1,
         };
         if (!uid) {
+          const guestRaw = await AsyncStorage.getItem(GUEST_KEY);
+          const guest = guestRaw ? JSON.parse(guestRaw) : null;
           if (!cancelled) dispatch({
             type:'hydrate', uid:null,
-            value:{ langIndex:deviceLangIndex(), ...deviceSettings },
+            value:{ langIndex:deviceLangIndex(), ...(guest?.data || {}), ...deviceSettings },
           });
           return;
         }
@@ -291,6 +295,21 @@ export function StoreProvider({ children }) {
     return () => clearTimeout(timer);
   }, [
     state.ready, state.ownerUid, user?.uid,
+    state.timeBudget, state.maxPerPortion, state.meatless, state.dietPreference,
+    state.glutenFree, state.lactoseFree, state.lowGlycemic, state.skill,
+    state.pantry, state.kiler, state.shoppingList, state.profile,
+  ]);
+
+  useEffect(() => {
+    if (!state.ready || state.ownerUid) return;
+    if (!state.guestMode) {
+      AsyncStorage.removeItem(GUEST_KEY).catch(() => {});
+      return;
+    }
+    const data = { ...userDataFromState(state), guestMode:true };
+    AsyncStorage.setItem(GUEST_KEY, JSON.stringify({ data, clientUpdatedAt:Date.now() })).catch(() => {});
+  }, [
+    state.ready, state.ownerUid, state.guestMode,
     state.timeBudget, state.maxPerPortion, state.meatless, state.dietPreference,
     state.glutenFree, state.lactoseFree, state.lowGlycemic, state.skill,
     state.pantry, state.kiler, state.shoppingList, state.profile,

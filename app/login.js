@@ -53,7 +53,7 @@ function Field({ label, error, secure, visible, onToggle, ...props }) {
 export default function LoginScreen() {
   const c = useTheme();
   const router = useRouter();
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
   const english = state.langIndex === 1;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -86,6 +86,11 @@ export default function LoginScreen() {
     setEmailTouched(true); setPasswordTouched(true);
     if (!valid) return;
     run(() => signInWithEmailAndPassword(auth, email.trim(), password));
+  }
+
+  function continueAsGuest() {
+    dispatch({ type:'set', key:'guestMode', value:true });
+    router.replace('/(tabs)');
   }
 
   async function resetPassword() {
@@ -150,6 +155,10 @@ export default function LoginScreen() {
             fontSize:13, marginBottom:space.m }}>{message}</Text> : null}
           <Button disabled={!valid || busy} loading={busy} onPress={submit} accessibilityLabel={english ? 'Log in' : 'Giriş yap'}>
             {english ? 'Log In' : 'Giriş Yap'}
+          </Button>
+          <Button kind="ghost" style={{ marginTop:space.s }} disabled={busy} onPress={continueAsGuest}
+            accessibilityLabel={english ? 'Continue as guest' : 'Misafir olarak devam et'}>
+            {english ? 'Continue as guest' : 'Misafir olarak devam et'}
           </Button>
           <View style={{ flexDirection:'row', alignItems:'center', gap:space.s, marginVertical:space.l }}>
             <View style={{ flex:1 }}><Divider /></View><Text style={{ color:c.ink3, fontSize:12 }}>{english ? 'or continue with' : 'veya şununla devam et'}</Text><View style={{ flex:1 }}><Divider /></View>

@@ -8,7 +8,7 @@ const PAGES = [
   {
     image:require('../assets/onboarding/family-sofra.png'),
     title:'Bu akşam ne pişirsem?',
-    body:'Sofra; bütçene, ayırabileceğin zamana ve beslenme tercihlerine uygun yemekleri senin için seçer.',
+    body:'Sofra; bütçene, ayırabileceğin zamana ve beslenme tercihlerine uygun yemekleri seçmene yardımcı olur.',
     note:'Benim İçin Seç · Mevsime Göre Seç · Kilerimden Seç',
   },
   {
@@ -20,7 +20,7 @@ const PAGES = [
   {
     image:require('../assets/onboarding/market-sofra.png'),
     title:'Kilerini ve bütçeni yönet',
-    body:'Evdeki malzemeleri işaretle, eksikleri listene ekle. İstanbul’daki günlük market ortalamalarıyla tahmini maliyeti önceden gör.',
+    body:'Evdeki malzemeleri işaretle, eksikleri listene ekle. Günlük market ortalama fiyatlarıyla tahmini maliyeti önceden gör.',
     note:'Daha az israf · Güncel fiyat · Kolay alışveriş',
   },
 ];

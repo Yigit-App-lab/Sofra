@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { onAuthStateChanged, reload } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 
@@ -10,6 +11,7 @@ export function AuthProvider({ children }) {
   const [, setRevision] = useState(0);
 
   useEffect(() => onAuthStateChanged(auth, (nextUser) => {
+    if (nextUser) AsyncStorage.removeItem('sofra.tr.v2.guest').catch(() => {});
     setUser(nextUser);
     setReady(true);
   }), []);

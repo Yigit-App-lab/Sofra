@@ -17,6 +17,7 @@ function Shell() {
   const onAuthScreen = segments[0] === 'login' || segments[0] === 'signup';
   const onOnboarding = segments[0] === 'onboarding';
   const storeReadyForUser = state.ready && state.ownerUid === (user?.uid || null);
+  const hasAccess = Boolean(user || state.guestMode);
 
   useEffect(() => {
     if (!storeReadyForUser || !authReady) return;
@@ -25,12 +26,12 @@ function Shell() {
       return;
     }
     if (onOnboarding) {
-      router.replace(user ? '/(tabs)' : '/login');
+      router.replace(hasAccess ? '/(tabs)' : '/login');
       return;
     }
-    if (!user && !onAuthScreen) router.replace('/login');
-    if (user && onAuthScreen) router.replace('/(tabs)');
-  }, [storeReadyForUser, authReady, state.onboardingComplete, user, onAuthScreen, onOnboarding, router]);
+    if (!hasAccess && !onAuthScreen) router.replace('/login');
+    if (hasAccess && onAuthScreen) router.replace('/(tabs)');
+  }, [storeReadyForUser, authReady, state.onboardingComplete, hasAccess, onAuthScreen, onOnboarding, router]);
 
   useEffect(() => {
     if (!state.ready) return;
@@ -52,7 +53,7 @@ function Shell() {
 
   if (!storeReadyForUser || !authReady ||
       (!state.onboardingComplete && !onOnboarding) ||
-      (state.onboardingComplete && !user && !onAuthScreen)) {
+      (state.onboardingComplete && !hasAccess && !onAuthScreen)) {
     return <View style={{ flex:1, backgroundColor:c.ground }} />;
   }
   return (

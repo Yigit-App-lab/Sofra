@@ -94,15 +94,22 @@ export default function Ben() {
     }
   }
 
+  function leaveGuestMode() {
+    dispatch({ type:'set', key:'guestMode', value:false });
+    router.replace('/login');
+  }
+
   return (
     <ScrollView contentContainerStyle={{ padding:space.l, paddingBottom:space.xl*2 }}>
       <Card style={{ marginBottom:space.m }}>
-        <Body size={13}>{user?.email || (t.code === 'en' ? 'Signed-in account' : 'Oturum açılan hesap')}</Body>
+        <Body size={13}>{user?.email || (t.code === 'en' ? 'Guest access' : 'Misafir erişimi')}</Body>
         <View style={{ height:4 }} />
         <Body dim size={12}>
           {state.syncStatus === 'error'
             ? (t.code === 'en' ? 'Saved on this phone · cloud sync unavailable' : 'Bu telefona kaydedildi · bulut eşitleme kullanılamıyor')
-            : state.syncStatus === 'syncing' || state.syncStatus === 'loading'
+            : !user
+              ? (t.code === 'en' ? 'Your data is saved only on this phone' : 'Verilerin yalnızca bu telefonda saklanıyor')
+              : state.syncStatus === 'syncing' || state.syncStatus === 'loading'
               ? (t.code === 'en' ? 'Syncing your profile…' : 'Profilin eşitleniyor…')
               : (t.code === 'en' ? 'Profile synced across your devices' : 'Profilin cihazların arasında eşitlendi')}
         </Body>
@@ -111,12 +118,17 @@ export default function Ben() {
             {t.code === 'en' ? 'Your email address is not verified.' : 'E-posta adresin henüz doğrulanmadı.'}
           </Text>
         ) : null}
-        <Pressable onPress={() => router.push('/account')} style={{ marginTop:space.m }}
+        {user ? <Pressable onPress={() => router.push('/account')} style={{ marginTop:space.m }}
           accessibilityRole="button" accessibilityLabel={t.code === 'en' ? 'Account and security' : 'Hesap ve güvenlik'}>
           <Text style={{ color:c.accent, fontSize:13.5, fontWeight:'700' }}>
             {t.code === 'en' ? 'Account & security' : 'Hesap ve güvenlik'}
           </Text>
-        </Pressable>
+        </Pressable> : <Pressable onPress={() => { dispatch({ type:'set', key:'guestMode', value:false }); router.replace('/login'); }}
+          style={{ marginTop:space.m }} accessibilityRole="button">
+          <Text style={{ color:c.accent, fontSize:13.5, fontWeight:'700' }}>
+            {t.code === 'en' ? 'Sign in to sync your data' : 'Verilerini eşitlemek için giriş yap'}
+          </Text>
+        </Pressable>}
       </Card>
       <Card>
         <Stat label={t('cookedN')} value={cooked.length} />
@@ -302,10 +314,10 @@ export default function Ben() {
       <View style={{ height:space.xl }} />
       <Button kind="ghost" disabled={signingOut} loading={signingOut}
         accessibilityLabel={t.code === 'en' ? 'Log out' : 'Çıkış yap'}
-        onPress={() => { setSignOutError(''); setShowSignOutConfirm(true); }}>
-        {t.code === 'en' ? 'Log Out' : 'Çıkış Yap'}
+        onPress={() => user ? (setSignOutError(''), setShowSignOutConfirm(true)) : leaveGuestMode()}>
+        {user ? (t.code === 'en' ? 'Log Out' : 'Çıkış Yap') : (t.code === 'en' ? 'Return to sign in' : 'Giriş ekranına dön')}
       </Button>
-      {showSignOutConfirm ? (
+      {user && showSignOutConfirm ? (
         <Card style={{ marginTop:space.m }}>
           <Body>{t.code === 'en' ? 'Log out?' : 'Çıkış yapılsın mı?'}</Body>
           <Body dim size={13} style={{ marginTop:space.xs }}>
