@@ -65,12 +65,28 @@ class RecipeCostTests(unittest.TestCase):
             1.8,
         )
 
+    def test_recovers_quantity_from_intact_original_text(self):
+        self.assertEqual(
+            quantity_and_unit(None, None, "2 adet kapya biber"),
+            (2, "adet"),
+        )
+        self.assertEqual(
+            quantity_and_unit(None, None, "yarım paket sucuk"),
+            (0.5, "paket"),
+        )
+
     def test_prices_antrikot_by_weight_or_piece(self):
         _, by_name = load_catalog()
         steak = find_catalog_item("antrikot", "4 parça antrikot", by_name)
         self.assertEqual(steak["id"], "kusbasi")
         self.assertEqual(consumed_units(400, "gr", steak), 0.4)
         self.assertEqual(consumed_units(4, "", steak), 0.8)
+
+    def test_maps_common_imported_aliases(self):
+        _, by_name = load_catalog()
+        self.assertEqual(find_catalog_item("kapya biber", "", by_name)["id"], "biber_kirmizi")
+        self.assertEqual(find_catalog_item("yumurta sarısı", "", by_name)["id"], "yumurta")
+        self.assertEqual(find_catalog_item("lavaş", "", by_name)["id"], "yufka")
 
     def test_unknown_measured_ingredients_reduce_cost_confidence(self):
         import sqlite3

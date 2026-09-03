@@ -54,6 +54,17 @@ def load_catalog() -> tuple[dict, dict]:
         "tavuk eti": "tavuk_gogus",
         "balik": "balik",
         "balik fileto": "balik",
+        "kapya biber": "biber_kirmizi",
+        "kirmizi kapya biber": "biber_kirmizi",
+        "carliston biber": "biber_sivri",
+        "biber": "biber_sivri",
+        "toz kirmizi biber": "pul_biber",
+        "toz biber": "pul_biber",
+        "limon suyu": "limon",
+        "nane": "nane_kuru",
+        "yumurta sarisi": "yumurta",
+        "yumurta beyazi": "yumurta",
+        "lavas": "yufka",
     }
     for alias, item_id in aliases.items():
         if item_id in by_id:
@@ -79,6 +90,9 @@ def parse_quantity(value) -> float | None:
     word_quantities = {"yarim": 0.5, "ceyrek": 0.25, "bir": 1.0}
     if text in word_quantities:
         return word_quantities[text]
+    leading_word = re.match(r"^(yarim|ceyrek|bir)\b", text)
+    if leading_word:
+        return word_quantities[leading_word.group(1)]
     text = text.replace(",", ".")
     mixed = re.match(r"^(\d+)\s+(\d+)\s*/\s*(\d+)$", text)
     if mixed and int(mixed.group(3)):
@@ -96,6 +110,10 @@ def quantity_and_unit(quantity, recipe_unit, original_text) -> tuple[float | Non
     broken_decimal = re.search(r"\b(\d+)[.,]\s+(\d+)\b", text)
     q = (float(f"{broken_decimal.group(1)}.{broken_decimal.group(2)}")
          if broken_decimal else parse_quantity(quantity))
+    if q is None:
+        # The importer frequently left quantity/unit columns empty although the
+        # intact source text still says "2 adet" or "yarım paket".
+        q = parse_quantity(text)
     unit = normalize(recipe_unit)
     if not unit:
         unit_patterns = (
@@ -110,7 +128,7 @@ def quantity_and_unit(quantity, recipe_unit, original_text) -> tuple[float | Non
             (r"\bcay bardagi\b", "çay bardağı"),
             (r"\b(ml|mililitre)\b", "ml"),
             (r"\b(litre|liter|lt)\b", "litre"),
-            (r"\bpaket\b", "paket"),
+            (r"\b(paket|kangal)\b", "paket"),
             (r"\bdilim\b", "dilim"),
             (r"\bbutun tavuk\b", "adet"),
         )
