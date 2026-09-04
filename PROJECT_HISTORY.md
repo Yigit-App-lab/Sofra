@@ -127,3 +127,26 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
   `npm test` her iki dosyayı çalıştırıyor.
 - Sunucu, veritabanı veya native değişiklik gerekmiyor; JavaScript yenilemesi
   yeterli.
+
+## 2026-09-04 — Cihaz testi: mayonez bulgusu
+
+- `Kilerimden seç` filtrelerle birlikte "Ev yapımı mayonez", "Mayonez" ve
+  "Sarımsaklı mayonez" döndürdü. İki ayrı kusur çıktı.
+- Yumurta, yağ ve limon içeren bir kiler, mayonez tarifinin bütün malzemelerini
+  eşliyor; tarif %100 eşleşme ve "Hazır" olarak en üste çıkıyor. Yumurta
+  `protein` sınıfında olduğu için bu oturumda eklenen kiler protein önceliği
+  sorunu büyütmüştü.
+- `dinner_category_score` içine başlık sonundaki ada göre reddetme eklendi
+  (`NOT_A_MEAL_HEADS`). Alt dizi araması kullanılamaz: "sos" ifadesi "soslu
+  makarna" içinde, "hardal" ifadesi "hardallı tavuk" içinde geçiyor. Türkçe ad
+  öbeği sonda olduğu için yalnız son kelime sınanıyor.
+- `backend/test_dinner_suitability.py` eklendi; fastapi kurulu değilse atlanıyor.
+- Tekrar eleme kapsama (containment) kuralıyla güçlendirildi ve kategori
+  koşulundan çıkarıldı: aynı tarif birden çok kategoriyle geldiği için
+  kategoriye bağlı karşılaştırma mayonez üçlüsünü kaçırıyordu.
+- "Ev yapımı mayonez" ile "Sarımsaklı mayonez" bilerek ayrı bırakıldı; bunları
+  birleştiren bir kural mercimek ve domates çorbasını da birleştirir. Bir çeşniyi
+  akşam yemeği listesinden çıkaran şey tekrar eleme değil, yemeğe uygunluk.
+- Testler: `engine.test.js` 98 -> 102.
+- **Bu değişiklik sunucu dağıtımı gerektiriyor**: `backend/recipe_api.py`
+  değişti, `deploy-sofra` çalıştırılmalı.

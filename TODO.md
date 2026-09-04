@@ -46,6 +46,8 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
 - [x] Eşitlikte daha uzun ve ayrıntılı tarifi seçme
 - [x] Çok benzer tarif tekrarlarını azaltma
 - [ ] Ana yemek, atıştırmalık ve yardımcı hazırlık sınıflandırmasını geliştirme
+- [x] Mayonez, sos, salça, hamur gibi yardımcı hazırlıkları akşam yemeği
+  önerilerinden çıkarma (başlık sonundaki ada göre)
 - [x] Yemek olmayan saklama/hazırlık kayıtlarını karantinaya alma
 - [x] Gerçekte videosu olmayan tariflerden “Videolu” ifadesini kaldırma
 - [ ] Düşük glisemik sınıflandırmasına şehriye, erişte ve tarhanayı ekleyip

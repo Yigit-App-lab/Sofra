@@ -113,9 +113,7 @@
         ? fromLocal(item, opts)
         : fromApi(item, opts));
     }
-    list = Engine.dropNearDuplicates(list,
-      function (s) { return s.title; },
-      function (s) { return s.category; });
+    list = Engine.dropNearDuplicates(list, function (s) { return s.title; });
     return opts.limit ? list.slice(0, opts.limit) : list;
   }
 

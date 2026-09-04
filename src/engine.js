@@ -213,6 +213,18 @@
     return shared / (x.length + y.length - shared);
   }
 
+  /** Is every word of the shorter title also in the longer one? */
+  function titleContains(a, b) {
+    var x = a ? a.split(' ') : [], y = b ? b.split(' ') : [];
+    if (!x.length || !y.length) return false;
+    var short = x.length <= y.length ? x : y;
+    var long = x.length <= y.length ? y : x;
+    for (var i = 0; i < short.length; i++) {
+      if (long.indexOf(short[i]) === -1) return false;
+    }
+    return true;
+  }
+
   /**
    * Collapse the same dish appearing several times.
    *
@@ -221,28 +233,33 @@
    * a three-card answer reads as a broken app. Entries are expected in ranked
    * order; the first of each family survives.
    *
+   * Containment is the rule that earns its keep: the common import pattern is a
+   * bare dish name plus the same name with a modifier in front ("Mayonez",
+   * "Ev Yapımı Mayonez", "Sarımsaklı Mayonez"), and word-overlap scoring rates
+   * those as only half similar because the shared word is one of two. Category
+   * is deliberately not consulted — the same dish arrives under several
+   * categories, which is how the duplicates survived the first attempt.
+   *
    * @param items   any array
    * @param titleOf reads a display title from an entry
-   * @param groupOf optional secondary identity (category, hero, …)
    */
   var DUPLICATE_SIMILARITY = 0.7;
 
-  function dropNearDuplicates(items, titleOf, groupOf) {
+  function dropNearDuplicates(items, titleOf) {
     var kept = [], keys = [];
     for (var i = 0; i < items.length; i++) {
       var key = normalizeTitleKey(titleOf ? titleOf(items[i]) : items[i]);
-      var group = groupOf ? String(groupOf(items[i]) || '') : '';
       var duplicate = false;
       for (var j = 0; j < keys.length; j++) {
-        if (!key || !keys[j].key) continue;
-        if (keys[j].key === key) { duplicate = true; break; }
-        if (keys[j].group === group && group
-            && titleSimilarity(keys[j].key, key) >= DUPLICATE_SIMILARITY) {
+        if (!key || !keys[j]) continue;
+        if (keys[j] === key
+            || titleContains(keys[j], key)
+            || titleSimilarity(keys[j], key) >= DUPLICATE_SIMILARITY) {
           duplicate = true; break;
         }
       }
       if (duplicate) continue;
-      keys.push({ key: key, group: group });
+      keys.push(key);
       kept.push(items[i]);
     }
     return kept;
@@ -736,9 +753,7 @@
     applyTieBreaks(out);
     out.sort(function (a, b) { return b.total - a.total; });
     if (ctx.dedupe !== false) {
-      out = dropNearDuplicates(out,
-        function (s) { return recipeTitle(s.recipe); },
-        function (s) { return s.recipe.category; });
+      out = dropNearDuplicates(out, function (s) { return recipeTitle(s.recipe); });
     }
     rotateBand(out, ctx.day);
     return limit ? out.slice(0, limit) : out;
@@ -872,7 +887,8 @@
     STATE: STATE, FACTOR: FACTOR, WEIGHTS: WEIGHTS, MEASURE: MEASURE, BAND: BAND,
     COVERAGE_MIN: COVERAGE_MIN, PROTEIN_BONUS: PROTEIN_BONUS,
     recipeTitle: recipeTitle, normalizeTitleKey: normalizeTitleKey,
-    titleSimilarity: titleSimilarity, dropNearDuplicates: dropNearDuplicates,
+    titleSimilarity: titleSimilarity, titleContains: titleContains,
+    dropNearDuplicates: dropNearDuplicates,
     dietaryFlags: dietaryFlags, pantryProteinFit: pantryProteinFit,
     detailScore: detailScore, matchedCount: matchedCount,
     stateOf: stateOf, factorFor: factorFor, livePriceFor: livePriceFor, unitPrice: unitPrice, dailyJitter: dailyJitter,

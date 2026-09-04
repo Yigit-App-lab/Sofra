@@ -199,12 +199,48 @@ def clean_ingredient_text(text):
 
 
 
+# A condiment, base or preparation is never an evening meal, however many
+# pantry ingredients it matches. These cannot go in the substring list below:
+# "sos" would reject "soslu makarna" and "hardal" would reject "hardallı
+# tavuk". Turkish puts the head noun last, so only the final word is tested —
+# "Ev yapımı mayonez" is rejected while "Mayonezli patates salatası" is not.
+NOT_A_MEAL_HEADS = frozenset({
+    "mayonez", "mayonezi",
+    "sos", "sosu", "sosları", "soslari",
+    "ketçap", "ketçabı", "ketcap",
+    "hardal", "hardalı",
+    "turşu", "turşusu",
+    "reçel", "reçeli",
+    "şurup", "şurubu",
+    "şerbet", "şerbeti",
+    "sirke", "sirkesi",
+    "salça", "salçası",
+    "pekmez", "pekmezi",
+    "krema", "kreması",
+    "maya", "mayası",
+    "hamur", "hamuru",
+    "terbiye", "terbiyesi",
+    "marinat", "marinadı",
+    "baharat", "baharatı",
+    "tahin", "tahini",
+})
+
+
+def title_head_word(title):
+    """The last word of a title, folded. '' when there is nothing to read."""
+    words = re.findall(r"[0-9a-zçğıöşü]+", str(title or "").casefold())
+    return words[-1] if words else ""
+
+
 def dinner_category_score(category, title=None):
     """Dinner suitability for recommendation only. Database is untouched."""
     if not category and not title:
         return 0
 
     c = f"{category or ''} {title or ''}".casefold()
+
+    if title_head_word(title) in NOT_A_MEAL_HEADS:
+        return -100
 
     # Definitely not an evening meal recommendation.
     reject = (

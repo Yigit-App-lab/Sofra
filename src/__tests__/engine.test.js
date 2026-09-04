@@ -593,15 +593,59 @@ t('Turkish case folding survives a title comparison', () => {
 });
 t('near-identical imports collapse to the first one ranked', () => {
   const rows = [
-    { title: 'Fırında Tavuk', category: 'tavuk' },
-    { title: 'Fırında Tavuk Tarifi', category: 'tavuk' },
-    { title: 'Fırında Tavuk Nasıl Yapılır (Videolu)', category: 'tavuk' },
-    { title: 'Fırında Sebzeli Tavuk', category: 'tavuk' },
-    { title: 'Mercimek Çorbası', category: 'corba' },
+    { title: 'Fırında Tavuk' },
+    { title: 'Fırında Tavuk Tarifi' },
+    { title: 'Fırında Tavuk Nasıl Yapılır (Videolu)' },
+    { title: 'Fırında Sebzeli Tavuk' },
+    { title: 'Mercimek Çorbası' },
   ];
-  const kept = E.dropNearDuplicates(rows, r => r.title, r => r.category);
-  eq(kept.length, 3);
+  const kept = E.dropNearDuplicates(rows, r => r.title);
+  eq(kept.length, 2);
   eq(kept[0].title, 'Fırında Tavuk');
+  eq(kept[1].title, 'Mercimek Çorbası');
+});
+t('a bare dish name is absorbed by the same name with a modifier', () => {
+  // Reported from Kilerimden seç: three mayonnaises in one three-card answer.
+  // Word overlap alone rated these half similar, because the shared word is
+  // one of two, so containment decides it instead.
+  //
+  // 'Ev yapımı mayonez' and 'Sarımsaklı mayonez' are two different sauces and
+  // survive on purpose: collapsing them would need a rule that also collapsed
+  // mercimek and domates çorbası. What removes a condiment from a dinner list
+  // is dinner suitability, not deduplication — see NOT_A_MEAL_HEADS in
+  // backend/recipe_api.py, which drops all three before they are ranked.
+  const rows = [
+    { title: 'Ev Yapımı Mayonez' },
+    { title: 'Mayonez' },
+    { title: 'Sarımsaklı Mayonez' },
+    { title: 'Mayonezli Tavuk Salatası' },
+  ];
+  const kept = E.dropNearDuplicates(rows, r => r.title).map(r => r.title);
+  eq(kept.length, 3);
+  ok(kept.indexOf('Mayonez') === -1, 'the bare title was not absorbed');
+  eq(kept[0], 'Ev Yapımı Mayonez');
+});
+t('duplicates are caught across categories, not only inside one', () => {
+  // The same import arrives filed under several categories, which is how the
+  // mayonnaise trio survived a category-scoped comparison.
+  const rows = [
+    { title: 'Mayonez', category: 'sos' },
+    { title: 'Mayonez Tarifi', category: 'kahvaltilik' },
+  ];
+  eq(E.dropNearDuplicates(rows, r => r.title).length, 1);
+});
+t('two soups that share only their head noun stay separate', () => {
+  const rows = [
+    { title: 'Mercimek Çorbası' },
+    { title: 'Domates Çorbası' },
+    { title: 'Tarhana Çorbası' },
+  ];
+  eq(E.dropNearDuplicates(rows, r => r.title).length, 3);
+});
+t('containment is symmetric', () => {
+  ok(E.titleContains(E.normalizeTitleKey('Mayonez'), E.normalizeTitleKey('Sarımsaklı Mayonez')));
+  ok(E.titleContains(E.normalizeTitleKey('Sarımsaklı Mayonez'), E.normalizeTitleKey('Mayonez')));
+  ok(!E.titleContains(E.normalizeTitleKey('Mercimek Çorbası'), E.normalizeTitleKey('Domates Çorbası')));
 });
 t('two genuinely different dishes are never collapsed', () => {
   const out = E.recommend(rec.recipes, ctx({ includeOffSeason: true }));
