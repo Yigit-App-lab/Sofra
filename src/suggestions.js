@@ -38,6 +38,9 @@
       key: 'local:' + recipe.id,
       source: 'local',
       id: recipe.id,
+      // Where this dish's feedback lives in state.profile. A bundled recipe is
+      // stored under its own id; see fromApi for the other convention.
+      profileKey: recipe.id,
       route: '/tarif/' + recipe.id,
       title: Engine.recipeTitle(recipe, opts.english),
       category: recipe.category || null,
@@ -75,6 +78,8 @@
       key: 'api:' + row.id,
       source: 'api',
       id: row.id,
+      // store.js writes API feedback under 'api:<id>' (apiRecipeForLearning).
+      profileKey: 'api:' + row.id,
       route: '/api-tarif/' + row.id,
       title: Engine.recipeTitle(row, opts.english),
       category: row.category || null,
@@ -100,6 +105,10 @@
     return suggestion.title;
   }
 
+  function profileKeyOf(suggestion) {
+    return suggestion.profileKey;
+  }
+
   /**
    * Normalise, drop near-duplicates, limit one family, and cut to `limit`.
    *
@@ -108,6 +117,9 @@
    * a broken app — `dropNearDuplicates` merges those. Separately, four green
    * bean dishes were reported in one list: not duplicates, just samey, so
    * `capByHeadNoun` lets only `perFamily` of them through.
+   *
+   * `profile` and `day` enable the feedback rules; omit them and nothing is
+   * suppressed, which is what the tests for the other rules rely on.
    *
    * `topUp` puts capped-out entries back when fewer than `limit` survive. It is
    * for a small fixed answer — three cards should be three cards, even if every
@@ -124,6 +136,14 @@
         ? fromLocal(item, opts)
         : fromApi(item, opts));
     }
+    // What the cook rejected, and what they cooked this week, comes out first.
+    // A rejection is absolute; the cooldown yields when `topUp` asks it to,
+    // because an empty answer is worse than a repeat.
+    list = Engine.dropRejected(list, profileKeyOf, opts.profile, opts.day, {
+      withinDays: opts.cooldownDays,
+      atLeast: opts.topUp ? opts.limit : 0,
+    });
+
     list = Engine.dropNearDuplicates(list, titleOf);
 
     var perFamily = opts.perFamily > 0 ? opts.perFamily : 1;

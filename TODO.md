@@ -30,11 +30,20 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
 - [x] Beğendiklerim listesi
 - [x] Beğendim ve Pişirdim seçimlerini bağımsız tutma
 - [x] Tat sinyallerini yalnız Beğendim üzerinden sayma
-- [ ] Bana göre değil listesini profil altında gösterme
-- [ ] Bana göre değil seçimini geri alma
-- [ ] Pişirdiklerim için ayrı tam liste
-- [ ] Yakın tarihte pişirilen tarifin tekrar önerilmesini sınırlama
-- [ ] Profil filtrelerinin üç öneri motorunda aynı çalıştığını doğrulama
+- [x] Bana göre değil listesini profil altında gösterme
+- [x] Bana göre değil seçimini geri alma (`ProfileRecipeList` içinde Geri al)
+- [x] Pişirdiklerim için ayrı tam liste
+- [x] Yakın tarihte pişirilen tarifin tekrar önerilmesini sınırlama — üç
+  yöntemde de. Paket içi motor zaten puan düşürüyordu; API yöntemleri geçmişi
+  hiç görmüyordu, çünkü geçmiş cihazda duruyor
+- [x] Bana göre değil seçiminin gerçekten bastırılması. `PROJECT_BRIEF.md` bunu
+  ürün kuralı olarak yazıyor ama hiçbir yerde uygulanmıyordu: paket içi motorda
+  yalnız 0,22 puan cezası vardı, API yöntemlerinde hiç yoktu
+- [x] Profil filtrelerinin üç öneri motorunda aynı çalıştığını doğrulama
+  (bölüm 4 ile birlikte, cihazda doğrulandı)
+- [ ] Bekleme süresini ve bastırmayı gerçek cihazda doğrulama: bir tarifi
+  Pişirdim işaretleyip üç yöntemde bir hafta görünmediğini, Bana göre değil
+  işaretleyip hiç görünmediğini, Geri al'dan sonra döndüğünü kontrol etme
 
 ## 4. Tarif motoru
 

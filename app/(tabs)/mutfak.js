@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { useStore } from '../../src/store';
+import { useStore, today } from '../../src/store';
 import { makeT } from '../../src/i18n';
 import Engine from '../../src/engine';
 import { apiErrorKey, getKilerIngredients, getTonightRecipes } from '../../src/api';
@@ -255,8 +255,18 @@ export default function Kiler() {
           // PER_FAMILY dishes may share a head noun — zeytinyağlı and etli taze
           // fasulye are different dinners, but four of them crowd out the rest
           // of the list.
+          // A dish the cook rejected must not come back here either, and one
+          // they cooked this week should wait its turn. The history is on the
+          // device, so this list is the only place that can apply it. No floor:
+          // a long list may shrink, and "Show 20 more" fetches further.
+          const wanted = Engine.dropRejected(
+            data.recipes || [],
+            recipe => `api:${recipe.id}`,
+            state.profile,
+            today(),
+          );
           const distinct = Engine.dropNearDuplicates(
-            data.recipes || [], recipe => recipe.title);
+            wanted, recipe => recipe.title);
           setRecipes(Engine.capByHeadNoun(
             distinct, recipe => recipe.title, PER_FAMILY));
           setHasMoreRecipes(Boolean(data.has_more));
@@ -283,7 +293,7 @@ export default function Kiler() {
     };
   }, [kilerIds, recipeLimit, state.timeBudget, state.langIndex, reloadToken,
       state.meatless, state.dietPreference, state.glutenFree,
-      state.lactoseFree, state.lowGlycemic]);
+      state.lactoseFree, state.lowGlycemic, state.profile]);
 
   useEffect(() => {
     setRecipeLimit(20);

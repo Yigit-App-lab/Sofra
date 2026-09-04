@@ -754,5 +754,70 @@ t('capping the bundled library leaves a usable spread of dinners', () => {
   });
 });
 
+console.log('\nfeedback the cook gave');
+t('only an explicit rejection counts as a rejection', () => {
+  // "Bu akşam olmaz" means not tonight and stays a scoring penalty.
+  // "Bana göre değil" means never, and must suppress.
+  const profile = { feedback: { a: { disliked: true }, b: { event: 'disliked' },
+                                c: { cooked: true }, d: { liked: true } },
+                    cooked: {}, skips: { e: 3 } };
+  eq(E.isRejected(profile, 'a'), true);
+  eq(E.isRejected(profile, 'b'), true);
+  eq(E.isRejected(profile, 'c'), false);
+  eq(E.isRejected(profile, 'd'), false);
+  eq(E.isRejected(profile, 'e'), false, 'a soft skip is not a rejection:');
+  eq(E.isRejected(profile, 'unknown'), false);
+  eq(E.isRejected(null, 'a'), false);
+});
+t('the cooldown window is inclusive and ignores the future', () => {
+  const profile = { feedback: {}, cooked: { fresh: 1000, old: 993, ancient: 900,
+                                            future: 1010 }, skips: {} };
+  eq(E.daysSinceCooked(profile, 'fresh', 1001), 1);
+  eq(E.daysSinceCooked(profile, 'never', 1001), null);
+  eq(E.cookedRecently(profile, 'fresh', 1001), true);
+  eq(E.cookedRecently(profile, 'old', 1000), true, 'exactly seven days ago:');
+  eq(E.cookedRecently(profile, 'old', 1001), false, 'eight days ago:');
+  eq(E.cookedRecently(profile, 'ancient', 1001), false);
+  eq(E.cookedRecently(profile, 'future', 1001), false, 'a clock change must not suppress:');
+});
+t('a rejection is absolute, a cooldown is not', () => {
+  const profile = { feedback: { no: { disliked: true } },
+                    cooked: { yesterday: 1000, lastweek: 996 }, skips: {} };
+  const rows = ['no', 'yesterday', 'lastweek', 'fresh'].map(id => ({ id }));
+  const key = r => r.id;
+
+  eq(E.dropRejected(rows, key, profile, 1001, {}).map(key).join(','), 'fresh');
+
+  // With a floor, the cooldown yields — least recently cooked first — but the
+  // rejected dish stays out even though that leaves the floor unmet.
+  eq(E.dropRejected(rows, key, profile, 1001, { atLeast: 3 }).map(key).join(','),
+     'fresh,lastweek,yesterday');
+  eq(E.dropRejected(rows, key, profile, 1001, { atLeast: 9 }).map(key).join(','),
+     'fresh,lastweek,yesterday', 'a rejection was resurrected by the floor');
+});
+t('a shorter or longer cooldown can be asked for', () => {
+  const profile = { feedback: {}, cooked: { x: 998 }, skips: {} };
+  const rows = [{ id: 'x' }];
+  const key = r => r.id;
+  eq(E.dropRejected(rows, key, profile, 1001, { withinDays: 2 }).length, 1);
+  eq(E.dropRejected(rows, key, profile, 1001, { withinDays: 30 }).length, 0);
+  eq(E.COOLDOWN_DAYS, 7);
+});
+t('no profile means nothing is suppressed', () => {
+  const rows = [{ id: 'a' }, { id: 'b' }];
+  eq(E.dropRejected(rows, r => r.id, null, null, {}).length, 2);
+  eq(E.dropRejected(rows, r => r.id, E.emptyProfile(), 1001, {}).length, 2);
+});
+t('the bundled ranker still penalises rather than hides a soft skip', () => {
+  // Rejection is handled by dropRejected at the list level; the score-level
+  // penalty for "not tonight" is unchanged.
+  const profile = E.emptyProfile();
+  const before = E.recommend(rec.recipes, ctx({ profile }), 1)[0].recipe.id;
+  profile.skips[before] = 2;
+  const after = E.recommend(rec.recipes, ctx({ profile }));
+  ok(after.some(s => s.recipe.id === before),
+     'a soft skip removed the dish from the list instead of lowering it');
+});
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

@@ -83,13 +83,18 @@ t('the mode headings map to real keys', () => {
   ok(missing.length === 0, `missing from i18n.js: ${missing.join(', ')}`);
 });
 
-t('no screen still carries an inline Turkish string in a t() position', () => {
+t('no screen still carries an inline Turkish string literal', () => {
   // Not exhaustive — a reminder, not a gate. Bu Akşam was rewritten to keep
   // every literal in i18n.js; this catches a regression in that one file.
+  //
+  // The literal pattern forbids a raw newline on purpose. A first attempt used
+  // /'[^']*[çğ…][^']*'/ and matched from an apostrophe in one statement to one
+  // several functions later, swallowing a comment that mentioned "Bana göre
+  // değil" and failing on prose rather than on code.
   const source = read('app/(tabs)/index.js');
-  const turkish = source.match(/'[^']*[çğıöşüÇĞİÖŞÜ][^']*'/g) || [];
-  const allowed = turkish.filter((s) => !/[a-z]{4}/i.test(s));
-  ok(turkish.length === allowed.length,
+  const literals = source.match(/'(?:[^'\\\n]|\\.)*'/g) || [];
+  const turkish = literals.filter((s) => /[çğıöşüÇĞİÖŞÜ]/.test(s) && /[a-z]{4}/i.test(s));
+  ok(turkish.length === 0,
      `inline Turkish left in index.js: ${turkish.slice(0, 3).join(' | ')}`);
 });
 

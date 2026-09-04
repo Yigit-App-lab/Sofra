@@ -309,3 +309,39 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
   blok değişiyor.
 - Sonraki adımların sırası `TODO.md` bölüm 7a'da: DNS, e-posta, Caddy, doğrulama,
   port kapatma, yama, yeni build, politika güncellemesi.
+
+## 2026-09-04 — Profil geri bildirimi üç yöntemde de geçerli
+
+- TODO bölüm 3'ün üç maddesi zaten yapılmıştı: `src/ProfileRecipeList.js`
+  beğendiklerim, pişirdiklerim ve bana göre değil listelerini tarihe göre
+  sıralı gösteriyor, her satırda `removeFeedback` çağıran bir Geri al düğmesi
+  var ve hem paket içi hem API tariflerini açabiliyor. `ben.js` üçüne de
+  bağlantı veriyor. Kutular işaretlendi. (Bu oturumda üçüncü kez TODO'nun
+  gerçeğin gerisinde kaldığı görüldü — hesap silme ve bildirimlerden sonra.)
+- Gerçekten eksik olan iki şey vardı ve ikisi de aynı sebepten: pişirme ve
+  ret geçmişi cihazda, `state.profile` içinde duruyor; API bunu göremez.
+  - Paket içi motor son pişirilen tarifi `repetitionPenalty` ile geriye
+    çekiyordu; `Mevsime göre seç`, `Kilerimden seç` ve Kiler sekmesi listesi
+    profili hiç görmüyordu.
+  - `Bana göre değil` hiçbir yerde bastırma yapmıyordu. `PROJECT_BRIEF.md`
+    "gelecekteki uygunsuz önerileri bastırmalı" diyor; paket içi motorda yalnız
+    en fazla 0,22 puanlık bir ceza vardı, yani reddedilen yemek yine başa
+    gelebiliyordu. API yöntemlerinde hiç etkisi yoktu.
+- Çözüm `engine.js` içinde tek yerde: `isRejected`, `daysSinceCooked`,
+  `cookedRecently` ve bunları listeye uygulayan `dropRejected`.
+  `suggestions.normalize` ve Kiler listesi aynı işlevi çağırıyor.
+- Ayrım bilinçli: **ret kesin**, profil ekranından geri alınana kadar bir daha
+  gelmiyor. **Bekleme süresi esnek** (7 gün): boş ekrandan iyidir, bu yüzden
+  `topUp` istendiğinde en eski pişirilenler geri konuyor. Ret bu durumda bile
+  geri gelmiyor; testte kart sayısı bire düşse dahi doğrulanıyor.
+- "Bu akşam olmaz" (soft skip) bastırılmıyor: bu "bu akşam değil" demek, "asla"
+  değil. Puan cezası olarak kalıyor ve bunun böyle kaldığı test ediliyor.
+- Normalleştirilmiş öneri şekline `profileKey` eklendi: paket içi tarif kendi
+  kimliğiyle, API tarifi `api:<id>` ile saklanıyor (`apiRecipeForLearning`).
+  Ekranlar artık bu ayrımı bilmek zorunda değil.
+- `i18n-keys` testindeki bir hata düzeltildi: satır içi Türkçe metin arayan
+  düzenli ifade, tek tırnaklar arasında satır sonu geçmesine izin verdiği için
+  bir açıklama satırını yakalayıp koda değil metne takılıyordu. Gerçek bir
+  regresyonu hâlâ yakaladığı yeniden sınandı.
+- Testler: `engine.test.js` 109 -> 115, `suggestions.test.js` 20 -> 24.
+- Sunucu değişikliği yok; JavaScript yenilemesi yeterli.

@@ -316,6 +316,86 @@
     return kept;
   }
 
+  // ----------------------------------------------------- feedback the cook gave
+  //
+  // `PROJECT_BRIEF.md`: "Bana göre değil should suppress unsuitable future
+  // recommendations and remain reversible from the profile." It was suppressing
+  // nothing. In the bundled ranker a rejected dish only lost at most 0.22 of
+  // score, so it could still lead; the two API methods never saw the profile at
+  // all, because the cooked and rejected history lives on the device. These
+  // helpers are the shared vocabulary, applied to both sources in
+  // `dropRejected` below.
+  //
+  // Profile keys differ by source: a bundled recipe is stored under its own id,
+  // an API recipe under 'api:<id>' (see `apiRecipeForLearning` in store.js).
+
+  var COOLDOWN_DAYS = 7;
+
+  /**
+   * Did the cook say this dish is not for them?
+   *
+   * Only an explicit "Bana göre değil" counts. `profile.skips` also counts
+   * "Bu akşam olmaz", which means not tonight rather than never, and stays a
+   * scoring penalty instead of a hard exclusion.
+   */
+  function isRejected(profile, key) {
+    if (!profile || key == null) return false;
+    var feedback = profile.feedback && profile.feedback[key];
+    return Boolean(feedback && (feedback.disliked || feedback.event === 'disliked'));
+  }
+
+  /** Days since it was last cooked, or null if never. */
+  function daysSinceCooked(profile, key, day) {
+    if (!profile || !profile.cooked || key == null || day == null) return null;
+    var last = profile.cooked[key];
+    if (last == null) return null;
+    var ago = day - Number(last);
+    return isFinite(ago) ? ago : null;
+  }
+
+  function cookedRecently(profile, key, day, withinDays) {
+    var ago = daysSinceCooked(profile, key, day);
+    var window = withinDays == null ? COOLDOWN_DAYS : withinDays;
+    return ago != null && ago >= 0 && ago <= window;
+  }
+
+  /**
+   * Remove what the cook has rejected, and what they cooked in the last few
+   * days, from a list of suggestions.
+   *
+   * A rejection is absolute: they said no, so it never comes back until they
+   * undo it in the profile. A cooldown is not — nobody wants an empty screen
+   * because they cooked well this week — so when `atLeast` is given, the most
+   * recently cooked entries are put back until that many suggestions remain.
+   *
+   * @param items    any array, in ranked order
+   * @param keyOf    reads the profile key from an entry
+   * @param profile  state.profile
+   * @param day      integer day number, as `today()` produces
+   * @param options  { withinDays, atLeast }
+   */
+  function dropRejected(items, keyOf, profile, day, options) {
+    var opts = options || {};
+    var kept = [], cooling = [], i;
+    for (i = 0; i < items.length; i++) {
+      var key = keyOf ? keyOf(items[i]) : items[i];
+      if (isRejected(profile, key)) continue;
+      if (cookedRecently(profile, key, day, opts.withinDays)) {
+        cooling.push({ item: items[i], ago: daysSinceCooked(profile, key, day) });
+        continue;
+      }
+      kept.push(items[i]);
+    }
+    if (opts.atLeast && kept.length < opts.atLeast && cooling.length) {
+      // Longest ago first: the least recently cooked is the least tiresome.
+      cooling.sort(function (a, b) { return b.ago - a.ago; });
+      for (i = 0; i < cooling.length && kept.length < opts.atLeast; i++) {
+        kept.push(cooling[i].item);
+      }
+    }
+    return kept;
+  }
+
   // ------------------------------------------------------- dietary filtering
   //
   // The API filters on precomputed recipe columns (`is_vegan`, `is_vegetarian`,
@@ -942,6 +1022,9 @@
     titleHeadWord: titleHeadWord, capByHeadNoun: capByHeadNoun,
     dropNearDuplicates: dropNearDuplicates,
     dietaryFlags: dietaryFlags, pantryProteinFit: pantryProteinFit,
+    COOLDOWN_DAYS: COOLDOWN_DAYS, isRejected: isRejected,
+    daysSinceCooked: daysSinceCooked, cookedRecently: cookedRecently,
+    dropRejected: dropRejected,
     detailScore: detailScore, matchedCount: matchedCount,
     stateOf: stateOf, factorFor: factorFor, livePriceFor: livePriceFor, unitPrice: unitPrice, dailyJitter: dailyJitter,
     unitsConsumed: unitsConsumed, costOf: costOf, costByMonth: costByMonth,

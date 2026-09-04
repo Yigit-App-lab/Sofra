@@ -191,5 +191,39 @@ t('exact duplicates go before the cap is even considered', () => {
   eq(S.normalize(rows, { limit: 20, perFamily: 2 }).map(s => s.id).join(','), '1,4');
 });
 
+console.log('\nthe profile reaches the API methods');
+t('both shapes say where their feedback is stored', () => {
+  eq(S.fromApi(apiRow({ id: 77 }), {}).profileKey, 'api:77');
+  const scored = localScored();
+  eq(S.fromLocal(scored, {}).profileKey, scored.recipe.id);
+});
+t('a rejected dish never comes back, in either source', () => {
+  const rows = [apiRow({ id: 1, title: 'Karnıyarık' }),
+                apiRow({ id: 2, title: 'Mercimek Çorbası' })];
+  const profile = { feedback: { 'api:1': { disliked: true } }, cooked: {}, skips: {} };
+  eq(S.normalize(rows, { limit: 3, profile, day: 1001 }).map(s => s.id).join(','), '2');
+  // Even when that leaves fewer cards than asked for.
+  eq(S.normalize(rows, { limit: 3, profile, day: 1001, topUp: true })
+      .map(s => s.id).join(','), '2');
+});
+t('something cooked yesterday waits, unless the answer would be too thin', () => {
+  const rows = [apiRow({ id: 1, title: 'Karnıyarık' }),
+                apiRow({ id: 2, title: 'Mercimek Çorbası' }),
+                apiRow({ id: 3, title: 'İzmir Köfte' }),
+                apiRow({ id: 4, title: 'Fırında Tavuk' })];
+  const profile = { feedback: {}, cooked: { 'api:1': 1000 }, skips: {} };
+  eq(S.normalize(rows, { limit: 3, profile, day: 1001, topUp: true })
+      .map(s => s.id).join(','), '2,3,4');
+  // Only two candidates, one cooked yesterday: it comes back rather than
+  // answering with a single card.
+  eq(S.normalize([rows[0], rows[1]], { limit: 3, profile, day: 1001, topUp: true })
+      .map(s => s.id).sort().join(','), '1,2');
+});
+t('without a profile the feedback rules do nothing', () => {
+  const rows = [apiRow({ id: 1, title: 'Karnıyarık' })];
+  eq(S.normalize(rows, { limit: 3 }).length, 1);
+  eq(S.normalize(rows, { limit: 3, profile: E.emptyProfile(), day: 1001 }).length, 1);
+});
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

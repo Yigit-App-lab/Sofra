@@ -59,6 +59,10 @@ export default function Tonight() {
     // topped up rather than shrinking the answer when variety is impossible.
     const suggestions = Suggestions.normalize(items, {
       english, limit:SUGGESTION_LIMIT, perFamily:1, topUp:true,
+      // The rejected and recently-cooked history lives on the device, so the
+      // API methods can only honour it here. Before this, "Bana göre değil"
+      // suppressed nothing in two of the three methods.
+      profile:state.profile, day:ctx.day,
     });
     if (!suggestions.length) return false;
     setError(null);
