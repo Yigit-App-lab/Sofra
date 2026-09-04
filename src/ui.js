@@ -91,6 +91,33 @@ export function Row({ children, gap = space.s, style }) {
   return <View style={[{ flexDirection:'row', alignItems:'center', gap }, style]}>{children}</View>;
 }
 
+/**
+ * A failure the user can do something about.
+ *
+ * Screens used to print a dead sentence — "Tarif önerileri yüklenemedi" — and
+ * leave the only way out as navigating away and back. Every network failure
+ * now says which failure it was and offers the retry in place.
+ */
+export function ErrorNotice({ message, onRetry, retryLabel, style }) {
+  const c = useTheme();
+  return (
+    <View style={[{ backgroundColor:c.surface2, borderRadius:radius.m,
+      padding:space.m, marginTop:space.m }, style]}>
+      <Text style={{ color:c.ink, fontSize:14.5 }}>{message}</Text>
+      {onRetry ? (
+        <Pressable accessibilityRole="button" onPress={onRetry}
+          style={({ pressed }) => ({ alignSelf:'flex-start', marginTop:space.s,
+            borderColor:c.line, borderWidth:1, borderRadius:radius.s,
+            paddingHorizontal:14, paddingVertical:8, opacity:pressed ? 0.65 : 1 })}>
+          <Text style={{ color:c.accent, fontSize:13.5, fontWeight:'700' }}>
+            {retryLabel}
+          </Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
 export function Divider() {
   const c = useTheme();
   return <View style={{ height:StyleSheet.hairlineWidth, backgroundColor:c.line }} />;

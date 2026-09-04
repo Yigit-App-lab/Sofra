@@ -13,7 +13,7 @@
     "ios:lan": "node tools/start-mobile.js lan",
     "ios": "expo start --ios",
     "android": "expo start --android",
-    "test": "node src/__tests__/engine.test.js && node src/__tests__/suggestions.test.js"
+    "test": "node src/__tests__/engine.test.js && node src/__tests__/suggestions.test.js && node src/__tests__/i18n-keys.test.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

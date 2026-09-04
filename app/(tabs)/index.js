@@ -7,9 +7,9 @@ import { ING, REC } from '../../src/data';
 import { useStore, useEngineCtx, PRICING_CITY } from '../../src/store';
 import { makeT } from '../../src/i18n';
 import { useTheme, space, radius } from '../../src/theme';
-import { Body, ScreenBackdrop, Title } from '../../src/ui';
+import { Body, ErrorNotice, ScreenBackdrop, Title } from '../../src/ui';
 import SuggestionCard from '../../src/SuggestionCard';
-import { getMarketPrices, getSeasonalRecipes, getTonightRecipes } from '../../src/api';
+import { apiErrorKey, getMarketPrices, getSeasonalRecipes, getTonightRecipes } from '../../src/api';
 
 const SUGGESTION_LIMIT = 3;
 
@@ -43,6 +43,9 @@ export default function Tonight() {
   const [choice, setChoice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // Which button produced the current state, so a failure can be retried in
+  // place instead of making the user guess which one they pressed.
+  const [lastMode, setLastMode] = useState(null);
   // The profile filters now live in ctx, so the bundled ranker applies the same
   // meatless / gluten / lactose / low-glycemic rules the API applies.
   const ranked = useMemo(() => Engine.recommend(REC, ctx), [ctx]);
@@ -61,10 +64,23 @@ export default function Tonight() {
 
   function fail(message) {
     setChoice(null);
-    setError(message);
+    setError({ message, retry: true });
+  }
+
+  /** No dinner matched. True, and not a failure — so no retry button. */
+  function empty(message) {
+    setChoice(null);
+    setError({ message, retry: false });
+  }
+
+  function retry() {
+    if (lastMode === 'seasonal') recommendSeasonal();
+    else if (lastMode === 'kiler') recommendFromKiler();
+    else recommendRandom();
   }
 
   async function recommendRandom() {
+    setLastMode('random');
     setLoading(true);
     setError(null);
     let currentRanked = ranked.filter((item) => item.recipe.main);
@@ -86,7 +102,7 @@ export default function Tonight() {
       setLoading(false);
     }
     if (!currentRanked.length) {
-      fail(t('noneMatch'));
+      empty(t('noneMatch'));
       return;
     }
     const previousIds = new Set(
@@ -98,10 +114,11 @@ export default function Tonight() {
     const candidates = leading.filter(item => !previousIds.has(item.recipe.id));
     const pool = candidates.length ? candidates : leading;
     const results = [...pool].sort(() => Math.random() - 0.5);
-    if (!show('random', results)) fail(t('noneMatch'));
+    if (!show('random', results)) empty(t('noneMatch'));
   }
 
   async function recommendSeasonal() {
+    setLastMode('seasonal');
     try {
       setLoading(true);
       setError(null);
@@ -116,18 +133,19 @@ export default function Tonight() {
         lactoseFree: state.lactoseFree,
         lowGlycemic: state.lowGlycemic,
       });
-      if (!show('seasonal', data.recipes || [])) fail(t('noSeasonalDinner'));
+      if (!show('seasonal', data.recipes || [])) empty(t('noSeasonalDinner'));
     } catch (e) {
       console.error('Tonight seasonal recommendation:', e);
-      fail(t('seasonalLoadFailed'));
+      fail(t(apiErrorKey(e)));
     } finally {
       setLoading(false);
     }
   }
 
   async function recommendFromKiler() {
+    setLastMode('kiler');
     if (!kilerIds.length) {
-      fail(t('kilerEmpty'));
+      empty(t('kilerEmpty'));
       return;
     }
     try {
@@ -141,10 +159,10 @@ export default function Tonight() {
         lactoseFree:state.lactoseFree,
         lowGlycemic:state.lowGlycemic,
       });
-      if (!show('kiler', data.recipes || [])) fail(t('noKilerRecipe'));
+      if (!show('kiler', data.recipes || [])) empty(t('noKilerRecipe'));
     } catch (e) {
       console.error('Tonight Kiler recommendation:', e);
-      fail(t('kilerLoadFailed'));
+      fail(t(apiErrorKey(e)));
     } finally {
       setLoading(false);
     }
@@ -172,9 +190,8 @@ export default function Tonight() {
         </View>
       )}
       {!loading && error ? (
-        <View style={{ backgroundColor:c.surface2, borderRadius:radius.m, padding:space.m, marginTop:space.m }}>
-          <Body>{error}</Body>
-        </View>
+        <ErrorNotice message={error.message} retryLabel={t('retry')}
+          onRetry={error.retry ? retry : null} />
       ) : null}
       {!loading && choice ? (
         <View style={{ marginTop:space.l }}>

@@ -73,6 +73,15 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
 - [ ] Bozuk ondalık ve hatalı kilogram kayıtlarını kaynak veride düzeltme
 - [ ] Veritabanına yedekli aktarım sonrası v16 maliyet denetimi
 
+## 5b. Ağ dayanıklılığı
+
+- [x] Tüm API çağrılarına zaman aşımı ekleme
+- [x] Yavaş sunucu ile bağlantı yokluğunu ayrı mesajlarla gösterme
+- [x] Bu Akşam ve Kiler ekranlarına yeniden dene düğmesi
+- [ ] `/recipes/tonight` sorgusunu hızlandırma (kilerde 6 malzemeyle 5,9 saniye;
+  süre limit değerinden bağımsız, yani maliyet ekleme değil sorgunun kendisi)
+- [ ] Tarifler, Pazar ve tarif ekranlarına da yeniden dene düğmesi
+
 ## 6. Tasarım ve kullanıcı deneyimi
 
 - [x] Bu Akşam, Tarifler ve Liste için arka plan görselleri

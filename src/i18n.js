@@ -38,6 +38,12 @@ const S = {
   findingRecipe:['Tarif aranıyor…','Finding a recipe…'],
   kilerEmpty:['Sofra’nın tarif eşleştirebilmesi için önce Kiler’e malzeme ekle.',
               'Add ingredients to Kiler first so Sofra can match a recipe.'],
+  // Failures the user can act on. A slow server and a dead connection produce
+  // the same message from fetch, so the client tells them apart and says which.
+  serverSlow:['Sunucu zamanında yanıt vermedi.','The server did not respond in time.'],
+  noConnection:['Sunucuya ulaşılamadı. Bağlantını kontrol et.','The server could not be reached. Check your connection.'],
+  serverError:['Sunucu şu an yanıt veremiyor.','The server cannot answer right now.'],
+  retry:['Yeniden dene','Try again'],
   noSeasonalDinner:['Mevsime uygun akşam yemeği bulunamadı.','No suitable seasonal dinner was found.'],
   seasonalLoadFailed:['Mevsim önerileri yüklenemedi.','Seasonal recommendations could not be loaded.'],
   noKilerRecipe:['Kiler’e uygun tarif bulunamadı.','No suitable Kiler recipe was found.'],

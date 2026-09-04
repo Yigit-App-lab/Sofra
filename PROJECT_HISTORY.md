@@ -150,3 +150,30 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
 - Testler: `engine.test.js` 98 -> 102.
 - **Bu değişiklik sunucu dağıtımı gerektiriyor**: `backend/recipe_api.py`
   değişti, `deploy-sofra` çalıştırılmalı.
+
+## 2026-09-04 — Ağ hatalarının görünür ve tekrar denenebilir olması
+
+- Kiler ekranı "Tarif önerileri yüklenemedi" gösterdi. Sunucu kaydına göre istek
+  sunucuya hiç ulaşmamıştı: aynı ekranın ilk çağrısı (`/kiler/ingredients`)
+  17:32:55'te 200 döndü, `/recipes/tonight` ise kayıtta hiç görünmüyor.
+- React Native yaklaşık bir dakika bekleyip `TypeError: Network request failed`
+  veriyor; bu mesaj sinyalsiz telefonla aynı. Artık her çağrı `src/api.js`
+  içindeki `request` fonksiyonundan geçiyor ve zaman aşımı taşıyor:
+  hızlı uçlar 15s, sıralama uçları 30s, market fiyatları 35s.
+- `error.kind` üç durumu ayırıyor: `timeout`, `offline`, `http`. `apiErrorKey`
+  bunu i18n anahtarına çeviriyor, ekranlar `error.kind` bilmiyor.
+- `ui.js` içine `ErrorNotice` eklendi: mesaj ve yerinde yeniden dene düğmesi.
+  Bu Akşam ekranı hangi düğmenin çalıştığını hatırlıyor; Kiler ekranı yeniden
+  denemeyi mevcut effect üzerinden yapıyor (`reloadToken`).
+- "Yemek bulunamadı" ile "istek başarısız" ayrıldı: ilkinde yeniden dene
+  düğmesi yok, çünkü tekrar denemek aynı sonucu verir.
+- Yeni `src/__tests__/i18n-keys.test.js`: ekranların istediği her çeviri
+  anahtarının `i18n.js` içinde tanımlı olduğunu doğruluyor. `makeT` eksik
+  anahtarda anahtarın kendisini döndürdüğü için yazım hatası sessizce yayına
+  çıkıyordu. İki test de bilerek bozularak sınandı.
+- Ölçüm: `/recipes/tonight` sunucuda 6 kiler malzemesi ile limit 1, 5 ve 20
+  için sırasıyla 5,93s / 5,87s / 5,95s. Süre limitten
+  bağımsız olduğu için maliyet ekleme değil, sorgunun kendisi yavaş.
+  `recipe_kiler` ve `recipe_completeness` CTE'leri her istekte tüm
+  `recipe_ingredients` tablosunu tarıyor. TODO'ya yazıldı.
+- Sunucu değişikliği yok; JavaScript yenilemesi yeterli.

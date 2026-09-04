@@ -10,9 +10,10 @@ import {
 import { useRouter } from 'expo-router';
 
 import { useStore } from '../../src/store';
-import { getKilerIngredients, getTonightRecipes } from '../../src/api';
+import { makeT } from '../../src/i18n';
+import { apiErrorKey, getKilerIngredients, getTonightRecipes } from '../../src/api';
 import { useTheme, space, radius } from '../../src/theme';
-import { ScreenBackdrop } from '../../src/ui';
+import { ErrorNotice, ScreenBackdrop } from '../../src/ui';
 
 
 function Pill({ label, selected, onPress }) {
@@ -175,6 +176,7 @@ export default function Kiler() {
   const c = useTheme();
   const router = useRouter();
   const { state, dispatch } = useStore();
+  const t = makeT(state.langIndex);
   const english = state.langIndex === 1;
 
   const [q, setQ] = useState('');
@@ -188,6 +190,9 @@ export default function Kiler() {
   const [recipeError, setRecipeError] = useState(null);
   const [recipeLimit, setRecipeLimit] = useState(20);
   const [hasMoreRecipes, setHasMoreRecipes] = useState(false);
+  // Bumped by the retry button. The recipe effect watches it, so retrying is
+  // the same code path as any other reload rather than a second one.
+  const [reloadToken, setReloadToken] = useState(0);
 
   const kiler = state.kiler || {};
 
@@ -244,7 +249,9 @@ export default function Kiler() {
         console.error(e);
 
         if (!cancelled) {
-          setRecipeError(english ? 'Recipe suggestions could not be loaded.' : 'Tarif önerileri yüklenemedi.');
+          // `/recipes/tonight` is the slowest endpoint in the app, so this is
+          // the screen most likely to time out. Say which failure it was.
+          setRecipeError(t(apiErrorKey(e)));
         }
       } finally {
         if (!cancelled) {
@@ -258,7 +265,7 @@ export default function Kiler() {
     return () => {
       cancelled = true;
     };
-  }, [kilerIds, recipeLimit, state.timeBudget, state.langIndex,
+  }, [kilerIds, recipeLimit, state.timeBudget, state.langIndex, reloadToken,
       state.meatless, state.dietPreference, state.glutenFree,
       state.lactoseFree, state.lowGlycemic]);
 
@@ -281,7 +288,7 @@ export default function Kiler() {
       setSuggestions(data.ingredients || []);
     } catch (e) {
       console.error(e);
-      setError(english ? 'Ingredients could not be loaded.' : 'Malzemeler yüklenemedi.');
+      setError(t(apiErrorKey(e)));
     } finally {
       setLoading(false);
     }
@@ -428,7 +435,8 @@ export default function Kiler() {
           style={{ marginVertical: 20 }}
         />
       ) : error ? (
-        <Text style={{ color: c.ink }}>{error}</Text>
+        <ErrorNotice message={error} retryLabel={t('retry')}
+          onRetry={() => loadIngredients(q)} style={{ marginTop: 0 }} />
       ) : (
         <View>
           {suggestionGroups.map(group => (
@@ -526,9 +534,9 @@ export default function Kiler() {
             style={{ marginVertical: 20 }}
           />
         ) : recipeError ? (
-          <Text style={{ color: c.ink }}>
-            {recipeError}
-          </Text>
+          <ErrorNotice message={recipeError} retryLabel={t('retry')}
+            onRetry={() => setReloadToken(token => token + 1)}
+            style={{ marginTop: 0 }} />
         ) : recipes.length === 0 ? (
           <Text style={{ color: c.ink3, fontSize: 13 }}>
             {english ? 'No suitable recipes found.' : 'Uygun tarif bulunamadı.'}
