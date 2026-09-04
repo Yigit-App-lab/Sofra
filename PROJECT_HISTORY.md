@@ -72,3 +72,58 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
 - Development build bir kez kurulduktan sonra JavaScript değişiklikleri Metro üzerinden test edilir.
 - `preview` build yalnızca kararlı kontrol noktalarında, uygulamayı Metro olmadan test etmek için üretilir.
 - Android testleri şimdilik ertelendi; değişiklikler toplandıktan sonra yeni Android build alınır.
+
+## 2026-09-04 — Test süreci standardizasyonu
+
+- Sohbet belleği yerine depo içindeki belgeler proje gerçeği olarak belirlendi.
+- `PROJECT_BRIEF.md`, `TESTING.md` ve `AGENTS.md` eklendi.
+- Development-client testleri için tünel varsayılan yapıldı; LAN ayrı ve isteğe bağlıdır.
+- Expo development-client bağlantısında CLI'ın ürettiği `exp+sofra-app://` bağlantısının
+  kullanılması, normal uygulama şemasıyla elle bağlantı kurulmaması kaydedildi.
+- Preflight ve standart mobil başlatma komutları `package.json` içine eklendi.
+
+## 2026-09-04 — Tarif maliyet denetimi v16
+
+- Canlı veritabanı üzerinde v16 maliyet denetimi üretildi:
+  `/tmp/sofra-recipe-cost-audit-v16.csv`.
+- Sonuçlar v15 ile aynı kaldı: 696 hesaplanamayan maliyet, 664 düşük kapsam,
+  25 düşük maliyetli ana protein yemeği.
+- Uzman incelemesi için 435 eksik miktar satırı dışa aktarıldı:
+  `/tmp/sofra-missing-quantities-final.csv`.
+- Öncelik dağılımı: 45 zorunlu protein, 14 tarif başlığındaki ana malzeme,
+  376 maliyet kapsamını tamamlayacak diğer malzeme.
+
+## 2026-09-04 — Üç öneri yönteminin hizalanması
+
+- `Benim için seç` paket içi kütüphaneyi, `Mevsime göre seç` ve `Kilerimden seç`
+  API veritabanını kullanıyor. Üç yöntem artık aynı kuralları uyguluyor.
+- Beslenme filtreleri tek yerde toplandı: `engine.dietaryFlags`. Glutensiz,
+  laktozsuz, düşük glisemik ve vegan/vejetaryen seçimleri daha önce yalnız API'ye
+  gönderiliyordu; paket içi öneri bunları hiç görmüyordu.
+- `ingredients.json` malzemelerine `gluten`, `lactose`, `highGlycemic`, `meat` ve
+  `animalProduct` alanları eklendi. Düşük glisemik listesi
+  `backend/classify_low_glycemic.py` ile birebir aynı tutuldu; şehriye, erişte ve
+  tarhana iki tarafta da eksik ve TODO'ya yazıldı.
+- `Etsiz` artık API'nin `is_vegetarian` tanımıyla aynı: balık da etsiz sayılmıyor.
+- Süre bütçesi paket içi motorda da kesin filtre oldu (`ctx.maxMinutes`); API
+  `time_budget` alanını SQL'de zaten kesin filtre olarak kullanıyor.
+- Maliyet güveni ortaklaştı: `engine.costOf` artık `coverage`, `trusted` ve
+  `unavailableReason` döndürüyor; eşik %70 ve gerekçeler
+  `backend/recipe_costs.py` ile aynı. Fiyatı güvenilir olmayan tarif üç yöntemde
+  de fiyat göstermiyor.
+- Kilerdeki protein önceliği eklendi (`PROTEIN_BONUS = 0.06`); API'nin ilk
+  sıralama anahtarı olan `matched_protein_count` ile aynı amaç.
+- Eşitlik bozucular API zinciriyle aynı sırada: protein, eksik malzeme sayısı,
+  eşleşen malzeme sayısı, tarif ayrıntısı. Epsilon karşılaştırıcı denendi ve
+  geçişli olmadığı için terk edildi; ağırlık olarak puana eklendi.
+- Çok benzer tarifler `engine.dropNearDuplicates` ile teke indiriliyor; başlık
+  normalleştirmesi `videolu`, `tarifi`, `nasıl yapılır` gibi kaynak gürültüsünü
+  atıyor. `Videolu` ifadesi API tarafında `clean_recipe_title` ile hâlihazırda
+  siliniyordu; paket içi kütüphanede hiç yoktu.
+- Yeni `src/suggestions.js` iki farklı yanıt biçimini tek şekle çeviriyor; yeni
+  `src/SuggestionCard.js` üç yöntemin kartını tek yerden basıyor. Ekrandaki
+  Türkçe/İngilizce metinler `i18n.js` içine taşındı.
+- Testler: `engine.test.js` 78 -> 98, yeni `suggestions.test.js` 15 test.
+  `npm test` her iki dosyayı çalıştırıyor.
+- Sunucu, veritabanı veya native değişiklik gerekmiyor; JavaScript yenilemesi
+  yeterli.

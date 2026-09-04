@@ -38,16 +38,21 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
 
 ## 4. Tarif motoru
 
-- [ ] Benim İçin Seç, Mevsime Göre Seç ve Kilerimden Seç ekranlarını hizalama
-- [ ] Kişi başı fiyat ve tarif bilgilerinin üç yöntemde aynı gösterilmesi
-- [ ] Etsiz, glutensiz, laktozsuz ve düşük glisemik filtrelerini tüm motorlarda doğrulama
-- [ ] Kilerde seçilmiş tavuk, et veya balığı uygun tariflerde önceliklendirme
-- [ ] Eşleşen malzeme sayısını sıralamada öne alma
-- [ ] Eşitlikte daha uzun ve ayrıntılı tarifi seçme
-- [ ] Çok benzer tarif tekrarlarını azaltma
+- [x] Benim İçin Seç, Mevsime Göre Seç ve Kilerimden Seç ekranlarını hizalama
+- [x] Kişi başı fiyat ve tarif bilgilerinin üç yöntemde aynı gösterilmesi
+- [x] Etsiz, glutensiz, laktozsuz ve düşük glisemik filtrelerini tüm motorlarda doğrulama
+- [x] Kilerde seçilmiş tavuk, et veya balığı uygun tariflerde önceliklendirme
+- [x] Eşleşen malzeme sayısını sıralamada öne alma
+- [x] Eşitlikte daha uzun ve ayrıntılı tarifi seçme
+- [x] Çok benzer tarif tekrarlarını azaltma
 - [ ] Ana yemek, atıştırmalık ve yardımcı hazırlık sınıflandırmasını geliştirme
 - [x] Yemek olmayan saklama/hazırlık kayıtlarını karantinaya alma
-- [ ] Gerçekte videosu olmayan tariflerden “Videolu” ifadesini kaldırma
+- [x] Gerçekte videosu olmayan tariflerden “Videolu” ifadesini kaldırma
+- [ ] Düşük glisemik sınıflandırmasına şehriye, erişte ve tarhanayı ekleyip
+  `classify_low_glycemic.py` betiğini canlı veritabanında yeniden çalıştırma
+- [ ] Süre bütçesinin kesin filtre olmasının öneri havuzunu ne kadar daralttığını
+  gerçek cihazda ölçme
+- [ ] Tarifler ve Mutfak ekranlarını da ortak öneri kartına taşıma
 
 ## 5. Tarif maliyetleri
 
@@ -60,7 +65,8 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
 - [ ] Kataloğa ekleme: cheddar, sosis, dolmalık fıstık, avokado, kişniş
 - [ ] Kataloğa ekleme: kuyruk yağı, safran, salam
 - [ ] Yeni ürünlerde yanlış eşleşme ve aykırı fiyat testleri
-- [ ] Uzman dosyasındaki kalan miktarları tamamlama
+- [ ] v16 uzman dosyasındaki kalan 435 miktar satırını tamamlama (45 zorunlu protein,
+  14 başlık malzemesi, 376 maliyet kapsamı)
 - [ ] Öncelikli miktarlar: kaşar, un, tereyağı, domates, sucuk, galeta unu
 - [ ] Bozuk ondalık ve hatalı kilogram kayıtlarını kaynak veride düzeltme
 - [ ] Veritabanına yedekli aktarım sonrası v16 maliyet denetimi

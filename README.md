@@ -4,60 +4,32 @@ Türkçe varsayılan, iOS hedefli. Maliyet hesabı telefonda; Firebase Authentic
 ve Firestore kullanıcı hesabı, kiler, tercihler ve tarif geri bildirimlerini
 cihazlar arasında eşitler.
 
-## Bugün, ücretsiz, kendi iPhone'unuzda çalıştırmak
+## Geliştirme ve test
 
-Gereken: [Node.js](https://nodejs.org) (LTS) ve iPhone'da **Expo Go** (App Store, ücretsiz).
-Mac gerekmiyor. Apple Developer üyeliği bu adım için gerekmiyor.
+Bu proje native Firebase/Apple/Google entegrasyonları nedeniyle Expo Go yerine kurulu
+bir EAS **development build** ile test edilir. Kalıcı proje özeti `PROJECT_BRIEF.md`,
+güncel işler `TODO.md`, tam test/build yöntemi ise `TESTING.md` içindedir.
 
 **Windows / PowerShell:**
 
 ```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass   # sadece bu pencere için
-.\setup.ps1
-cd $HOME\sofra
-npx expo start
+cd "C:\Users\yberktas\Desktop\my app1\Sofra"
+npm.cmd run preflight
+npm.cmd run ios:dev
 ```
 
-**macOS / Linux:**
-
-```bash
-./setup.sh ~/sofra
-cd ~/sofra
-npx expo start
-```
-
-Sonra terminaldeki QR kodu iPhone kamerasıyla okutun. Telefon ve bilgisayar aynı
-Wi-Fi ağında olmalı.
+QR kodunu normal iPhone kamerasıyla okutun ve Sofra development build içinde açın.
+Normal çalıştırmada `--clear` kullanmayın. Ayrıntılı sorun giderme için `TESTING.md`
+dosyasını izleyin.
 
 ### Neden SDK 54 — okumadan atlamayın
 
-App Store'daki **Expo Go, SDK 54'te dondurulmuş durumda**. Expo'nun kendi SDK 56
-changelog'u *"Expo Go for SDK 56 is not available on the Apple App Store"* diyor ve
-SDK 57 hâlâ inceleme bekliyor. Yani SDK 57 ile açtığınız bir proje bugün
-kurabileceğiniz Expo Go'da **açılmaz**.
+Proje şu anda Expo SDK 54 kullanır. SDK yükseltmesi ayrı bir iş olarak planlanmalı,
+native bağımlılıklarla birlikte test edilmeli ve yeni development build alınmalıdır.
 
-`setup.ps1` bu yüzden SDK 54 kullanıyor. 99 $'lık Apple Developer üyeliğini alıp
-EAS ile gerçek bir *development build* çıkardığınızda `-Sdk 57` ile yükseltin.
-
-## Gerçek bir iOS derlemesine geçmek (99 $ sonrası)
-
-Mac gerekmiyor — EAS bulutta macOS'ta derliyor ve `eas submit` Windows'ta çalışıyor.
-
-```powershell
-npm i -g eas-cli
-eas login
-eas build:configure
-eas device:create          # "Website that generates a registration URL" seçin,
-                           # linki iPhone'da açın, profili kurun
-eas build --profile development --platform ios
-```
-
-İki gizli bekleme var: yeni bir üyelikte cihaz kaydının yayılması **24–72 saat**
-sürebilir (öncesinde derleme anlaşılmaz bir hatayla düşer), ve ilk harici TestFlight
-derlemesi **Beta App Review**'dan geçer (1–2 gün). Ücretsiz kademe ayda 15 iOS
-derlemesi veriyor.
-
-iPhone'da **Ayarlar → Gizlilik ve Güvenlik → Geliştirici Modu**'nu açıp yeniden başlatın.
+Yeni development, preview veya production build almadan önce `TESTING.md` içindeki
+build kontrolünü uygulayın. Aktif geliştirmede mevcut development build Metro ile
+yeniden kullanılır; JavaScript değişiklikleri için gereksiz EAS build alınmaz.
 
 ## Dosyalar
 

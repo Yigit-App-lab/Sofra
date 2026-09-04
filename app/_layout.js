@@ -21,16 +21,16 @@ function Shell() {
 
   useEffect(() => {
     if (!storeReadyForUser || !authReady) return;
+    // Onboarding owns its completion navigation. Redirecting here at the same
+    // time as its persisted state update can dispatch before the nested tabs
+    // navigator is registered.
+    if (onOnboarding) return;
     if (!state.onboardingComplete) {
-      if (!onOnboarding) router.replace('/onboarding');
-      return;
-    }
-    if (onOnboarding) {
-      router.replace(hasAccess ? '/(tabs)' : '/login');
+      router.replace('/onboarding');
       return;
     }
     if (!hasAccess && !onAuthScreen) router.replace('/login');
-    if (hasAccess && onAuthScreen) router.replace('/(tabs)');
+    if (hasAccess && onAuthScreen) router.navigate('/(tabs)');
   }, [storeReadyForUser, authReady, state.onboardingComplete, hasAccess, onAuthScreen, onOnboarding, router]);
 
   useEffect(() => {

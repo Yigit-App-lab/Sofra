@@ -33,7 +33,7 @@ export default function SignupScreen() {
       // Account creation must still succeed if email delivery is temporarily
       // unavailable; the account screen lets the user resend the message.
       await sendEmailVerification(credential.user).catch(() => {});
-      router.replace('/(tabs)');
+      router.navigate('/(tabs)');
     } catch (nextError) { setError(friendlyAuthError(nextError, english)); }
     finally { setBusy(false); }
   }

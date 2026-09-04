@@ -6,9 +6,14 @@
   "private": true,
   "scripts": {
     "start": "expo start",
+    "preflight": "node tools/preflight.js && git status --short --branch",
+    "verify": "npm run preflight && npm test",
+    "ios:dev": "node tools/start-mobile.js tunnel",
+    "ios:dev:clear": "node tools/start-mobile.js tunnel --clear",
+    "ios:lan": "node tools/start-mobile.js lan",
     "ios": "expo start --ios",
     "android": "expo start --android",
-    "test": "node src/__tests__/engine.test.js"
+    "test": "node src/__tests__/engine.test.js && node src/__tests__/suggestions.test.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

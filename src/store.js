@@ -384,13 +384,25 @@ export function useEngineCtx() {
     pantrySet: state.pantry,
     profile: state.profile,
     timeBudget: state.timeBudget,
+    // The API filters `time_budget` in SQL, so the bundled library has to gate
+    // on it too — otherwise "Benim için seç" offers a 90-minute dish to someone
+    // who asked for 30 minutes and the other two methods do not.
+    maxMinutes: state.timeBudget,
     maxPerPortion: state.maxPerPortion,
     meatless: state.meatless,
+    // Every profile filter reaches the local engine as well. These four used to
+    // be sent to the API only, so they shaped two of the three methods.
+    diet: state.dietPreference,
+    glutenFree: state.glutenFree,
+    lactoseFree: state.lactoseFree,
+    lowGlycemic: state.lowGlycemic,
     skill: state.skill,
     day: today(),
     priceOverrides,
     priceSnapshot: state.marketPriceSnapshot,
   }), [state.pantry, state.profile, state.timeBudget,
-       state.maxPerPortion, state.meatless, state.skill, state.marketPriceSnapshot,
+       state.maxPerPortion, state.meatless, state.dietPreference,
+       state.glutenFree, state.lactoseFree, state.lowGlycemic,
+       state.skill, state.marketPriceSnapshot,
        priceOverrides]);
 }

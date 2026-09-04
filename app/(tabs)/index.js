@@ -2,12 +2,16 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Engine from '../../src/engine';
-import { ING, REC, byId } from '../../src/data';
+import Suggestions from '../../src/suggestions';
+import { ING, REC } from '../../src/data';
 import { useStore, useEngineCtx, PRICING_CITY } from '../../src/store';
-import { makeT, tl } from '../../src/i18n';
+import { makeT } from '../../src/i18n';
 import { useTheme, space, radius } from '../../src/theme';
-import { Body, Button, Card, Chip, Price, Row, ScreenBackdrop, Title, stateChip } from '../../src/ui';
+import { Body, ScreenBackdrop, Title } from '../../src/ui';
+import SuggestionCard from '../../src/SuggestionCard';
 import { getMarketPrices, getSeasonalRecipes, getTonightRecipes } from '../../src/api';
+
+const SUGGESTION_LIMIT = 3;
 
 function ChoiceButton({ number, title, subtitle, onPress, disabled }) {
   const c = useTheme();
@@ -39,11 +43,26 @@ export default function Tonight() {
   const [choice, setChoice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // The profile filters now live in ctx, so the bundled ranker applies the same
+  // meatless / gluten / lactose / low-glycemic rules the API applies.
   const ranked = useMemo(() => Engine.recommend(REC, ctx), [ctx]);
   const kilerIds = useMemo(
     () => Object.values(state.kiler || {}).map(item => Number(item.id)),
     [state.kiler]
   );
+
+  function show(mode, items) {
+    const suggestions = Suggestions.normalize(items, { english, limit:SUGGESTION_LIMIT });
+    if (!suggestions.length) return false;
+    setError(null);
+    setChoice({ mode, suggestions });
+    return true;
+  }
+
+  function fail(message) {
+    setChoice(null);
+    setError(message);
+  }
 
   async function recommendRandom() {
     setLoading(true);
@@ -67,24 +86,19 @@ export default function Tonight() {
       setLoading(false);
     }
     if (!currentRanked.length) {
-      setChoice(null);
-      setError(t('noneMatch'));
+      fail(t('noneMatch'));
       return;
     }
     const previousIds = new Set(
-      choice?.kind === 'local' ? choice.results.map(item => item.recipe.id) : []
+      choice?.mode === 'random' ? choice.suggestions.map(item => item.id) : []
     );
     // Keep the surprise, but only inside the best current cost/fit band so
     // today's market prices materially affect which dinners can be selected.
     const leading = currentRanked.slice(0, Math.min(12, currentRanked.length));
     const candidates = leading.filter(item => !previousIds.has(item.recipe.id));
     const pool = candidates.length ? candidates : leading;
-    const results = [...pool]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-    setError(null);
-    setChoice({ kind:'local', mode:'random', results,
-      reason:english ? 'A dinner idea chosen for you' : 'Senin için seçilen bir akşam yemeği' });
+    const results = [...pool].sort(() => Math.random() - 0.5);
+    if (!show('random', results)) fail(t('noneMatch'));
   }
 
   async function recommendSeasonal() {
@@ -95,24 +109,17 @@ export default function Tonight() {
         month: ctx.month,
         region: ctx.region,
         city: PRICING_CITY,
-        limit: 3,
+        limit: SUGGESTION_LIMIT * 3,
         timeBudget: state.timeBudget,
         diet: state.dietPreference,
         glutenFree: state.glutenFree,
         lactoseFree: state.lactoseFree,
         lowGlycemic: state.lowGlycemic,
       });
-      const recipes = data.recipes || [];
-      if (!recipes.length) {
-        setChoice(null);
-        setError(english ? 'No suitable seasonal dinner was found.' : 'Mevsime uygun akşam yemeği bulunamadı.');
-        return;
-      }
-      setChoice({ kind:'api', mode:'seasonal', recipes });
+      if (!show('seasonal', data.recipes || [])) fail(t('noSeasonalDinner'));
     } catch (e) {
       console.error('Tonight seasonal recommendation:', e);
-      setChoice(null);
-      setError(english ? 'Seasonal recommendations could not be loaded.' : 'Mevsim önerileri yüklenemedi.');
+      fail(t('seasonalLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -120,131 +127,27 @@ export default function Tonight() {
 
   async function recommendFromKiler() {
     if (!kilerIds.length) {
-      setChoice(null);
-      setError(english
-        ? 'Add ingredients to Kiler first so Sofra can match a recipe.'
-        : 'Sofra’nın tarif eşleştirebilmesi için önce Kiler’e malzeme ekle.');
+      fail(t('kilerEmpty'));
       return;
     }
     try {
       setLoading(true);
       setError(null);
       const data = await getTonightRecipes(kilerIds, {
-        limit:3, timeBudget:state.timeBudget, city:PRICING_CITY,
+        limit:SUGGESTION_LIMIT * 3, timeBudget:state.timeBudget, city:PRICING_CITY,
         meatless:state.meatless,
         diet:state.dietPreference,
         glutenFree:state.glutenFree,
         lactoseFree:state.lactoseFree,
         lowGlycemic:state.lowGlycemic,
       });
-      const recipes = data.recipes || [];
-      if (!recipes.length) {
-        setChoice(null);
-        setError(english ? 'No suitable Kiler recipe was found.' : 'Kiler’e uygun tarif bulunamadı.');
-        return;
-      }
-      setChoice({ kind:'api', mode:'kiler', recipes });
+      if (!show('kiler', data.recipes || [])) fail(t('noKilerRecipe'));
     } catch (e) {
       console.error('Tonight Kiler recommendation:', e);
-      setChoice(null);
-      setError(english ? 'Kiler recommendation could not be loaded.' : 'Kiler önerisi yüklenemedi.');
+      fail(t('kilerLoadFailed'));
     } finally {
       setLoading(false);
     }
-  }
-
-  function renderLocalResult() {
-    return (
-      <View style={{ marginTop:space.l }}>
-        {choice.results.map((s, index) => {
-          const r = s.recipe;
-          const heroState = Engine.stateOf(byId[r.hero], ctx.region, ctx.month, ctx.regions);
-          return (
-            <Card key={r.id} style={{ marginBottom:space.m }}>
-              <Text style={{ color:c.accent, fontSize:11, fontWeight:'800', letterSpacing:0.7 }}>
-                {choice.mode === 'seasonal'
-                  ? `${english ? 'SEASONAL CHOICE' : 'MEVSİMSEL SEÇİM'} ${index + 1}`
-                  : `${english ? 'TONIGHT’S CHOICE' : 'BU AKŞAMIN SEÇİMİ'} ${index + 1}`}
-              </Text>
-              <Title size={24}>{t.title(r)}</Title>
-              <Body dim size={12.5}>{r.minutes} {t('min')} · {t.cat(r.category)}</Body>
-              <Body size={13} style={{ marginTop:space.s }}>{choice.reason}</Body>
-              <View style={{ marginTop:space.m }}>
-                <Price value={tl(s.cost.perPortion)} unit={t('perPerson')} />
-                <Body dim size={12.5}>
-                  {t('forN', r.servings || 2)} · {tl(s.cost.total)} ₺ {t('total').toLowerCase()}
-                </Body>
-              </View>
-              <Row gap={6} style={{ flexWrap:'wrap', marginVertical:space.m }}>
-                {stateChip(heroState, t)}
-                {s.missing.length > 0 && <Chip>{s.missing.length} {t('toBuy')}</Chip>}
-              </Row>
-              <Button onPress={() => router.push(`/tarif/${r.id}`)}>{t('cook')}</Button>
-            </Card>
-          );
-        })}
-      </View>
-    );
-  }
-
-  function renderApiResult() {
-    return (
-      <View style={{ marginTop:space.l }}>
-        {choice.recipes.map((r, index) => {
-          const ready = r.missing_count === 0;
-          const hasCost = r.cost_per_portion != null && (r.cost_coverage || 0) >= 0.7;
-          const servings = r.cost_servings || r.servings || 2;
-          return (
-            <Card key={r.id} style={{ marginBottom:space.m }}>
-              <Text style={{ color:c.accent, fontSize:11, fontWeight:'800', letterSpacing:0.7 }}>
-                {choice.mode === 'seasonal'
-                  ? `${english ? 'SEASONAL CHOICE' : 'MEVSİMSEL SEÇİM'} ${index + 1}`
-                  : `${english ? 'FROM YOUR PANTRY' : 'KİLERİNDEN'} ${index + 1}`}
-              </Text>
-              <Title size={24}>{r.title}</Title>
-              <Body dim size={12.5}>
-                {r.total_minutes != null ? `${r.total_minutes} ${t('min')} · ` : ''}
-                {r.category || (english ? 'Recipe' : 'Tarif')}
-              </Body>
-              <Body size={13} style={{ marginTop:space.s }}>
-                {choice.mode === 'seasonal'
-                  ? `${english ? 'Seasonal ingredients' : 'Mevsim malzemeleri'}: ${(r.seasonal_ingredients || []).join(', ')}`
-                  : english
-                    ? `Matched with ${r.matched_count || 0} ingredients in your Kiler`
-                    : `Kilerindeki ${r.matched_count || 0} malzemeyle eşleşti`}
-              </Body>
-              <View style={{ marginTop:space.m }}>
-                <Price value={hasCost ? tl(r.cost_per_portion) : '—'} unit={t('perPerson')} />
-                <Body dim size={12.5}>
-                  {hasCost
-                    ? `${t('forN', servings)} · ${tl(r.cost_total)} ₺ ${t('total').toLowerCase()} · ${t('approximateCost')}`
-                    : t('costUnavailable')}
-                </Body>
-              </View>
-              <Row gap={6} style={{ flexWrap:'wrap', marginVertical:space.m }}>
-                {hasCost && (
-                  <Chip>{t('priceCoverage', `%${Math.round((r.cost_coverage || 0) * 100)}`)}</Chip>
-                )}
-                {choice.mode === 'seasonal' && (
-                  <Chip tone="accent">{r.seasonal_count} {english ? 'in season' : 'mevsiminde'}</Chip>
-                )}
-                {choice.mode !== 'seasonal' && (
-                  <>
-                <Chip tone={ready ? 'accent' : undefined}>
-                  {ready ? english ? 'Ready' : 'Hazır' : `${r.missing_count} ${english ? 'missing' : 'eksik'}`}
-                </Chip>
-                <Chip>%{Math.round(r.match_percent || 0)} {english ? 'match' : 'eşleşme'}</Chip>
-                  </>
-                )}
-              </Row>
-              <Button onPress={() => router.push(`/api-tarif/${r.id}`)}>
-                {t('cook')}
-              </Button>
-            </Card>
-          );
-        })}
-      </View>
-    );
   }
 
   return (
@@ -252,24 +155,20 @@ export default function Tonight() {
     <ScrollView style={{ backgroundColor:'transparent' }}
       contentContainerStyle={{ padding:space.l, paddingBottom:space.xl * 2 }}>
       <View style={{ marginBottom:space.l }}>
-        <Title size={28}>{english ? 'What shall we cook tonight?' : 'Bu akşam ne pişirelim?'}</Title>
+        <Title size={28}>{t('tonightQuestion')}</Title>
       </View>
-      <ChoiceButton number="1" title={english ? 'Choose for me' : 'Benim için seç'}
-        subtitle={english ? 'Recommend a random dinner' : 'Rastgele bir akşam yemeği öner'}
+      <ChoiceButton number="1" title={t('chooseForMe')} subtitle={t('chooseForMeSub')}
         onPress={recommendRandom} disabled={loading} />
-      <ChoiceButton number="2" title={english ? 'Choose by season' : 'Mevsime göre seç'}
-        subtitle={english ? 'Use ingredients in season now' : 'Şu an mevsiminde olan malzemeleri kullan'}
+      <ChoiceButton number="2" title={t('chooseBySeason')} subtitle={t('chooseBySeasonSub')}
         onPress={recommendSeasonal} disabled={loading} />
-      <ChoiceButton number="3" title={english ? 'Choose from my Kiler' : 'Kilerimden seç'}
-        subtitle={english ? `Match my ${kilerIds.length} Kiler ingredients` : `${kilerIds.length} Kiler malzememle eşleştir`}
+      <ChoiceButton number="3" title={t('chooseFromKiler')}
+        subtitle={t('chooseFromKilerSub', kilerIds.length)}
         onPress={recommendFromKiler} disabled={loading} />
 
       {loading && (
         <View style={{ paddingVertical:space.xl, alignItems:'center' }}>
           <ActivityIndicator color={c.accent} />
-          <Body dim size={13} style={{ marginTop:space.s }}>
-            {english ? 'Finding a recipe…' : 'Tarif aranıyor…'}
-          </Body>
+          <Body dim size={13} style={{ marginTop:space.s }}>{t('findingRecipe')}</Body>
         </View>
       )}
       {!loading && error ? (
@@ -277,8 +176,14 @@ export default function Tonight() {
           <Body>{error}</Body>
         </View>
       ) : null}
-      {!loading && choice?.kind === 'local' ? renderLocalResult() : null}
-      {!loading && choice?.kind === 'api' ? renderApiResult() : null}
+      {!loading && choice ? (
+        <View style={{ marginTop:space.l }}>
+          {choice.suggestions.map((suggestion, index) => (
+            <SuggestionCard key={suggestion.key} suggestion={suggestion} mode={choice.mode}
+              index={index} t={t} ctx={ctx} onPress={(s) => router.push(s.route)} />
+          ))}
+        </View>
+      ) : null}
     </ScrollView>
     </ScreenBackdrop>
   );

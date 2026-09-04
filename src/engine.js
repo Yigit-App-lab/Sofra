@@ -149,24 +149,196 @@
     return grams / 1000;                                          // kg or L
   }
 
+  // -------------------------------------------------------------- recipe text
+  //
+  // The bundled library keeps titles in `titles.tr` / `titles.en`; the API
+  // returns a single `title`. Both reach the same helpers so that one
+  // normalisation rule serves all three suggestion methods.
+
+  function recipeTitle(recipe, english) {
+    if (!recipe) return '';
+    if (recipe.titles) return recipe.titles[english ? 'en' : 'tr'] || recipe.titles.tr || '';
+    return recipe.title || '';
+  }
+
+  // Source titles advertise videos Sofra cannot show, and repeat filler that
+  // makes two identical dishes look different. Both are stripped before any
+  // comparison. The API strips the same words in `clean_recipe_title`.
+  var TITLE_NOISE = {
+    videolu: 1, videosu: 1, resimli: 1, tarif: 1, tarifi: 1, tarifleri: 1,
+    nasil: 1, yapilir: 1, kolay: 1, pratik: 1, nefis: 1, enfes: 1, efsane: 1,
+    ev: 1, evde: 1, usulu: 1, orjinal: 1, gercek: 1, en: 1, ve: 1, ile: 1
+  };
+
+  /** Fold Turkish case/diacritics so 'Şehriyeli Pilav' and 'sehriyeli pilav' match. */
+  function foldTurkish(text) {
+    return String(text == null ? '' : text)
+      .replace(/[İI]/g, 'i').replace(/ı/g, 'i')
+      .replace(/[Şş]/g, 's').replace(/[Ğğ]/g, 'g').replace(/[Çç]/g, 'c')
+      .replace(/[Üü]/g, 'u').replace(/[Öö]/g, 'o')
+      .toLowerCase();
+  }
+
+  /** "Videolu Fırın Makarna Tarifi" -> "firin makarna" (sorted, noise dropped). */
+  function normalizeTitleKey(text) {
+    var folded = foldTurkish(text).replace(/[^a-z0-9]+/g, ' ').trim();
+    if (!folded) return '';
+    var parts = folded.split(' '), out = [];
+    for (var i = 0; i < parts.length; i++) {
+      var token = parts[i];
+      // Single letters are source debris; a single digit ('Kek 2') is not.
+      if (!token || TITLE_NOISE[token]) continue;
+      if (token.length < 2 && !/^[0-9]$/.test(token)) continue;
+      if (out.indexOf(token) === -1) out.push(token);
+    }
+    out.sort();
+    return out.join(' ');
+  }
+
+  function namedInTitle(item, titleKey) {
+    var name = normalizeTitleKey((item.names && item.names.tr) || item.id);
+    if (!name) return false;
+    var words = name.split(' ');
+    for (var i = 0; i < words.length; i++) {
+      if (words[i].length >= 4 && titleKey.indexOf(words[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  function titleSimilarity(a, b) {
+    var x = a ? a.split(' ') : [], y = b ? b.split(' ') : [];
+    if (!x.length || !y.length) return 0;
+    var shared = 0;
+    for (var i = 0; i < x.length; i++) if (y.indexOf(x[i]) !== -1) shared++;
+    return shared / (x.length + y.length - shared);
+  }
+
+  /**
+   * Collapse the same dish appearing several times.
+   *
+   * The API library holds many near-identical imports ("Fırında Tavuk",
+   * "Fırında Tavuk Tarifi", "Fırında Tavuk Nasıl Yapılır"), and three of them in
+   * a three-card answer reads as a broken app. Entries are expected in ranked
+   * order; the first of each family survives.
+   *
+   * @param items   any array
+   * @param titleOf reads a display title from an entry
+   * @param groupOf optional secondary identity (category, hero, …)
+   */
+  var DUPLICATE_SIMILARITY = 0.7;
+
+  function dropNearDuplicates(items, titleOf, groupOf) {
+    var kept = [], keys = [];
+    for (var i = 0; i < items.length; i++) {
+      var key = normalizeTitleKey(titleOf ? titleOf(items[i]) : items[i]);
+      var group = groupOf ? String(groupOf(items[i]) || '') : '';
+      var duplicate = false;
+      for (var j = 0; j < keys.length; j++) {
+        if (!key || !keys[j].key) continue;
+        if (keys[j].key === key) { duplicate = true; break; }
+        if (keys[j].group === group && group
+            && titleSimilarity(keys[j].key, key) >= DUPLICATE_SIMILARITY) {
+          duplicate = true; break;
+        }
+      }
+      if (duplicate) continue;
+      keys.push({ key: key, group: group });
+      kept.push(items[i]);
+    }
+    return kept;
+  }
+
+  // ------------------------------------------------------- dietary filtering
+  //
+  // The API filters on precomputed recipe columns (`is_vegan`, `is_vegetarian`,
+  // `is_low_glycemic`) and on `contains_gluten` / `contains_lactose` in
+  // `kiler_ingredients`. The bundled library carries the same facts as
+  // per-ingredient flags in `ingredients.json`, and this is the only place that
+  // reads them — so a filter can never mean one thing in one screen and
+  // something else in another. Optional ingredients count: an allergen the cook
+  // may add is still an allergen in the dish.
+
+  function dietaryFlags(recipe, byId) {
+    var gluten = false, lactose = false, highGlycemic = false;
+    var meat = false, animal = false;
+    var ings = recipe.ingredients || [];
+    for (var i = 0; i < ings.length; i++) {
+      var item = byId ? byId[ings[i].id] : null;
+      if (!item) continue;
+      if (item.gluten) gluten = true;
+      if (item.lactose) lactose = true;
+      if (item.highGlycemic) highGlycemic = true;
+      if (item.meat) meat = true;
+      if (item.animalProduct) animal = true;
+    }
+    if (recipe.meatGrams > 0) meat = true;
+    return {
+      gluten: gluten,
+      lactose: lactose,
+      lowGlycemic: !highGlycemic,
+      meat: meat,
+      vegetarian: !meat,
+      vegan: !meat && !animal
+    };
+  }
+
   // ------------------------------------------------------------------- cost
+
+  // Cost confidence, kept identical to backend/recipe_costs.py so that the
+  // bundled library and the API publish or withhold a price for the same
+  // reasons. A dish whose protein or headline ingredient could not be priced
+  // shows no number at all: a plausible-looking 12 TL chicken dinner is worse
+  // than admitting the estimate is unavailable.
+  var COVERAGE_MIN = 0.70;
+  var MIN_TOTAL = 0.05;
+  var COST_RELEVANT_KIND = { protein: 1, sut: 1, tahil: 1, sebze: 1, meyve: 1 };
+  var WATER_IDS = { su: 1, ilik_su: 1, sicak_su: 1, soguk_su: 1, kaynar_su: 1 };
 
   /**
    * What does this recipe cost, and where does the money go?
    * Returns total TRY, per-portion TRY, and a line-by-line breakdown sorted
    * most-expensive-first — because "the kıyma is 78% of this meal" is the single
    * most useful thing the app can tell someone cooking to a budget.
+   *
+   * `coverage` / `trusted` / `unavailableReason` mirror the API's
+   * `cost_coverage` / `cost_per_portion` / `cost_unavailable_reason`, so a
+   * screen can apply one rule to a local and an API suggestion alike.
    */
   function costOf(recipe, ctx) {
-    var lines = [], total = 0;
+    var lines = [], total = 0, eligible = 0, priced = 0;
+    var missingIngredients = [], missingProtein = false, missingNamed = false;
+    var titleKey = normalizeTitleKey(recipeTitle(recipe));
     for (var i = 0; i < recipe.ingredients.length; i++) {
       var ri = recipe.ingredients[i];
       if (ri.optional) continue;
+      if (WATER_IDS[ri.id]) continue;
       var item = ctx.byId[ri.id];
-      if (!item) continue;
+      if (!item) {
+        // A measured ingredient the catalogue does not know still belongs in the
+        // denominator. Ignoring it used to produce a misleading 100% coverage.
+        eligible++;
+        missingIngredients.push(ri.id);
+        continue;
+      }
       var units = unitsConsumed(ri, item);
+      if (!(units > 0)) {
+        if (COST_RELEVANT_KIND[item.kind]) {
+          eligible++;
+          missingIngredients.push(ri.id);
+          if (titleKey && namedInTitle(item, titleKey)) missingNamed = true;
+        }
+        if (item.kind === 'protein') missingProtein = true;
+        continue;
+      }
+      eligible++;
       var livePrice = livePriceFor(item, ctx.priceOverrides);
       var price = unitPrice(item, ctx.region, ctx.month, ctx.regions, ctx.priceOverrides);
+      if (!(price > 0)) {
+        missingIngredients.push(ri.id);
+        if (item.kind === 'protein') missingProtein = true;
+        continue;
+      }
+      priced++;
       var cost = units * price;
       total += cost;
       lines.push({
@@ -177,10 +349,26 @@
     }
     lines.sort(function (a, b) { return b.cost - a.cost; });
     var servings = recipe.servings || 2;
+    var coverage = eligible ? priced / eligible : 0;
+    var trusted = priced > 0 && total >= MIN_TOTAL && coverage >= COVERAGE_MIN
+      && !missingProtein && !missingNamed;
+    var reason = null;
+    if (!trusted) {
+      if (missingProtein) reason = 'missing_required_protein';
+      else if (missingNamed) reason = 'missing_required_ingredient';
+      else if (!priced) reason = 'no_priced_ingredients';
+      else if (coverage < COVERAGE_MIN) reason = 'coverage_under_70_percent';
+      else reason = 'total_below_minimum';
+    }
     return {
       total: total,
       perPortion: total / servings,
+      servings: servings,
       lines: lines,
+      coverage: coverage,
+      trusted: trusted,
+      unavailableReason: reason,
+      missingIngredients: missingIngredients,
       // How much of the bill one ingredient is. Drives "expensive because…".
       driver: lines.length ? lines[0] : null,
       driverShare: total > 0 && lines.length ? lines[0].cost / total : 0,
@@ -317,6 +505,49 @@
     return (h % 1000) / 1000;
   }
 
+  /**
+   * Does the dish use a protein the cook already has?
+   *
+   * `matched_protein_count` is the API's first sort key for `Kilerimden seç`:
+   * someone who ticked chicken wants the chicken used, not a lentil soup that
+   * happens to match more of the spice rack. The bundled ranker gets the same
+   * priority as an additive bonus, so a cook with no protein in the pantry is
+   * unaffected.
+   */
+  var PROTEIN_BONUS = 0.06;
+
+  function pantryProteinFit(recipe, ctx) {
+    var have = 0, used = 0, id;
+    for (id in ctx.pantrySet) {
+      if (!ctx.pantrySet[id]) continue;
+      var owned = ctx.byId[id];
+      if (owned && owned.kind === 'protein') have++;
+    }
+    if (!have) return { have: 0, used: 0, score: 0 };
+    for (var i = 0; i < recipe.ingredients.length; i++) {
+      var ri = recipe.ingredients[i];
+      if (ri.optional) continue;
+      var item = ctx.byId[ri.id];
+      if (item && item.kind === 'protein' && ctx.pantrySet[ri.id]) used++;
+    }
+    return { have: have, used: used, score: used ? 1 : 0 };
+  }
+
+  /**
+   * How much recipe is actually there — the tie-breaker.
+   *
+   * Imported libraries carry both a four-line sketch and a full write-up of the
+   * same dish. When nothing else separates them, the cook is better served by
+   * the detailed one.
+   */
+  function detailScore(recipe) {
+    var ingredients = recipe.ingredients ? recipe.ingredients.length : 0;
+    var steps = recipe.steps ? recipe.steps.length : 0;
+    var prose = 0;
+    for (var i = 0; i < steps; i++) prose += String(recipe.steps[i] || '').length;
+    return ingredients * 2 + steps * 3 + prose / 200;
+  }
+
   function pantryFit(recipe, pantrySet, byId) {
     var have = 0, need = 0, missing = [], burden = 0;
     for (var i = 0; i < recipe.ingredients.length; i++) {
@@ -406,8 +637,25 @@
     return { available: false, blockers: blockers, nextMonth: soonest };
   }
 
+  /**
+   * Every filter the profile can set, applied in one place.
+   *
+   * `Benim için seç` used to ignore gluten, lactose, low-glycemic and the
+   * vegan/vegetarian choice entirely — those were sent to the API and so only
+   * shaped the other two methods. A coeliac asking for a dinner idea was served
+   * börek. All four now gate the bundled library too.
+   */
   function passesFilters(recipe, ctx) {
-    if (ctx.meatless && recipe.meatGrams > 0) return false;
+    var diet = ctx.diet && ctx.diet !== 'standard' ? ctx.diet : null;
+    if (ctx.meatless || diet || ctx.glutenFree || ctx.lactoseFree || ctx.lowGlycemic) {
+      var flags = dietaryFlags(recipe, ctx.byId);
+      if (ctx.meatless && !flags.vegetarian) return false;
+      if (diet === 'vegan' && !flags.vegan) return false;
+      if (diet === 'vegetarian' && !flags.vegetarian) return false;
+      if (ctx.glutenFree && flags.gluten) return false;
+      if (ctx.lactoseFree && flags.lactose) return false;
+      if (ctx.lowGlycemic && !flags.lowGlycemic) return false;
+    }
     if (ctx.maxMinutes && recipe.minutes > ctx.maxMinutes) return false;
     if (ctx.mealType && recipe.tags.indexOf(ctx.mealType) === -1) return false;
     if (ctx.exclude && ctx.exclude.length) {
@@ -455,6 +703,7 @@
       var norm = (c.cost.perPortion - lo) / span;
       var costScore = 1 - Math.pow(norm, 1.5);
       var pf = pantryFit(r, ctx.pantrySet, ctx.byId);
+      var pp = pantryProteinFit(r, ctx);
       var parts = {
         cost: costScore,
         pantry: pf.coverage,
@@ -470,17 +719,70 @@
       var base = 0;
       for (var k in WEIGHTS) base += WEIGHTS[k] * parts[k];
       base -= WEIGHTS.pantry * 0.4 * pf.shopBurden;      // buying a lot is friction, not cost
+      base += PROTEIN_BONUS * pp.score;                  // use the meat they already bought
+      parts.protein = pp.score;
       var penalty = repetitionPenalty(r, ctx.profile, ctx.day);
       parts.penalty = penalty;
       out.push({
         recipe: r, cost: c.cost, parts: parts, missing: pf.missing,
         availability: c.availability,
+        // Reported for parity with the API's matched_count / matched_protein_count.
+        matched: matchedCount(r, ctx),
+        matchedProtein: pp.used,
+        detail: detailScore(r),
         total: Math.max(0, Math.min(1, base - penalty))
       });
     }
+    applyTieBreaks(out);
     out.sort(function (a, b) { return b.total - a.total; });
+    if (ctx.dedupe !== false) {
+      out = dropNearDuplicates(out,
+        function (s) { return recipeTitle(s.recipe); },
+        function (s) { return s.recipe.category; });
+    }
     rotateBand(out, ctx.day);
     return limit ? out.slice(0, limit) : out;
+  }
+
+  function matchedCount(recipe, ctx) {
+    var have = 0;
+    for (var i = 0; i < recipe.ingredients.length; i++) {
+      var ri = recipe.ingredients[i];
+      if (ri.optional) continue;
+      if (ctx.pantrySet && ctx.pantrySet[ri.id]) have++;
+    }
+    return have;
+  }
+
+  /**
+   * The API's tie-break chain, folded into the score as a hair of weight.
+   *
+   * `/recipes/tonight` breaks ties by matched protein, then fewer missing
+   * ingredients, then more of the kitchen used, then the fuller recipe. The
+   * bundled ranker now agrees — but as a term small enough that it can only
+   * decide dishes the weighted score could not separate, never overturn a
+   * genuinely better one. An epsilon comparator was tried first and rejected:
+   * it is not transitive, so the sort itself became unpredictable.
+   */
+  var TIEBREAK = 0.004;
+
+  function applyTieBreaks(out) {
+    var maxMissing = 1, maxMatched = 1, maxDetail = 1, maxProtein = 1, i;
+    for (i = 0; i < out.length; i++) {
+      maxMissing = Math.max(maxMissing, out[i].missing.length);
+      maxMatched = Math.max(maxMatched, out[i].matched);
+      maxDetail = Math.max(maxDetail, out[i].detail);
+      maxProtein = Math.max(maxProtein, out[i].matchedProtein);
+    }
+    for (i = 0; i < out.length; i++) {
+      var s = out[i];
+      var rank = 0.50 * (s.matchedProtein / maxProtein)
+               + 0.25 * (1 - s.missing.length / maxMissing)
+               + 0.15 * (s.matched / maxMatched)
+               + 0.10 * (s.detail / maxDetail);
+      s.parts.tiebreak = rank;
+      s.total = Math.max(0, Math.min(1, s.total + TIEBREAK * rank));
+    }
   }
 
   /**
@@ -568,6 +870,11 @@
 
   var api = {
     STATE: STATE, FACTOR: FACTOR, WEIGHTS: WEIGHTS, MEASURE: MEASURE, BAND: BAND,
+    COVERAGE_MIN: COVERAGE_MIN, PROTEIN_BONUS: PROTEIN_BONUS,
+    recipeTitle: recipeTitle, normalizeTitleKey: normalizeTitleKey,
+    titleSimilarity: titleSimilarity, dropNearDuplicates: dropNearDuplicates,
+    dietaryFlags: dietaryFlags, pantryProteinFit: pantryProteinFit,
+    detailScore: detailScore, matchedCount: matchedCount,
     stateOf: stateOf, factorFor: factorFor, livePriceFor: livePriceFor, unitPrice: unitPrice, dailyJitter: dailyJitter,
     unitsConsumed: unitsConsumed, costOf: costOf, costByMonth: costByMonth,
     emptyProfile: emptyProfile, learn: learn, tasteScore: tasteScore,

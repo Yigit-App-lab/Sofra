@@ -606,6 +606,7 @@
     "en": "Potato"
    },
    "kind": "sebze",
+   "highGlycemic": true,
    "unit": "kg",
    "price": 50.0,
    "priceMonth": 8,
@@ -1139,6 +1140,7 @@
     "en": "Rice"
    },
    "kind": "tahil",
+   "highGlycemic": true,
    "unit": "kg",
    "price": 58.0,
    "priceMonth": 8,
@@ -1152,6 +1154,7 @@
     "en": "Coarse bulgur"
    },
    "kind": "tahil",
+   "gluten": true,
    "unit": "kg",
    "price": 70.95,
    "priceMonth": 8,
@@ -1165,6 +1168,7 @@
     "en": "Fine bulgur"
    },
    "kind": "tahil",
+   "gluten": true,
    "unit": "kg",
    "price": 72.0,
    "priceMonth": 8,
@@ -1178,6 +1182,8 @@
     "en": "Pasta"
    },
    "kind": "tahil",
+   "gluten": true,
+   "highGlycemic": true,
    "unit": "kg",
    "price": 69.8,
    "priceMonth": 8,
@@ -1191,6 +1197,7 @@
     "en": "Vermicelli"
    },
    "kind": "tahil",
+   "gluten": true,
    "unit": "kg",
    "price": 70.0,
    "priceMonth": 8,
@@ -1204,6 +1211,7 @@
     "en": "Turkish egg noodles"
    },
    "kind": "tahil",
+   "gluten": true,
    "unit": "kg",
    "price": 120.0,
    "priceMonth": 8,
@@ -1217,6 +1225,8 @@
     "en": "Flour"
    },
    "kind": "tahil",
+   "gluten": true,
+   "highGlycemic": true,
    "unit": "kg",
    "price": 21.8,
    "priceMonth": 8,
@@ -1230,6 +1240,8 @@
     "en": "Semolina"
    },
    "kind": "tahil",
+   "gluten": true,
+   "highGlycemic": true,
    "unit": "kg",
    "price": 40.0,
    "priceMonth": 8,
@@ -1243,6 +1255,7 @@
     "en": "Starch"
    },
    "kind": "tahil",
+   "highGlycemic": true,
    "unit": "kg",
    "price": 60.0,
    "priceMonth": 8,
@@ -1256,6 +1269,8 @@
     "en": "Bread"
    },
    "kind": "tahil",
+   "gluten": true,
+   "highGlycemic": true,
    "unit": "adet",
    "price": 17.0,
    "priceMonth": 8,
@@ -1270,6 +1285,8 @@
     "en": "Yufka pastry"
    },
    "kind": "tahil",
+   "gluten": true,
+   "highGlycemic": true,
    "unit": "adet",
    "price": 15.0,
    "priceMonth": 8,
@@ -1283,6 +1300,7 @@
     "en": "Tarhana"
    },
    "kind": "tahil",
+   "gluten": true,
    "unit": "kg",
    "price": 150.0,
    "priceMonth": 8,
@@ -1296,6 +1314,7 @@
     "en": "Egg"
    },
    "kind": "protein",
+   "animalProduct": true,
    "unit": "adet",
    "price": 4.3,
    "priceMonth": 8,
@@ -1309,6 +1328,8 @@
     "en": "Chicken thigh"
    },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 119.9,
    "priceMonth": 8,
@@ -1322,6 +1343,8 @@
     "en": "Chicken breast"
    },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 180.0,
    "priceMonth": 8,
@@ -1335,6 +1358,8 @@
     "en": "Minced beef"
    },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 769.9,
    "priceMonth": 8,
@@ -1348,6 +1373,8 @@
     "en": "Beef cubes"
    },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 750.0,
    "priceMonth": 8,
@@ -1361,6 +1388,8 @@
     "en": "Lamb"
    },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 800.0,
    "priceMonth": 8,
@@ -1374,6 +1403,8 @@
     "en": "Sucuk sausage"
    },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 500.0,
    "priceMonth": 8,
@@ -1387,6 +1418,8 @@
     "en": "Canned tuna"
    },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 450.0,
    "priceMonth": 8,
@@ -1397,6 +1430,8 @@
    "id": "somon",
    "names": { "tr": "Somon", "en": "Salmon" },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 600.0,
    "priceMonth": 8,
@@ -1407,6 +1442,8 @@
    "id": "levrek",
    "names": { "tr": "Levrek", "en": "Sea bass" },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 500.0,
    "priceMonth": 8,
@@ -1417,6 +1454,8 @@
    "id": "cipura",
    "names": { "tr": "Çipura", "en": "Sea bream" },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 450.0,
    "priceMonth": 8,
@@ -1427,6 +1466,8 @@
    "id": "hamsi",
    "names": { "tr": "Hamsi", "en": "Anchovy" },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 250.0,
    "priceMonth": 8,
@@ -1437,6 +1478,8 @@
    "id": "karides",
    "names": { "tr": "Karides", "en": "Shrimp" },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 600.0,
    "priceMonth": 8,
@@ -1447,6 +1490,8 @@
    "id": "balik",
    "names": { "tr": "Balık", "en": "Fish" },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 350.0,
    "priceMonth": 8,
@@ -1457,6 +1502,8 @@
    "id": "pastirma",
    "names": { "tr": "Pastırma", "en": "Pastirma" },
    "kind": "protein",
+   "meat": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 1000.0,
    "priceMonth": 8,
@@ -1470,6 +1517,8 @@
     "en": "Yoghurt"
    },
    "kind": "sut",
+   "lactose": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 50.0,
    "priceMonth": 8,
@@ -1483,6 +1532,8 @@
     "en": "Milk"
    },
    "kind": "sut",
+   "lactose": true,
+   "animalProduct": true,
    "unit": "L",
    "price": 41.5,
    "priceMonth": 8,
@@ -1496,6 +1547,8 @@
     "en": "White cheese"
    },
    "kind": "sut",
+   "lactose": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 225.0,
    "priceMonth": 8,
@@ -1509,6 +1562,8 @@
     "en": "Kaşar cheese"
    },
    "kind": "sut",
+   "lactose": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 400.0,
    "priceMonth": 8,
@@ -1522,6 +1577,8 @@
     "en": "Curd cheese"
    },
    "kind": "sut",
+   "lactose": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 180.0,
    "priceMonth": 8,
@@ -1535,6 +1592,8 @@
     "en": "Butter"
    },
    "kind": "sut",
+   "lactose": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 450.0,
    "priceMonth": 8,
@@ -1548,6 +1607,8 @@
     "en": "Cream"
    },
    "kind": "sut",
+   "lactose": true,
+   "animalProduct": true,
    "unit": "L",
    "price": 300.0,
    "priceMonth": 8,
@@ -1561,6 +1622,8 @@
     "en": "Ayran"
    },
    "kind": "sut",
+   "lactose": true,
+   "animalProduct": true,
    "unit": "L",
    "price": 45.0,
    "priceMonth": 8,
@@ -1652,6 +1715,7 @@
     "en": "Grape molasses"
    },
    "kind": "kiler",
+   "highGlycemic": true,
    "unit": "kg",
    "price": 180.0,
    "priceMonth": 8,
@@ -1665,6 +1729,8 @@
     "en": "Honey"
    },
    "kind": "kiler",
+   "highGlycemic": true,
+   "animalProduct": true,
    "unit": "kg",
    "price": 500.0,
    "priceMonth": 8,
@@ -1691,6 +1757,7 @@
     "en": "Sugar"
    },
    "kind": "kiler",
+   "highGlycemic": true,
    "unit": "kg",
    "price": 47.3,
    "priceMonth": 8,
@@ -1899,6 +1966,7 @@
     "en": "Cornmeal"
    },
    "kind": "tahil",
+   "highGlycemic": true,
    "unit": "kg",
    "price": 60.0,
    "priceMonth": 8,
@@ -1922,6 +1990,8 @@
    "id": "galeta_unu",
    "names": {"tr": "Galeta unu", "en": "Breadcrumbs"},
    "kind": "tahil", "unit": "kg", "price": 102.7,
+   "gluten": true,
+   "highGlycemic": true,
    "priceMonth": 9, "source": "market", "cls": "kiler",
    "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10
   },
@@ -1936,6 +2006,7 @@
    "id": "soya_sosu",
    "names": {"tr": "Soya sosu", "en": "Soy sauce"},
    "kind": "kiler", "unit": "L", "price": 439.95,
+   "gluten": true,
    "priceMonth": 9, "source": "market", "cls": "kiler",
    "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10
   },
@@ -1986,6 +2057,8 @@
    "id": "milfoy",
    "names": {"tr": "Milföy", "en": "Puff pastry"},
    "kind": "tahil", "unit": "kg", "price": 155.06,
+   "gluten": true,
+   "highGlycemic": true,
    "priceMonth": 9, "source": "market", "cls": "kiler",
    "marketTracked": true, "marketKind": "packaged", "minUnitPrice": 10,
    "marketQuery": "Milföy hamuru"

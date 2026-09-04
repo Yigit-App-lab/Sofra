@@ -487,5 +487,158 @@ t('use-up never overrides an out-of-season gate', () => {
   ok(!E.recommend(rec.recipes, c).some(s => s.recipe.id === 'zeytinyagli_bamya'));
 });
 
+/* ---------------------------------------------------------------------------
+ * Aligning the three suggestion methods
+ *
+ * "Benim için seç" reads the bundled library through this engine, while
+ * "Mevsime göre seç" and "Kilerimden seç" read the database through the API.
+ * The tests below pin the behaviour that has to be identical in both.
+ * -------------------------------------------------------------------------*/
+
+console.log('\ndietary filters');
+t('a gluten-free request never returns a dish with flour, bread or pasta', () => {
+  const out = E.recommend(rec.recipes, ctx({ glutenFree: true, includeOffSeason: true }));
+  ok(out.length > 0, 'no gluten-free dishes at all');
+  out.forEach(s => {
+    ok(!E.dietaryFlags(s.recipe, byId).gluten, `${s.recipe.id} contains gluten`);
+  });
+});
+t('a lactose-free request never returns yoghurt, cheese or butter', () => {
+  const out = E.recommend(rec.recipes, ctx({ lactoseFree: true, includeOffSeason: true }));
+  ok(out.length > 0, 'no lactose-free dishes at all');
+  out.forEach(s => {
+    ok(!E.dietaryFlags(s.recipe, byId).lactose, `${s.recipe.id} contains lactose`);
+  });
+});
+t('a low-glycemic request never returns rice, potato, sugar or white flour', () => {
+  const out = E.recommend(rec.recipes, ctx({ lowGlycemic: true, includeOffSeason: true }));
+  ok(out.length > 0, 'no low-glycemic dishes at all');
+  out.forEach(s => {
+    ok(E.dietaryFlags(s.recipe, byId).lowGlycemic, `${s.recipe.id} is not low-glycemic`);
+  });
+});
+t('vegan excludes eggs, dairy and honey; vegetarian keeps them', () => {
+  const vegan = E.recommend(rec.recipes, ctx({ diet: 'vegan', includeOffSeason: true }));
+  const vegetarian = E.recommend(rec.recipes, ctx({ diet: 'vegetarian', includeOffSeason: true }));
+  ok(vegan.length > 0 && vegetarian.length > vegan.length,
+     `vegan ${vegan.length}, vegetarian ${vegetarian.length}`);
+  vegan.forEach(s => ok(E.dietaryFlags(s.recipe, byId).vegan, `${s.recipe.id} is not vegan`));
+  vegetarian.forEach(s => ok(E.dietaryFlags(s.recipe, byId).vegetarian, `${s.recipe.id} has meat`));
+});
+t('meatless means what the API means by it — fish is not vegetarian', () => {
+  const out = E.recommend(rec.recipes, ctx({ meatless: true, includeOffSeason: true }));
+  out.forEach(s => {
+    s.recipe.ingredients.forEach(ri => {
+      ok(!(byId[ri.id] || {}).meat, `${s.recipe.id} contains ${ri.id}`);
+    });
+  });
+});
+t('a filter that matches nothing returns an empty list, not a wrong dinner', () => {
+  eq(E.recommend(rec.recipes, ctx({ maxMinutes: 1 })).length, 0);
+});
+
+console.log('\ncost confidence');
+t('a well-mapped recipe reports full coverage and a trusted price', () => {
+  const c = E.costOf(recById.menemen, ctx());
+  eq(c.coverage, 1);
+  eq(c.trusted, true);
+  eq(c.unavailableReason, null);
+});
+t('an unpriceable protein withholds the price instead of guessing', () => {
+  const broken = JSON.parse(JSON.stringify(recById.izmir_kofte));
+  broken.ingredients.forEach(ri => { if (ri.id === 'kiyma') ri.qty = 0; });
+  const c = E.costOf(broken, ctx());
+  eq(c.trusted, false);
+  eq(c.unavailableReason, 'missing_required_protein');
+});
+t('an ingredient the catalogue does not know lowers coverage', () => {
+  const broken = JSON.parse(JSON.stringify(recById.menemen));
+  broken.ingredients.push({ id: 'gizli_malzeme', qty: 200, unit: 'g' });
+  const c = E.costOf(broken, ctx());
+  ok(c.coverage < 1, `coverage stayed at ${c.coverage}`);
+  ok(c.missingIngredients.indexOf('gizli_malzeme') !== -1, 'unmapped id not reported');
+});
+t('the coverage threshold is the one the API publishes on', () => {
+  eq(E.COVERAGE_MIN, 0.70);
+});
+
+console.log('\npantry protein priority');
+t('mince in the kitchen lifts the dishes that use it', () => {
+  const base = { tuz: 1, aycicek_yagi: 1, sogan: 1 };
+  const withMince = Object.assign({}, base, { kiyma: 1 });
+  const rank = (pantry, id) =>
+    E.recommend(rec.recipes, ctx({ pantrySet: pantry })).findIndex(s => s.recipe.id === id);
+  ['biber_dolmasi', 'karniyarik', 'patates_musakka'].forEach(id => {
+    ok(rank(withMince, id) < rank(base, id), `${id} did not rise with kıyma in the kitchen`);
+  });
+});
+t('a kitchen with no protein is unaffected by the protein bonus', () => {
+  const pantry = { tuz: 1, aycicek_yagi: 1, sogan: 1 };
+  E.recommend(rec.recipes, ctx({ pantrySet: pantry })).forEach(s => {
+    eq(s.parts.protein, 0, `${s.recipe.id} claimed a protein match`);
+  });
+});
+t('the protein bonus cannot outweigh an out-of-season gate', () => {
+  const c = ctx({ month: 1, pantrySet: { kiyma: 1, bamya: 1 } });
+  ok(!E.recommend(rec.recipes, c).some(s => s.recipe.id === 'zeytinyagli_bamya'));
+});
+
+console.log('\nduplicate suppression');
+t('source noise and word order do not make two titles different', () => {
+  eq(E.normalizeTitleKey('Videolu Fırında Tavuk Tarifi'),
+     E.normalizeTitleKey('Fırında Tavuk Nasıl Yapılır'));
+});
+t('Turkish case folding survives a title comparison', () => {
+  eq(E.normalizeTitleKey('ŞEHRİYELİ PİLAV'), E.normalizeTitleKey('şehriyeli pilav'));
+});
+t('near-identical imports collapse to the first one ranked', () => {
+  const rows = [
+    { title: 'Fırında Tavuk', category: 'tavuk' },
+    { title: 'Fırında Tavuk Tarifi', category: 'tavuk' },
+    { title: 'Fırında Tavuk Nasıl Yapılır (Videolu)', category: 'tavuk' },
+    { title: 'Fırında Sebzeli Tavuk', category: 'tavuk' },
+    { title: 'Mercimek Çorbası', category: 'corba' },
+  ];
+  const kept = E.dropNearDuplicates(rows, r => r.title, r => r.category);
+  eq(kept.length, 3);
+  eq(kept[0].title, 'Fırında Tavuk');
+});
+t('two genuinely different dishes are never collapsed', () => {
+  const out = E.recommend(rec.recipes, ctx({ includeOffSeason: true }));
+  const ids = new Set(out.map(s => s.recipe.id));
+  eq(ids.size, out.length);
+  ok(out.length > 40, `only ${out.length} dishes survived deduplication`);
+});
+t('deduplication can be switched off for auditing', () => {
+  const on = E.recommend(rec.recipes, ctx({ includeOffSeason: true })).length;
+  const off = E.recommend(rec.recipes, ctx({ includeOffSeason: true, dedupe: false })).length;
+  ok(off >= on, `${off} without dedupe, ${on} with`);
+});
+
+console.log('\ntie-breaking');
+t('the fuller recipe wins when nothing else separates two dishes', () => {
+  const thin = { id: 'thin', titles: { tr: 'Bir yemek' }, category: 'test', minutes: 20,
+    difficulty: 1, servings: 2, tags: [], hero: 'sogan', meatGrams: 0,
+    main: true, steps: ['Pişir.'],
+    ingredients: [{ id: 'sogan', qty: 100, unit: 'g' }, { id: 'tuz', qty: 5, unit: 'g' }] };
+  const full = JSON.parse(JSON.stringify(thin));
+  full.id = 'full';
+  full.titles.tr = 'Başka bir yemek';
+  full.steps = ['Soğanı doğrayın.', 'Yağda kavurun.', 'Tuz ekleyin.', 'On dakika pişirin.'];
+  ok(E.detailScore(full) > E.detailScore(thin), 'detail score did not separate them');
+  const out = E.recommend([thin, full], ctx({ day: 7 }));
+  eq(out[0].recipe.id, 'full');
+});
+t('a tie-break can never overturn a materially better dish', () => {
+  // Below the rotating band the list is in pure score order: the tie-break is
+  // a fraction of a point and cannot reorder dishes the ranker separated.
+  const out = E.recommend(rec.recipes, ctx({ includeOffSeason: true, dedupe: false }));
+  for (let i = E.BAND + 1; i < out.length; i++) {
+    ok(out[i - 1].total >= out[i].total - 1e-9,
+       `position ${i} is out of order: ${out[i - 1].total} then ${out[i].total}`);
+  }
+  ok(E.PROTEIN_BONUS < E.WEIGHTS.cost, 'the protein bonus outweighs the cost signal');
+});
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

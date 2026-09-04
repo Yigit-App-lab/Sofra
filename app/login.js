@@ -76,7 +76,7 @@ export default function LoginScreen() {
   const valid = EMAIL.test(email.trim()) && password.length >= 8;
 
   async function run(action, provider = 'email') {
-    try { setBusy(true); setMessage(''); await action(); router.replace('/(tabs)'); }
+    try { setBusy(true); setMessage(''); await action(); router.navigate('/(tabs)'); }
     catch (error) {
       if (error?.code !== 'ERR_REQUEST_CANCELED' && error?.code !== '1001') {
         if (provider === 'apple' && error?.code === 'auth/invalid-credential') {
@@ -102,7 +102,7 @@ export default function LoginScreen() {
 
   function continueAsGuest() {
     dispatch({ type:'set', key:'guestMode', value:true });
-    router.replace('/(tabs)');
+    router.navigate('/(tabs)');
   }
 
   async function resetPassword() {

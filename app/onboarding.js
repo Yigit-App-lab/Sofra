@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { FlatList, ImageBackground, SafeAreaView, Text, View, useWindowDimensions } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useStore } from '../src/store';
+import { useAuth } from '../src/auth';
 import { useTheme, space } from '../src/theme';
 import { Body, Button, Card, Title } from '../src/ui';
 
@@ -38,7 +40,9 @@ const PAGES = [
 
 export default function OnboardingScreen() {
   const c = useTheme();
-  const { dispatch } = useStore();
+  const router = useRouter();
+  const { user } = useAuth();
+  const { state, dispatch } = useStore();
   const listRef = useRef(null);
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
@@ -50,6 +54,7 @@ export default function OnboardingScreen() {
   const goNext = () => {
     if (last) {
       dispatch({ type:'set', key:'onboardingComplete', value:true });
+      router.replace(user || state.guestMode ? '/(tabs)' : '/login');
       return;
     }
     const next = page + 1;
