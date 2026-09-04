@@ -75,10 +75,21 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
 - [x] Et, tavuk ve balık fiyatlarını maliyet motoruna bağlama
 - [x] İlk paketli ürün grubunu günlük fiyat akışına ekleme
 - [x] 286 malzeme miktarı ve 108 tarif porsiyonunu veritabanına aktarma
+- [x] Katalog eklemelerini etkiye göre sıralayan araç —
+  `backend/rank_catalog_gaps.py`. Gerçek maliyet motorunu içe aktarıyor, yani
+  saydığı eksik kalem canlı kodun da eşleştiremediği kalem
+- [ ] Aracı canlı veritabanında çalıştırıp öncelik listesini belirleme
+- [ ] Öncelik listesindeki kalemleri `assets/data/ingredients.json` içine ekleme
+  (fiyat, birim, kind, cls alanları elle doldurulacak — fiyat gerçek dünya
+  verisi, tahmin edilmemeli)
 - [ ] Güvenli ad eşleştirmeleri: yağ, çorba kaşığı un, kültür mantarı, maydanoz, köy biberi
-- [ ] Kataloğa ekleme: zerdeçal, margarin/Teremyağ, defne yaprağı, reyhan, fesleğen
-- [ ] Kataloğa ekleme: cheddar, sosis, dolmalık fıstık, avokado, kişniş
-- [ ] Kataloğa ekleme: kuyruk yağı, safran, salam
+- [ ] ~~Kataloğa ekleme: zerdeçal, margarin/Teremyağ, defne yaprağı, reyhan, fesleğen~~
+- [ ] ~~Kataloğa ekleme: cheddar, sosis, dolmalık fıstık, avokado, kişniş~~
+- [ ] ~~Kataloğa ekleme: kuyruk yağı, safran, salam~~
+  — bu üç liste elle seçilmişti. Sıralama araçtan gelecek: baharatlar küçük
+  miktarlarda kullanıldığı için kapsamı %70 eşiğinin altına genellikle
+  düşürmüyor, yani muhtemelen düşük etkili. Araç çalıştıktan sonra bu maddeler
+  gerçek öncelikle yeniden yazılacak
 - [ ] Yeni ürünlerde yanlış eşleşme ve aykırı fiyat testleri
 - [ ] v16 uzman dosyasındaki kalan 435 miktar satırını tamamlama (45 zorunlu protein,
   14 başlık malzemesi, 376 maliyet kapsamı)

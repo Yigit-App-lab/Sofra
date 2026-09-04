@@ -345,3 +345,32 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
   regresyonu hâlâ yakaladığı yeniden sınandı.
 - Testler: `engine.test.js` 109 -> 115, `suggestions.test.js` 20 -> 24.
 - Sunucu değişikliği yok; JavaScript yenilemesi yeterli.
+
+## 2026-09-04 — Katalog eklemelerini etkiye göre sıralama
+
+- Önemli bağlantı: `backend/recipe_costs.py` kataloğunu
+  `assets/data/ingredients.json` dosyasından okuyor — yani paket içi uygulamanın
+  kataloğu ile maliyet motorunun kataloğu aynı dosya. Oraya eklenen her kalem
+  175 bin tarifli API kütüphanesinin maliyet kapsamını da iyileştiriyor.
+- `backend/rank_catalog_gaps.py` yazıldı. Eşleştirme kurallarını yeniden
+  yazmıyor; `recipe_costs` modülünü içe aktarıyor ve `market_prices` modülünü
+  bir taslakla değiştiriyor (kapsam aritmetiği fiyata bağlı değil). Böylece
+  sistem python'uyla çalışıyor ve saydığı eksik kalem, canlı kodun da
+  eşleştiremediği kalem oluyor.
+- Ölçüt "kaç tarifte geçiyor" değil, "kaç tarifi yayımlanabilir maliyete
+  taşıyor". Sentetik sınamada ortaya çıkan şey bu ayrımı gösteriyor: yalnız
+  zerdeçalı eksik olan dört malzemeli bir tarif zaten yayımlanıyor, çünkü kapsam
+  3/4 = %75 ve eşik %70. Üç malzemeli bir tarifte cheddar eklemek kapsamı
+  %67'den %100'e çıkarıyor ve tarifi açıyor.
+- Bu nedenle TODO'daki elle yazılmış üç katalog listesi (zerdeçal, defne
+  yaprağı, reyhan, fesleğen…) muhtemelen düşük etkili: baharatlar küçük
+  miktarlarda kullanılıyor ve kapsamı eşiğin altına düşürmüyorlar. Maddeler
+  üstü çizili bırakıldı, sıralama araçtan gelecek.
+- Ekler birbirini etkiliyor: üç malzemeli ve yalnız biri fiyatlanan bir tarif,
+  iki eksik kalem birlikte eklenene kadar eşiği geçmiyor. Tek tek açgözlü seçim
+  her birini sıfır kazançla puanlıyor ve hiçbirini seçmiyor — sınamada en büyük
+  grup böyle atlandı. Bu yüzden tek kalem işe yaramadığında en iyi ikili
+  aranıyor; sentetik sınamada 9 tarifin 9'u üç adımda açıldı
+  ("cheddar", "hindi göğsü", "zerdeçal + safran").
+- Araç fiyat üretmiyor. Fiyat gerçek dünya verisi; iskelet çıktısında `price`
+  alanı boş bırakılıyor ve elle doldurulması gerekiyor.
