@@ -167,7 +167,10 @@
   var TITLE_NOISE = {
     videolu: 1, videosu: 1, resimli: 1, tarif: 1, tarifi: 1, tarifleri: 1,
     nasil: 1, yapilir: 1, kolay: 1, pratik: 1, nefis: 1, enfes: 1, efsane: 1,
-    ev: 1, evde: 1, usulu: 1, orjinal: 1, gercek: 1, en: 1, ve: 1, ile: 1
+    ev: 1, evde: 1, usulu: 1, orjinal: 1, gercek: 1, en: 1, ve: 1, ile: 1,
+    // Generic dish words carry no identity: 'Taze fasulye' and 'Taze fasulye
+    // yemeği' are one dish, and 'yemeği' must never be read as the head noun.
+    yemek: 1, yemegi: 1, yemekleri: 1
   };
 
   /** Fold Turkish case/diacritics so 'Şehriyeli Pilav' and 'sehriyeli pilav' match. */
@@ -211,6 +214,54 @@
     var shared = 0;
     for (var i = 0; i < x.length; i++) if (y.indexOf(x[i]) !== -1) shared++;
     return shared / (x.length + y.length - shared);
+  }
+
+  /**
+   * The head noun — the word that says what the dish *is*.
+   *
+   * Turkish puts it last, so 'Zeytinyağlı taze fasulye' and 'Etli taze fasulye'
+   * both answer 'fasulye'. Noise and generic dish words are skipped from the
+   * right, which is why 'Taze fasulye yemeği' answers 'fasulye' too. The API
+   * reads titles the same way in `title_head_word`.
+   */
+  function titleHeadWord(text) {
+    var folded = foldTurkish(text).replace(/[^a-z0-9]+/g, ' ').trim();
+    if (!folded) return '';
+    var parts = folded.split(' ');
+    for (var i = parts.length - 1; i >= 0; i--) {
+      var token = parts[i];
+      if (!token || TITLE_NOISE[token]) continue;
+      if (token.length < 2 && !/^[0-9]$/.test(token)) continue;
+      return token;
+    }
+    return '';
+  }
+
+  /**
+   * Let at most `max` dishes of the same family into one answer.
+   *
+   * Reported from the Kiler list: four taze fasulye dishes in twenty. They are
+   * not duplicates — zeytinyağlı, etli and fırında green beans are three
+   * different dinners — so collapsing them by title would be wrong, and any
+   * rule strong enough to merge them would also merge mercimek and domates
+   * çorbası. Capping the family keeps the best of them and gives the rest of
+   * the list back to other food.
+   *
+   * Entries are expected in ranked order; the first `max` of each family stay.
+   */
+  function capByHeadNoun(items, titleOf, max) {
+    var limit = max > 0 ? max : 1;
+    var seen = {}, kept = [];
+    for (var i = 0; i < items.length; i++) {
+      var head = titleHeadWord(titleOf ? titleOf(items[i]) : items[i]);
+      if (head) {
+        var used = seen[head] || 0;
+        if (used >= limit) continue;
+        seen[head] = used + 1;
+      }
+      kept.push(items[i]);
+    }
+    return kept;
   }
 
   /** Is every word of the shorter title also in the longer one? */
@@ -888,6 +939,7 @@
     COVERAGE_MIN: COVERAGE_MIN, PROTEIN_BONUS: PROTEIN_BONUS,
     recipeTitle: recipeTitle, normalizeTitleKey: normalizeTitleKey,
     titleSimilarity: titleSimilarity, titleContains: titleContains,
+    titleHeadWord: titleHeadWord, capByHeadNoun: capByHeadNoun,
     dropNearDuplicates: dropNearDuplicates,
     dietaryFlags: dietaryFlags, pantryProteinFit: pantryProteinFit,
     detailScore: detailScore, matchedCount: matchedCount,

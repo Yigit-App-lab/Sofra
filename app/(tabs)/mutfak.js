@@ -11,9 +11,14 @@ import { useRouter } from 'expo-router';
 
 import { useStore } from '../../src/store';
 import { makeT } from '../../src/i18n';
+import Engine from '../../src/engine';
 import { apiErrorKey, getKilerIngredients, getTonightRecipes } from '../../src/api';
 import { useTheme, space, radius } from '../../src/theme';
 import { ErrorNotice, ScreenBackdrop } from '../../src/ui';
+
+
+// How many dishes sharing a head noun may appear in the pantry list at once.
+const PER_FAMILY = 2;
 
 
 function Pill({ label, selected, onPress }) {
@@ -242,7 +247,18 @@ export default function Kiler() {
         });
 
         if (!cancelled) {
-          setRecipes(data.recipes || []);
+          // The library holds four separate recipes titled exactly "Taze
+          // Fasulye", so an undeduplicated list of twenty showed the same dish
+          // four times. Bu Akşam has always deduplicated; this list never did.
+          //
+          // Two rules: identical and contained titles are one dish, and at most
+          // PER_FAMILY dishes may share a head noun — zeytinyağlı and etli taze
+          // fasulye are different dinners, but four of them crowd out the rest
+          // of the list.
+          const distinct = Engine.dropNearDuplicates(
+            data.recipes || [], recipe => recipe.title);
+          setRecipes(Engine.capByHeadNoun(
+            distinct, recipe => recipe.title, PER_FAMILY));
           setHasMoreRecipes(Boolean(data.has_more));
         }
       } catch (e) {

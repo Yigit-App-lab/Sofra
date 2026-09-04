@@ -96,13 +96,24 @@
     };
   }
 
+  function titleOf(suggestion) {
+    return suggestion.title;
+  }
+
   /**
-   * Normalise, drop near-duplicates, and cut to `limit`.
+   * Normalise, drop near-duplicates, limit one family, and cut to `limit`.
    *
-   * The API library holds several imports of the same dish, and three of them
-   * in a three-card answer reads as a broken app. Local results are deduped by
-   * `Engine.recommend`, but running it here as well is harmless and keeps the
-   * rule in one place.
+   * Two different problems, two different rules. The API library holds several
+   * imports of the same dish, and three of them in a three-card answer reads as
+   * a broken app — `dropNearDuplicates` merges those. Separately, four green
+   * bean dishes were reported in one list: not duplicates, just samey, so
+   * `capByHeadNoun` lets only `perFamily` of them through.
+   *
+   * `topUp` puts capped-out entries back when fewer than `limit` survive. It is
+   * for a small fixed answer — three cards should be three cards, even if every
+   * candidate is a green bean dish. A long list must not ask for it: there the
+   * limit is a ceiling rather than a target, and relaxing the cap whenever the
+   * pool is smaller than twenty would mean never capping at all.
    */
   function normalize(items, options) {
     var opts = options || {};
@@ -113,8 +124,26 @@
         ? fromLocal(item, opts)
         : fromApi(item, opts));
     }
-    list = Engine.dropNearDuplicates(list, function (s) { return s.title; });
-    return opts.limit ? list.slice(0, opts.limit) : list;
+    list = Engine.dropNearDuplicates(list, titleOf);
+
+    var perFamily = opts.perFamily > 0 ? opts.perFamily : 1;
+    var varied = Engine.capByHeadNoun(list, titleOf, perFamily);
+
+    if (opts.topUp && opts.limit && varied.length < opts.limit) {
+      var selected = {}, j, short = opts.limit - varied.length;
+      for (j = 0; j < varied.length; j++) selected[varied[j].key] = true;
+      for (j = 0; j < list.length && short > 0; j++) {
+        if (selected[list[j].key]) continue;
+        selected[list[j].key] = true;
+        short -= 1;
+      }
+      // Rebuilt from `list` so the survivors keep their ranked order rather
+      // than having the put-back ones appended at the end.
+      varied = list.filter(function (suggestion) {
+        return selected[suggestion.key];
+      });
+    }
+    return opts.limit ? varied.slice(0, opts.limit) : varied;
   }
 
   /**

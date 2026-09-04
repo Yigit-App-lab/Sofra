@@ -55,7 +55,11 @@ export default function Tonight() {
   );
 
   function show(mode, items) {
-    const suggestions = Suggestions.normalize(items, { english, limit:SUGGESTION_LIMIT });
+    // One dish per family, so three cards are three different dinners — but
+    // topped up rather than shrinking the answer when variety is impossible.
+    const suggestions = Suggestions.normalize(items, {
+      english, limit:SUGGESTION_LIMIT, perFamily:1, topUp:true,
+    });
     if (!suggestions.length) return false;
     setError(null);
     setChoice({ mode, suggestions });

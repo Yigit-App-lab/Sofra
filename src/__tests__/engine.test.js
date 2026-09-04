@@ -684,5 +684,75 @@ t('a tie-break can never overturn a materially better dish', () => {
   ok(E.PROTEIN_BONUS < E.WEIGHTS.cost, 'the protein bonus outweighs the cost signal');
 });
 
+console.log('\nfamilies of the same dish');
+t('four recipes titled exactly the same are one dish', () => {
+  // Reported from the Kiler list: the library holds four separate recipes all
+  // titled "Taze Fasulye", differing only in category and cooking time.
+  const rows = [
+    { title: 'Taze Fasulye', category: 'Sebze', total_minutes: 35 },
+    { title: 'Semizotu Yemeği', category: 'Semizotlu Tarifler', total_minutes: 30 },
+    { title: 'Taze Fasulye', category: 'Zeytinyağlı', total_minutes: 45 },
+    { title: 'Taze Fasulye', category: 'Sebze', total_minutes: 40 },
+    { title: 'Taze Fasulye', category: 'Zeytinyağlı', total_minutes: 40 },
+  ];
+  const kept = E.dropNearDuplicates(rows, r => r.title);
+  eq(kept.length, 2);
+  eq(kept[0].total_minutes, 35, 'the first-ranked one should survive:');
+  eq(kept[1].title, 'Semizotu Yemeği');
+});
+t('a generic dish word carries no identity', () => {
+  eq(E.normalizeTitleKey('Taze Fasulye'), E.normalizeTitleKey('Taze Fasulye Yemeği'));
+  eq(E.normalizeTitleKey('Semizotu Yemeği'), 'semizotu');
+});
+t('the head noun is the word that says what the dish is', () => {
+  eq(E.titleHeadWord('Zeytinyağlı Taze Fasulye'), 'fasulye');
+  eq(E.titleHeadWord('Etli Taze Fasulye'), 'fasulye');
+  eq(E.titleHeadWord('Taze Fasulye Yemeği'), 'fasulye');   // 'yemeği' skipped
+  eq(E.titleHeadWord('Taze Fasulye Salatası'), 'salatasi'); // a salad, not beans
+  eq(E.titleHeadWord('Mercimek Çorbası'), 'corbasi');
+  eq(E.titleHeadWord('Fırında Tavuk Tarifi'), 'tavuk');     // 'tarifi' skipped
+  eq(E.titleHeadWord(''), '');
+  eq(E.titleHeadWord(null), '');
+});
+t('a family is capped, not merged', () => {
+  // These are three different dinners. The cap keeps the best ones and gives
+  // the rest of the list back to other food; merging them would be wrong.
+  const rows = [
+    { title: 'Zeytinyağlı Taze Fasulye' },
+    { title: 'Etli Taze Fasulye' },
+    { title: 'Fırında Taze Fasulye' },
+    { title: 'Mercimek Çorbası' },
+  ];
+  const kept = E.capByHeadNoun(rows, r => r.title, 2).map(r => r.title);
+  eq(kept.length, 3);
+  eq(kept[0], 'Zeytinyağlı Taze Fasulye');
+  eq(kept[1], 'Etli Taze Fasulye');
+  eq(kept[2], 'Mercimek Çorbası');
+});
+t('the cap keeps ranked order and defaults to one', () => {
+  const rows = ['Mercimek Çorbası', 'Domates Çorbası', 'Karnıyarık']
+    .map(title => ({ title }));
+  eq(E.capByHeadNoun(rows, r => r.title, 1).map(r => r.title).join('|'),
+     'Mercimek Çorbası|Karnıyarık');
+  eq(E.capByHeadNoun(rows, r => r.title, 0).length, 2, 'zero should mean one');
+});
+t('a title with no readable head noun is never dropped by the cap', () => {
+  const rows = [{ title: '' }, { title: '   ' }, { title: 'Tarifi' }];
+  eq(E.capByHeadNoun(rows, r => r.title, 1).length, 3);
+});
+t('capping the bundled library leaves a usable spread of dinners', () => {
+  const out = E.recommend(rec.recipes, ctx({ includeOffSeason: true }));
+  const capped = E.capByHeadNoun(out, s => E.recipeTitle(s.recipe), 2);
+  ok(capped.length > 30, `only ${capped.length} dishes survived the cap`);
+  const heads = {};
+  capped.forEach(s => {
+    const head = E.titleHeadWord(E.recipeTitle(s.recipe));
+    if (head) heads[head] = (heads[head] || 0) + 1;
+  });
+  Object.keys(heads).forEach(head => {
+    ok(heads[head] <= 2, `${heads[head]} dishes share the head noun ${head}`);
+  });
+});
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

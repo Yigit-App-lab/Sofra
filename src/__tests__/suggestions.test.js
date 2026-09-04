@@ -142,5 +142,54 @@ t('each method has its own heading', () => {
   eq(S.headingFor(undefined), 'tonightChoice');
 });
 
+console.log('\nvariety in one answer');
+t('one dish per family by default, so three cards are three dinners', () => {
+  const rows = [
+    apiRow({ id: 1, title: 'Zeytinyağlı Taze Fasulye' }),
+    apiRow({ id: 2, title: 'Etli Taze Fasulye' }),
+    apiRow({ id: 3, title: 'Mercimek Çorbası' }),
+    apiRow({ id: 4, title: 'Karnıyarık' }),
+  ];
+  eq(S.normalize(rows, { limit: 3 }).map(s => s.id).join(','), '1,3,4');
+});
+t('the cap gives way rather than answering with one card', () => {
+  // Every candidate is a green bean dish. Variety is impossible, so the cap
+  // is relaxed instead of shrinking the answer to a single suggestion.
+  const rows = [
+    apiRow({ id: 1, title: 'Zeytinyağlı Taze Fasulye' }),
+    apiRow({ id: 2, title: 'Etli Taze Fasulye' }),
+    apiRow({ id: 3, title: 'Fırında Taze Fasulye' }),
+  ];
+  eq(S.normalize(rows, { limit: 3, topUp: true }).length, 3);
+  eq(S.normalize(rows, { limit: 3 }).length, 1, 'without topUp the cap holds:');
+});
+t('putting entries back preserves ranked order', () => {
+  const rows = [
+    apiRow({ id: 1, title: 'Mercimek Çorbası' }),
+    apiRow({ id: 2, title: 'Domates Çorbası' }),
+    apiRow({ id: 3, title: 'Tarhana Çorbası' }),
+    apiRow({ id: 4, title: 'Karnıyarık' }),
+  ];
+  eq(S.normalize(rows, { limit: 3, topUp: true }).map(s => s.id).join(','), '1,2,4');
+});
+t('a long list caps the family instead of filling up on it', () => {
+  const rows = [
+    apiRow({ id: 1, title: 'Zeytinyağlı Taze Fasulye' }),
+    apiRow({ id: 2, title: 'Etli Taze Fasulye' }),
+    apiRow({ id: 3, title: 'Fırında Taze Fasulye' }),
+    apiRow({ id: 4, title: 'Karnıyarık' }),
+  ];
+  eq(S.normalize(rows, { limit: 20, perFamily: 2 }).map(s => s.id).join(','), '1,2,4');
+});
+t('exact duplicates go before the cap is even considered', () => {
+  const rows = [
+    apiRow({ id: 1, title: 'Taze Fasulye' }),
+    apiRow({ id: 2, title: 'Taze Fasulye' }),
+    apiRow({ id: 3, title: 'Taze Fasulye Yemeği' }),
+    apiRow({ id: 4, title: 'Karnıyarık' }),
+  ];
+  eq(S.normalize(rows, { limit: 20, perFamily: 2 }).map(s => s.id).join(','), '1,4');
+});
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);
