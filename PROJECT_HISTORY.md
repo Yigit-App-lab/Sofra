@@ -207,3 +207,105 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
   TODO'ya yazıldı.
 - **Dağıtım sırası**: push -> `deploy-sofra` -> `refresh_recipe_kiler_stats.py`
   -> `--verify`. Ters sıra da güvenli, yalnız arada yavaş kalır.
+
+## 2026-09-04 — Kiler listesinde tekrarlayan tarifler
+
+- Cihaz testinde Kiler listesinde dört "Taze Fasulye" göründü. Ekran görüntüsüne
+  göre dördünün başlığı birebir aynı; yalnız kategori (Sebze, Zeytinyağlı) ve
+  süre (35/40/45 dk) farklı. Yani gerçek kopya başlıklar.
+- Sebep: Kiler ekranı (`app/(tabs)/mutfak.js`, bileşen adı `Kiler`) API
+  satırlarını doğrudan kendi kartına basıyordu; tekrar eleme yalnız Bu Akşam
+  ekranında çalışıyordu. Artık iki kural da uygulanıyor.
+- İki ayrı sorun, iki ayrı kural:
+  `dropNearDuplicates` aynı ve kapsanan başlıkları teke indiriyor;
+  yeni `capByHeadNoun` aynı ana adı (Türkçede son kelime) taşıyan yemek sayısını
+  sınırlıyor. Zeytinyağlı, etli ve fırında taze fasulye üç ayrı yemek olduğu için
+  birleştirilmiyor, sayıları sınırlanıyor. Kiler listesinde en fazla 2,
+  Bu Akşam'ın üç kartında en fazla 1.
+- `yemek`, `yemeği`, `yemekleri` kelimeleri gürültü listesine eklendi: "Taze
+  Fasulye" ile "Taze Fasulye Yemeği" aynı yemek, ve "yemeği" ana ad olamaz.
+- Bu Akşam'da `topUp` seçeneği var: sınır yüzünden üç karttan azı kalırsa
+  çıkarılanlar sıralamayı bozmadan geri konuyor. Uzun listede bilerek kapalı;
+  açık olsaydı havuz yirmiden küçük olduğu her durumda sınır anlamsızlaşırdı.
+  Bu, testin yakaladığı bir tasarım hatasıydı.
+- Testler: `engine.test.js` 102 -> 109, `suggestions.test.js` 15 -> 20.
+- Kalıcı çözüm kaynak veride: aynı başlıklı tarifleri birleştirmek veya
+  karantinaya almak. TODO'ya yazıldı.
+- Sunucu değişikliği yok; JavaScript yenilemesi yeterli.
+
+## 2026-09-04 — Yayın hazırlığı: bulunanlar ve gizlilik politikası
+
+- **Hesap silme zaten yapılmış.** `app/account.js` içinde tam akış var: şifre,
+  Google ve Apple için yeniden kimlik doğrulama, `deleteCloudUserState`,
+  `deleteUser`, cihazdaki kopyanın silinmesi ve iki adımlı onay. Profilim
+  ekranından `/account` ile erişiliyor. TODO iki yerde yanlıştı, düzeltildi.
+  Kalan iş: gerçek cihazda üç giriş yöntemiyle denemek.
+- **Bildirimler yalnız yerel.** `notifications.js` günlük hatırlatmayı cihazda
+  planlıyor; `getExpoPushToken` çağrısı yok. Yani "push notification
+  yapılandırması" maddesi gereksiz ve gizlilik politikasında bildirim
+  belirtecinden söz etmek gerekmiyor.
+- **Yayın için en kritik bulgu**: `app.json`, API `http://129.121.89.248:8000`
+  adresinde olduğu için iOS'ta ATS'i tamamen kapatıyor
+  (`NSAllowsArbitraryLoads`) ve Android'de cleartext trafiğe izin veriyor.
+  Blanket ATS istisnası bilinen bir App Store ret gerekçesi. Ayrıca kilerdeki
+  malzemeler ve beslenme tercihleri şifresiz gidiyor. `HTTPS_SETUP.md` yazıldı:
+  alan adı, Caddy ile otomatik Let's Encrypt sertifikası, 8000 portunun
+  kapatılması, politikanın aynı alan adından yayımlanması ve uygulama tarafı
+  değişiklikleri. Son ikisi native yapılandırma olduğu için **yeni build
+  gerektiriyor**, Metro yenilemesi yetmiyor.
+- Gizlilik politikası taslakları koddan yazıldı, şablondan değil:
+  `legal/gizlilik-politikasi.md` (Türkçe, sunulacak olan) ve
+  `legal/privacy-policy.md`. Her iddia `cloudStore.js`, `auth.js`,
+  `notifications.js`, `account.js`, `firestore.rules` ve `recipe_api.py` ile
+  karşılaştırıldı. Analitik, reklam, çökme raporlama aracı yok; misafir
+  kullanımda hiçbir veri buluta gitmiyor.
+- **Beslenme filtrelerinin çerçevesi düzeltildi.** İlk taslak bunları KVKK m.6
+  kapsamında özel nitelikli veri sayıyordu. Bu fazla iddialıydı: Sofra bir yemek
+  uygulaması ve insanlar çoğu zaman kendileri için değil, sofradaki başkaları
+  için yemek yapıyor. "Glutensiz" işareti hesap sahibinin sağlığı hakkında
+  güvenilir bir bilgi vermez. Politikada artık "yemek filtresi" olarak
+  tanımlanıyor, hukuki dayanak sözleşmenin ifası. Kalan risk, bir denetçinin
+  filtreyi çıkarımsal sağlık verisi sayması; taslak bunu filtreleri başka hiçbir
+  amaçla kullanmayarak azaltıyor. Karar hukukçuya ait.
+- **Ama bu, filtrenin doğruluğunu güvenlik konusu yapıyor.** Çölyak hastası bir
+  çocuk için filtre işaretleyen biri, filtrenin çalışmasına güveniyor. SQL'deki
+  `kig.contains_gluten = 1` koşulu, malzeme `kiler_ingredients` tablosuna
+  eşlenmemişse NULL döndürüyor ve tarif glutensiz filtresinden geçiyor. Yani
+  hata yanlış tarafta: unu tanınmayan bir yazımla yazılmış tarif, glutenden
+  kaçınan kişiye gösteriliyor. `unmapped_ingredient_count` sütununun varlığı
+  eşlenmemiş malzemenin yaygın olduğunu gösteriyor. Ölçüm ve düzeltme TODO
+  bölüm 5c'ye eklendi.
+- Politikaya, filtrelerin kusursuz olmadığını ve tıbbi zorunluluk varsa malzeme
+  listesinin kontrol edilmesi gerektiğini söyleyen bir uyarı eklendi. Aynı
+  uyarının uygulama içinde de görünmesi gerekiyor.
+- Yayımlanan politika adresi App Store Connect ve Google Play için zorunlu ve
+  uygulama listede olduğu sürece erişilebilir kalmalı.
+- Yayıncı: Yigit Berktaş, birey olarak. İletişim için Sofra'ya ayrı bir e-posta
+  adresi kullanılacak.
+
+## 2026-09-04 — Alan adları ve HTTPS hazırlığı
+
+- Alan adları alındı: `buaksamnepisireyim.com` ve `buaksamnepisireyim.online`.
+  Karar: `.com` site ve gizlilik politikası, `api.buaksamnepisireyim.com` API,
+  `.online` kalıcı olarak `.com`'a yönlenir. Tek marka, tek sertifika seti, tek
+  politika kopyası. API'yi ayrı alan adına koymak ikinci bir sertifika ve ikinci
+  bir bakım noktası demek olurdu; faydası yok.
+- `site/Caddyfile` gerçek adlarla hazır: API ters vekil, site dosya sunucusu,
+  `.online` yönlendirmesi, HSTS başlıkları, günlük dosyası döndürme.
+- `site/gizlilik.html` ve `site/privacy.html`, `legal/*.md` dosyalarından
+  üretildi. Kendi kendine yeten sayfalar: dış CDN veya font isteği yok, telefon
+  öncelikli, koyu tema uyumlu, iki dil birbirine bağlı. Taslak notu (hukukçu
+  uyarısı) yayımlanan sayfaya sızmıyor; bunu bir sınama ile doğruladım.
+- `site/index.html`: mütevazı bir açılış sayfası. Politikadan yukarı tıklayan bir
+  inceleme uzmanının 404 görmemesi için. Uygulamanın henüz yayına hazırlandığını
+  söylüyor, doğru olmayan hiçbir şey iddia etmiyor.
+- Yürürlük tarihi 4 Eylül 2026, iletişim `iletisim@buaksamnepisireyim.com`.
+  **Bu adresin yayından önce posta alması gerekiyor.**
+- `https-cutover.patch` hazır ama **bilerek uygulanmadı**: `API_URL`
+  değişikliği, `NSAppTransportSecurity` bloğunun kaldırılması ve
+  `expo-build-properties` girdisinin çıkarılması. Bugün uygulanırsa uygulama
+  API'ye erişemez. `git apply --check` mevcut ağaçta geçiyor; `app.json`
+  round-trip'i özgün biçimlendirmeyle birebir aynı olduğu için yalnız hedef iki
+  blok değişiyor.
+- Sonraki adımların sırası `TODO.md` bölüm 7a'da: DNS, e-posta, Caddy, doğrulama,
+  port kapatma, yama, yeni build, politika güncellemesi.
