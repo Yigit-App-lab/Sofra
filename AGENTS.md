@@ -15,6 +15,11 @@ While working:
 
 - Keep pricing/ranking logic in `src/engine.js`, not in screens.
 - Use dry runs and backups before live database changes.
+- After anything that changes `recipes`, `recipe_ingredients`, `ingredients`,
+  `ingredient_aliases` or `kiler_canonical_map`, run
+  `backend/refresh_recipe_kiler_stats.py` and then `--verify`. `/recipes/tonight`
+  ranks on three precomputed counts; a stale table makes it slow, never wrong,
+  but leaving it stale gives up the speed it was built for.
 - Never put passwords, private keys, Firebase service-account files, or signing
   credentials in documentation or commits.
 - Do not start or cancel EAS builds unless the user explicitly authorizes it. Before

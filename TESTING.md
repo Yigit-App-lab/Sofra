@@ -80,6 +80,29 @@ npx.cmd eas-cli@latest build --platform ios --profile development
 Preview is for stable Metro-independent testing, not active iteration. Android builds
 are currently batched until real Android testing resumes.
 
+## Recipe suggestion performance
+
+`/recipes/tonight` reads three per-recipe counts from `recipe_kiler_stats`. After
+deploying a backend change that touches recipes or ingredient mappings:
+
+```bash
+python3 backend/refresh_recipe_kiler_stats.py --dry-run
+python3 backend/refresh_recipe_kiler_stats.py
+python3 backend/refresh_recipe_kiler_stats.py --verify
+```
+
+`--verify` recomputes every row and compares; a non-zero exit means rebuild. The
+API falls back to computing the counts inline whenever the table is missing or
+does not cover every recipe, so a missed refresh costs speed and not accuracy.
+
+To compare the endpoint against an earlier revision of itself after any change
+to its query, using the service virtualenv's interpreter:
+
+```bash
+systemctl cat sofra-api.service | grep -i exec
+<venv>/bin/python backend/test_tonight_equivalence.py --baseline-rev HEAD~1
+```
+
 ## Application/API checks
 
 ```powershell

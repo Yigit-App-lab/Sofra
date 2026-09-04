@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import html
 import re
 import sqlite3
+import time
 import unicodedata
 
 try:
@@ -359,6 +360,43 @@ def ensure_ingredient_classes():
         db.commit()
     finally:
         db.close()
+
+
+RECIPE_KILER_STATS = "recipe_kiler_stats"
+_STATS_STATE = {"checked_at": 0.0, "ready": False}
+_STATS_TTL_SECONDS = 120
+
+
+def recipe_kiler_stats_ready(db):
+    """Is the precomputed per-recipe table present and covering every recipe?
+
+    `total_kiler_ingredients` and the raw/unmapped ingredient counts describe a
+    recipe, not a request — every cook gets the same numbers — yet they used to
+    be recomputed from 1.6M rows of recipe_ingredients on every call, which is
+    where most of this endpoint's ~5.9s went.
+
+    They are read from `recipe_kiler_stats` when it is built and covers the
+    library, and computed inline when it is not. Installing this file before
+    running backend/refresh_recipe_kiler_stats.py is therefore merely slow
+    rather than broken, and a stale table after a recipe import falls back to
+    the correct slow path instead of quietly dropping the new recipes. The
+    answer is cached briefly because it is asked once per request.
+    """
+    now = time.monotonic()
+    if now - _STATS_STATE["checked_at"] < _STATS_TTL_SECONDS:
+        return _STATS_STATE["ready"]
+    ready = False
+    try:
+        stats_rows = db.execute(
+            f"SELECT COUNT(*) FROM {RECIPE_KILER_STATS}"
+        ).fetchone()[0]
+        recipe_rows = db.execute("SELECT COUNT(*) FROM recipes").fetchone()[0]
+        ready = stats_rows > 0 and stats_rows >= recipe_rows
+    except sqlite3.Error:
+        ready = False
+    _STATS_STATE["checked_at"] = now
+    _STATS_STATE["ready"] = ready
+    return ready
 
 
 def ensure_recipe_exclusions():
@@ -1525,23 +1563,27 @@ def recipes_tonight(payload: TonightRequest):
             """
             time_params.append(payload.time_budget)
 
-        sql = f"""
-            WITH recipe_kiler AS (
-                SELECT DISTINCT
-                    ri.recipe_id,
-                    kcm.kiler_id
-                FROM recipe_ingredients ri
-                JOIN ingredients i
-                    ON i.id = ri.ingredient_id
-                JOIN ingredient_aliases ia
-                    ON ia.alias_normalized = i.name_normalized
-                JOIN kiler_canonical_map kcm
-                    ON kcm.canonical_id = ia.canonical_id
-            ),
-
-            recipe_completeness AS (
+        # Read the per-recipe counts from the precomputed table when it is
+        # usable; otherwise compute them, restricted to the candidate recipes.
+        if recipe_kiler_stats_ready(db):
+            stats_cte = f"""
+                SELECT
+                    st.recipe_id,
+                    st.total_kiler_ingredients,
+                    st.raw_ingredient_count,
+                    st.unmapped_ingredient_count
+                FROM {RECIPE_KILER_STATS} st
+                WHERE st.recipe_id IN (
+                    SELECT recipe_id FROM matched
+                )
+            """
+        else:
+            stats_cte = """
                 SELECT
                     ri.recipe_id,
+
+                    COUNT(DISTINCT kcm.kiler_id)
+                        AS total_kiler_ingredients,
 
                     COUNT(DISTINCT ri.ingredient_id)
                         AS raw_ingredient_count,
@@ -1562,35 +1604,41 @@ def recipes_tonight(payload: TonightRequest):
                 LEFT JOIN kiler_canonical_map kcm
                     ON kcm.canonical_id = ia.canonical_id
 
+                WHERE ri.recipe_id IN (
+                    SELECT recipe_id FROM matched
+                )
+
+                GROUP BY ri.recipe_id
+            """
+
+        sql = f"""
+            WITH matched AS (
+                -- Driven from the ids the cook actually selected.
+                -- kiler_canonical_map holds ~8k rows, so this starts small and
+                -- stays small. The previous shape built a 1.33M-row mapping of
+                -- the whole library through a temp B-tree on every request and
+                -- filtered it afterwards.
+                SELECT
+                    ri.recipe_id,
+                    COUNT(DISTINCT kcm.kiler_id) AS matched_count,
+                    COUNT(DISTINCT CASE
+                        WHEN km.ingredient_class = 'protein'
+                        THEN kcm.kiler_id
+                    END) AS matched_protein_count
+                FROM kiler_canonical_map kcm
+                JOIN kiler_ingredients km
+                    ON km.id = kcm.kiler_id
+                JOIN ingredient_aliases ia
+                    ON ia.canonical_id = kcm.canonical_id
+                JOIN ingredients i
+                    ON i.name_normalized = ia.alias_normalized
+                JOIN recipe_ingredients ri
+                    ON ri.ingredient_id = i.id
+                WHERE kcm.kiler_id IN ({placeholders})
                 GROUP BY ri.recipe_id
             ),
 
-            matched AS (
-                SELECT
-                    rk.recipe_id,
-                    COUNT(DISTINCT rk.kiler_id) AS matched_count,
-                    COUNT(DISTINCT CASE
-                        WHEN km.ingredient_class = 'protein'
-                        THEN rk.kiler_id
-                    END) AS matched_protein_count
-                FROM recipe_kiler rk
-                JOIN kiler_ingredients km
-                    ON km.id = rk.kiler_id
-                WHERE rk.kiler_id IN ({placeholders})
-                GROUP BY rk.recipe_id
-            ),
-
-            totals AS (
-                SELECT
-                    rk.recipe_id,
-                    COUNT(DISTINCT rk.kiler_id)
-                        AS total_kiler_ingredients
-                FROM recipe_kiler rk
-                WHERE rk.recipe_id IN (
-                    SELECT recipe_id FROM matched
-                )
-                GROUP BY rk.recipe_id
-            ),
+            stats AS ({stats_cte}),
 
             core_totals AS (
                 SELECT
@@ -1632,32 +1680,32 @@ def recipes_tonight(payload: TonightRequest):
 
                 m.matched_count,
                 m.matched_protein_count,
-                t.total_kiler_ingredients,
+                s.total_kiler_ingredients,
 
-                rcx.raw_ingredient_count,
-                rcx.unmapped_ingredient_count,
+                s.raw_ingredient_count,
+                s.unmapped_ingredient_count,
 
                 (
-                    t.total_kiler_ingredients
-                    + rcx.unmapped_ingredient_count
+                    s.total_kiler_ingredients
+                    + s.unmapped_ingredient_count
                 ) AS strict_total_ingredients,
 
                 (
-                    t.total_kiler_ingredients
+                    s.total_kiler_ingredients
                     - m.matched_count
                 ) AS known_missing_count,
 
                 (
-                    t.total_kiler_ingredients
+                    s.total_kiler_ingredients
                     - m.matched_count
-                    + rcx.unmapped_ingredient_count
+                    + s.unmapped_ingredient_count
                 ) AS missing_count,
 
                 CASE
                     WHEN (
-                        t.total_kiler_ingredients
+                        s.total_kiler_ingredients
                         - m.matched_count
-                        + rcx.unmapped_ingredient_count
+                        + s.unmapped_ingredient_count
                     ) = 0
                     THEN 1
                     ELSE 0
@@ -1676,8 +1724,8 @@ def recipes_tonight(payload: TonightRequest):
                 ROUND(
                     100.0 * m.matched_count /
                     NULLIF(
-                        t.total_kiler_ingredients
-                        + rcx.unmapped_ingredient_count,
+                        s.total_kiler_ingredients
+                        + s.unmapped_ingredient_count,
                         0
                     ),
                     1
@@ -1686,7 +1734,7 @@ def recipes_tonight(payload: TonightRequest):
                 ROUND(
                     (
                         100.0 * m.matched_count /
-                        NULLIF(t.total_kiler_ingredients, 0)
+                        NULLIF(s.total_kiler_ingredients, 0)
                     )
 
                     + (m.matched_count * 3.0)
@@ -1698,8 +1746,8 @@ def recipes_tonight(payload: TonightRequest):
                       END
 
                     - CASE
-                        WHEN t.total_kiler_ingredients = 1 THEN 20
-                        WHEN t.total_kiler_ingredients = 2 THEN 5
+                        WHEN s.total_kiler_ingredients = 1 THEN 20
+                        WHEN s.total_kiler_ingredients = 2 THEN 5
                         ELSE 0
                       END
 
@@ -1717,7 +1765,7 @@ def recipes_tonight(payload: TonightRequest):
                     )
 
                     - CASE
-                        WHEN t.total_kiler_ingredients <= 2 THEN 15
+                        WHEN s.total_kiler_ingredients <= 2 THEN 15
                         ELSE 0
                       END
 
@@ -1725,11 +1773,8 @@ def recipes_tonight(payload: TonightRequest):
 
             FROM matched m
 
-            JOIN totals t
-                ON t.recipe_id = m.recipe_id
-
-            JOIN recipe_completeness rcx
-                ON rcx.recipe_id = m.recipe_id
+            JOIN stats s
+                ON s.recipe_id = m.recipe_id
 
             JOIN recipes r
                 ON r.id = m.recipe_id

@@ -177,3 +177,33 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
   `recipe_kiler` ve `recipe_completeness` CTE'leri her istekte tüm
   `recipe_ingredients` tablosunu tarıyor. TODO'ya yazıldı.
 - Sunucu değişikliği yok; JavaScript yenilemesi yeterli.
+
+## 2026-09-04 — /recipes/tonight yeniden yazıldı
+
+- Ölçüm: sorgu limitten bağımsız 5,9 saniye. Sebep indeks eksikliği değil;
+  indeksler var ve kullanılıyor. İki CTE her istekte tüm kütüphaneyi tarıyordu:
+  `recipe_kiler` geçici B-tree ile 1.331.238 satır üretiyor (2,66s),
+  `recipe_completeness` 1,63M satırı tarife göre grupluyor (2,21s).
+- Kütüphane ölçeği: 174.949 tarif, 1.629.216 tarif-malzeme satırı, 150.441
+  malzeme, 8.198 kiler eşlemesi, 807 kiler malzemesi.
+- `matched` artık seçilen kiler kimliklerinden başlıyor: en yaygın altı malzemeyle
+  0,375s, sıradan altı malzemeyle 0,034s, seyrek altı malzemeyle 0,003s.
+- `total_kiler_ingredients` ve ham/eşlenmemiş malzeme sayıları isteğe değil
+  tarife bağlı. Yeni `recipe_kiler_stats` tablosuna alındı;
+  `backend/refresh_recipe_kiler_stats.py` kuruyor (`--dry-run`, `--verify`).
+  Tablo yanına kurulup takas ediliyor, yarı dolu tablo okunmuyor.
+- Tablo yoksa veya tüm tarifleri kapsamıyorsa API sayıları eskisi gibi yerinde
+  hesaplıyor (`recipe_kiler_stats_ready`, 120 saniyelik önbellek). Yani kod
+  tablodan önce kurulursa yavaş çalışır, bozulmaz; tarif içe aktarımından sonra
+  bayat tablo sessizce tarif düşürmez.
+- Denklik testi: `backend/test_tonight_equivalence.py` sentetik bir kütüphane
+  kuruyor, mevcut kodu ve seçilen git sürümünü iki modül olarak yükleyip her
+  sıralama alanını ve sıralama düzenini karşılaştırıyor. 11 senaryo × 2 kod yolu
+  + bayat tablo senaryosu: tamamı aynı.
+- Bu test gerçek bir hatayı yakaladı: `t.total_kiler_ingredients` yer değiştirmesi
+  `st.total_kiler_ingredients` içine de girip `ss.` üretmişti. Yalnız önbellekli
+  yolda, yani yenileme çalıştıktan sonraki canlı yolda patlayacaktı.
+- `/recipes/by-kiler` aynı düzeltmeyi almadı; ölçülmediği için dokunulmadı,
+  TODO'ya yazıldı.
+- **Dağıtım sırası**: push -> `deploy-sofra` -> `refresh_recipe_kiler_stats.py`
+  -> `--verify`. Ters sıra da güvenli, yalnız arada yavaş kalır.
