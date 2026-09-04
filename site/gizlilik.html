@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gizlilik Politikası — Sofra</title>
+<meta name="robots" content="index, follow">
+<style>
+  :root {
+    --ground: #fbf9f6; --ink: #1c1a17; --ink2: #4a4540; --ink3: #7a736b;
+    --line: #e4ded5; --accent: #b4451f; --surface: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #141311; --ink: #f2efe9; --ink2: #c4bdb3; --ink3: #8f877d;
+      --line: #2d2a26; --accent: #e07a4e; --surface: #1c1a17;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 44rem; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+  header { border-bottom: 1px solid var(--line); padding-bottom: 1.25rem; margin-bottom: 2rem; }
+  .brand { font-size: .8rem; letter-spacing: .09em; text-transform: uppercase;
+            color: var(--accent); font-weight: 700; }
+  .langs { margin-top: .85rem; font-size: .85rem; }
+  .langs a { color: var(--ink3); }
+  .langs strong { color: var(--ink); }
+  h1 { font-size: 1.7rem; line-height: 1.25; margin: .6rem 0 .2rem; letter-spacing: -.02em; }
+  h2 { font-size: 1.18rem; margin: 2.4rem 0 .6rem; letter-spacing: -.01em; }
+  h3 { font-size: 1rem; margin: 1.8rem 0 .4rem; color: var(--ink2); }
+  p, li { color: var(--ink2); }
+  strong { color: var(--ink); }
+  a { color: var(--accent); }
+  ul { padding-left: 1.15rem; }
+  li { margin: .3rem 0; }
+  code { background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+          padding: .1rem .3rem; font-size: .85em; word-break: break-word; }
+  blockquote { margin: 1.4rem 0; padding: .9rem 1.1rem; background: var(--surface);
+                border: 1px solid var(--line); border-left: 3px solid var(--accent);
+                border-radius: 6px; }
+  blockquote p { margin: 0; }
+  .table-scroll { overflow-x: auto; margin: 1.2rem 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--line); }
+  th { color: var(--ink); font-weight: 600; white-space: nowrap; }
+  footer { margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
+            font-size: .85rem; color: var(--ink3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">Sofra</div>
+  <div class="langs"><strong>Türkçe</strong> · <a href="/privacy.html">English</a></div>
+</header>
+<h1>Sofra — Gizlilik Politikası</h1>
+<p><strong>Yürürlük tarihi:</strong> 4 Eylül 2026</p>
+<h2>1. Veri sorumlusu</h2>
+<p>Sofra uygulamasını Yigit Berktaş bir birey olarak yayımlar ve işletir. Bu
+politikada "biz" ifadesi buna karşılık gelir. İletişim: iletisim@buaksamnepisireyim.com</p>
+<h2>2. Kısaca</h2>
+<ul>
+<li>Sofra'yı hesap açmadan, misafir olarak kullanabilirsin. Bu durumda hiçbir
+  veri buluta gönderilmez; her şey yalnız cihazında kalır.</li>
+<li>Hesap açarsan tercihlerin ve kilerin cihazlar arasında eşitlenir.</li>
+<li>Reklam yoktur, analitik veya izleme aracı yoktur, verilerini kimseye satmayız.</li>
+<li>Hesabını uygulama içinden kalıcı olarak silebilirsin.</li>
+</ul>
+<h2>3. İşlediğimiz veriler</h2>
+<h3>3.1 Hesap verileri</h3>
+<p>Hesap açmayı seçersen, kimlik doğrulama Google Firebase Authentication
+üzerinden yapılır:</p>
+<ul>
+<li><strong>E-posta ile kayıt:</strong> e-posta adresin ve şifren. Şifreyi biz görmeyiz;
+  Firebase tarafında karma (hash) olarak saklanır.</li>
+<li><strong>Apple ile giriş:</strong> Apple'ın verdiği kullanıcı kimliği ve e-posta adresi.
+  Apple'ın "e-postamı gizle" seçeneğini kullanırsan yalnız yönlendirme adresini
+  görürüz.</li>
+<li><strong>Google ile giriş:</strong> Google hesabının kimliği ve e-posta adresi.</li>
+</ul>
+<h3>3.2 Uygulama tercihleri ve içerik</h3>
+<p>Hesabın varsa aşağıdakiler Firestore'da <code>users/{kullanıcı-kimliği}/app/state</code>
+yolunda saklanır ve cihazlarına eşitlenir:</p>
+<ul>
+<li>süre bütçesi ve kişi başı bütçe üst sınırı,</li>
+<li><strong>beslenme tercihleri: etsiz, vejetaryen/vegan, glutensiz, laktozsuz, düşük
+  glisemik</strong>,</li>
+<li>yemek yapma deneyimi düzeyi,</li>
+<li>kilerindeki ve mutfağındaki malzemeler,</li>
+<li>alışveriş listen,</li>
+<li>beğendiğin, pişirdiğin ve "bana göre değil" dediğin tarifler ile bunlardan
+  öğrenilen tat tercihleri.</li>
+</ul>
+<h3>3.3 Beslenme filtreleri hakkında not</h3>
+<p>Etsiz, glutensiz, laktozsuz ve düşük glisemik seçenekleri birer <strong>yemek
+filtresidir</strong>, sağlık kaydı değildir. İnsanlar çoğu zaman kendileri için değil,
+sofradaki başkaları için yemek yapar: bu filtreleri çocuğun, bir misafirin ya da
+ev halkından birinin ihtiyacı için de işaretleyebilirsin. Sofra bu seçimlerden
+senin veya bir başkasının sağlık durumuna dair çıkarım yapmaz, böyle bir kayıt
+tutmaz.</p>
+<p>Bu seçimleri yalnızca sana uygun tarifleri süzmek için kullanırız; profilleme,
+reklam veya üçüncü taraflarla paylaşım için kullanmayız. Hiç işaretlemek zorunda
+değilsin; işaretlemezsen Sofra çalışmaya devam eder ve tercihlerini istediğin
+zaman değiştirebilir veya hesabını silerek tamamen kaldırabilirsin.</p>
+<blockquote>
+<p><strong>Önemli:</strong> Bu filtreler tarif verisindeki malzeme eşleşmelerine dayanır ve
+kusursuz değildir. Tıbbi bir zorunluluk varsa — çölyak, laktoz intoleransı,
+diyabet gibi — bir tarifi uygulamadan önce malzeme listesini kendin kontrol
+et. Sofra tıbbi tavsiye vermez ve tıbbi bir araç değildir.</p>
+</blockquote>
+<h3>3.4 Cihazında kalan veriler</h3>
+<p>Dil seçimi, tanıtım ekranını görüp görmediğin ve günlük hatırlatma ayarların
+yalnız cihazında saklanır (AsyncStorage). Misafir kullanımda yukarıdaki tüm
+tercihler de yalnız cihazında kalır.</p>
+<h3>3.5 Sunucu kayıtları</h3>
+<p>Tarif ve fiyat verileri kendi sunucumuzdaki bir API'den gelir. Bu sunucu, her
+istek için IP adresini ve istenen adresi teknik kayıt olarak tutar. Bu kayıtlar
+hata ayıklama ve kötüye kullanımı önleme amacıyla tutulur; pazarlama için
+kullanılmaz ve hesabınla ilişkilendirilmez — API isteklerinde kimlik bilgisi
+gönderilmez.</p>
+<h3>3.6 İşlemediğimiz veriler</h3>
+<p>Konum, rehber, fotoğraflar, reklam kimliği, cihaz parmak izi ve çerez
+kullanmıyoruz. Uygulamada analitik, çökme raporlama veya reklam aracı yoktur.
+Bildirimler cihazında yerel olarak planlanır; uzak bildirim (push) belirteci
+üretmiyor ve toplamıyoruz.</p>
+<h2>4. İşleme amaçları ve hukuki dayanak</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Veri</th>
+<th>Amaç</th>
+<th>Dayanak</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hesap verileri</td>
+<td>Hesabını oluşturmak ve girişini sağlamak</td>
+<td>Sözleşmenin ifası</td>
+</tr>
+<tr>
+<td>Tercihler, kiler, listeler</td>
+<td>Uygulamanın çalışması ve cihazlar arası eşitleme</td>
+<td>Sözleşmenin ifası</td>
+</tr>
+<tr>
+<td>Beslenme filtreleri</td>
+<td>Uygun tarifleri süzmek</td>
+<td>Sözleşmenin ifası</td>
+</tr>
+<tr>
+<td>Tat geri bildirimleri</td>
+<td>Önerileri sana göre iyileştirmek</td>
+<td>Sözleşmenin ifası</td>
+</tr>
+<tr>
+<td>Sunucu kayıtları</td>
+<td>Güvenlik, hata ayıklama, kötüye kullanımın önlenmesi</td>
+<td>Meşru menfaat</td>
+</tr>
+</tbody>
+</table></div>
+<h2>5. Paylaşım ve yurt dışına aktarım</h2>
+<p>Verilerini satmıyoruz ve reklam amacıyla paylaşmıyoruz. Hizmeti çalıştırmak için
+şu sağlayıcıları kullanıyoruz:</p>
+<ul>
+<li><strong>Google Firebase (Authentication ve Cloud Firestore)</strong> — hesap ve tercih
+  verilerinin barındırılması. Google sunucuları Türkiye dışında bulunabilir.</li>
+<li><strong>Apple</strong> — "Apple ile giriş" kullanırsan kimlik doğrulama.</li>
+<li><strong>Google</strong> — "Google ile giriş" kullanırsan kimlik doğrulama.</li>
+</ul>
+<p>Bu sağlayıcılar verileri bizim adımıza işler. Yurt dışına aktarım, KVKK'nın
+aktarım hükümleri kapsamında ve açık rızana dayanılarak yapılır.</p>
+<p>Tarif maliyetleri için market fiyatlarını dış kaynaklardan topluyoruz. Bu
+isteklerde <strong>hiçbir kullanıcı verisi</strong> gönderilmez.</p>
+<h2>6. Saklama süreleri</h2>
+<ul>
+<li>Hesap ve tercih verileri: hesabın var olduğu sürece.</li>
+<li>Hesabını sildiğinde: Firestore'daki tercih ve kiler verilerin ve Firebase
+  Authentication hesabın silinir, cihazındaki yerel kopya kaldırılır.</li>
+<li>Sunucu teknik kayıtları: en fazla 30 gün tutulmasını hedefliyoruz.</li>
+</ul>
+<h2>7. Hesabını silme</h2>
+<p>Uygulamada <strong>Profilim → Hesap ve güvenlik → Hesabımı sil</strong> yolunu izle.
+Güvenlik için önce şifrenle ya da Apple/Google hesabınla yeniden giriş yapman
+istenir. Silme işlemi geri alınamaz.</p>
+<h2>8. Haklarınız</h2>
+<p>KVKK m.11 ve — sana uygulanıyorsa — GDPR kapsamında; verilerinin işlenip
+işlenmediğini öğrenme, bunlara erişme, düzeltilmesini veya silinmesini isteme,
+işlemeye itiraz etme ve rızanı geri çekme hakların vardır. Talebini
+iletisim@buaksamnepisireyim.com adresine iletebilirsin. En kısa sürede, her hâlükârda otuz
+gün içinde yanıt veririz.</p>
+<h2>9. Güvenlik</h2>
+<p>Kimlik doğrulama ve tercih eşitlemesi Google Firebase üzerinden şifreli
+bağlantıyla yapılır. Firestore kuralları, her kullanıcının yalnız kendi
+verilerine erişmesine izin verir.</p>
+<blockquote>
+<p><strong>Şu anki sınırlama:</strong> tarif ve fiyat isteklerini karşılayan API henüz şifresiz
+bağlantı (HTTP) üzerinden çalışıyor. Bu isteklerde hesap bilgisi veya şifre
+bulunmaz; ancak kilerinde işaretlediğin malzemeler ve beslenme tercihlerin,
+ağı izleyebilen biri tarafından görülebilir. Bu bağlantıyı şifrelemek üzerinde
+çalışıyoruz.</p>
+</blockquote>
+<h2>10. Çocuklar</h2>
+<p>Sofra 13 yaşın altındaki çocuklara yönelik değildir ve bilerek bu yaş grubundan
+veri toplamayız.</p>
+<h2>11. Değişiklikler</h2>
+<p>Bu politikayı güncellersek yürürlük tarihini değiştirir ve önemli değişiklikleri
+uygulama içinde duyururuz.</p>
+<h2>12. İletişim</h2>
+<p>iletisim@buaksamnepisireyim.com</p>
+<footer>Sofra · buaksamnepisireyim.com</footer>
+</div>
+</body>
+</html>

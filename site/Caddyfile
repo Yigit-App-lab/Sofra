@@ -1,0 +1,59 @@
+# /etc/caddy/Caddyfile  —  Sofra
+#
+# Caddy is used rather than nginx because it obtains and renews the Let's
+# Encrypt certificates itself: no certbot, no cron job, no expiry surprise in
+# eleven months. It listens on 80 and 443 and redirects HTTP to HTTPS on its own.
+#
+# Prerequisite, or certificate issuance fails:
+#   api.buaksamnepisireyim.com.  A  129.121.89.248
+#   buaksamnepisireyim.com.      A  129.121.89.248
+#   www.buaksamnepisireyim.com.  A  129.121.89.248
+#   buaksamnepisireyim.online.   A  129.121.89.248
+#   www.buaksamnepisireyim.online. A 129.121.89.248
+
+# ---------------------------------------------------------------- the API
+api.buaksamnepisireyim.com {
+    reverse_proxy 127.0.0.1:8000
+
+    encode gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options nosniff
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/api.log {
+            roll_size 20mb
+            roll_keep 3
+        }
+        format json
+    }
+}
+
+# ------------------------------------------------- the site and the policy
+buaksamnepisireyim.com, www.buaksamnepisireyim.com {
+    root * /var/www/sofra
+    file_server
+    encode gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        -Server
+    }
+
+    # The policy URL submitted to App Store Connect must not break if the file
+    # is ever renamed, so serve the old paths too rather than 404.
+    redir /privacy /privacy.html permanent
+    redir /gizlilik /gizlilik.html permanent
+}
+
+# --------------------------------------------- the .online name, redirected
+# One brand, one place to maintain. This keeps the name from being squatted
+# without giving anyone two versions of the policy to disagree with.
+buaksamnepisireyim.online, www.buaksamnepisireyim.online {
+    redir https://buaksamnepisireyim.com{uri} permanent
+}

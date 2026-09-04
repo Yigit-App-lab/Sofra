@@ -1,0 +1,41 @@
+--- a/src/api.js
++++ b/src/api.js
+@@ -13,7 +13,10 @@
+  *   'offline' — the request could not be sent at all
+  *   'http'    — the server answered, and refused
+  * ==========================================================================*/
+-export const API_URL = "http://129.121.89.248:8000";
++// The IP is kept in a comment on purpose: builds already installed on a phone
++// still point at http://129.121.89.248:8000, so that host must keep answering
++// until those installs are gone.
++export const API_URL = "https://api.buaksamnepisireyim.com";
+ 
+ // `/recipes/tonight` measures about 6.5s on the server for twenty recipes, so
+ // the recipe deadline has to leave room for a slow phone network on top of it.
+--- a/app.json
++++ b/app.json
+@@ -30,14 +30,6 @@
+           "iosUrlScheme": "com.googleusercontent.apps.167919551577-qfj5eq2dou44st2tjlfnb68lod059305"
+         }
+       ],
+-      [
+-        "expo-build-properties",
+-        {
+-          "android": {
+-            "usesCleartextTraffic": true
+-          }
+-        }
+-      ],
+       "expo-apple-authentication"
+     ],
+     "ios": {
+@@ -49,9 +41,6 @@
+         "usesNonExemptEncryption": false
+       },
+       "infoPlist": {
+-        "NSAppTransportSecurity": {
+-          "NSAllowsArbitraryLoads": true
+-        },
+         "CFBundleLocalizations": [
+           "tr",
+           "en"
