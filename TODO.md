@@ -57,24 +57,46 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
 - [x] Kiler listesinde aynı adı taşıyan tarifleri teke indirme (kütüphanede
   birebir "Taze Fasulye" başlıklı dört ayrı tarif var)
 - [x] Bir öneri listesinde aynı ana addan en fazla belirli sayıda yemek
-- [ ] Aynı adı taşıyan tarifleri kaynak veride birleştirme veya karantinaya alma
+- [~] Aynı adı taşıyan tarifleri kaynak veride birleştirme veya karantinaya alma
+  — **ölçüldü, yapılmamasına karar verildi.** Gerekçe aşağıda
   - [x] Ölçüm aracı — `backend/audit_duplicate_titles.py`. Aynı başlığı taşıyan
     tarifleri malzeme örtüşmesine göre kümeliyor ve ikiye ayırıyor: aynı içe
     aktarmanın kopyaları (karantinaya alınabilir) ile tek adın altındaki farklı
     yemekler (zeytinyağlı ve etli taze fasulye — karantina bunları kaybettirir).
     Kalacak kopyayı hazırlanış belirliyor: daha uzun ve daha adımlı olan
-  - [ ] Aracı canlı veritabanında çalıştırıp eşik değerini seçme
-  - [ ] Kopyaları karantinaya alan betiği yazma (kuru deneme ve yedekle;
-    silmek yerine `recipe_exclusions`, çünkü silinen tarif kullanıcının
-    beğendiklerinde `api:<id>` olarak asılı kalır)
-  - [ ] Tek adı paylaşan farklı yemekler için başlığı ayırt edilebilir kılma
-- [ ] Ana yemek, atıştırmalık ve yardımcı hazırlık sınıflandırmasını geliştirme
+  - [x] Araç canlı veritabanında çalıştırıldı: karantinaya alınabilir 1.357
+    tarif çıktı. En büyük on kümenin tamamı (sütlaç, revani, ıslak kek,
+    pankek) `dinner_category_score`'dan zaten -100 alıyor, limonata ise
+    yalnızca Türkçe katlama hatası yüzünden 0 alıyordu — o hata bu turda
+    düzeltildi. Yani karantina kullanıcının gördüğü hiçbir şeyi
+    değiştirmiyor: kazanç sıfır, canlı veritabanına yazma riski gerçek
+  - [ ] Tek adı paylaşan farklı yemekler için başlığı ayırt edilebilir kılma —
+    tek kalan gerçek iş bu, ve kullanıcıya dönük tarafı (Kiler listesinde
+    dört "Taze Fasulye") istemci tarafında zaten çözüldü
+- [x] Ana yemek, atıştırmalık ve yardımcı hazırlık sınıflandırmasını geliştirme
   - [x] Ölçüm aracı — `backend/audit_dinner_classification.py`. Puan
     kovalarını ve en çok tarif barındıran "görüş yok" (0 puan) kategorilerini
     listeliyor. 0 puan alan tarif, sıralamada gerçek akşam yemekleriyle eşit
     yarışıyor; asıl boşluk orası
-  - [ ] Aracı canlı veritabanında çalıştırıp en büyük kategorileri görme
-  - [ ] `dinner_category_score` anahtar kelimelerini sonuca göre genişletme
+  - [x] Araç canlı veritabanında çalıştırıldı: 16.918 tarif (%9,7) hiçbir
+    kurala takılmıyordu
+  - [x] Türkçe katlama hatası — `str.casefold()` İ harfini "i" + birleşen
+    nokta (U+0307) yaptığı için "içecek" hiçbir zaman "İçecekler" içinde
+    bulunamıyordu. 2.260 içecek tarifi hiç reddedilmemiş. `fold_tr()`
+    eklendi; hem metin hem anahtar kelime tabloları aynı alfabede buluşuyor
+  - [x] `CATEGORY_SCORES` — denetimin çıkardığı kategori adları birebir
+    eşleşme tablosuna alındı. Yalnızca bütün anahtar kelime kuralları 0
+    döndürdüğünde bakılıyor, bu yüzden değişiklik tamamen eklemeli:
+    hâlihazırda puanlanmış hiçbir tarif yer değiştirmiyor
+  - [x] Belirsiz kategoriler kasıtla dışarıda: "(kategorisiz)" 2.074,
+    "Diğer Tarifler" 301, "Dünya Mutfaklarından Tarifler" 118 ve "Pratik
+    Yemek Tarifleri" 400 hem akşam yemeği hem tatlı barındırıyor; oradaki
+    tahmin görüşsüzlükten kötü olurdu
+  - [x] Doğrulama — eski ve yeni puanlayıcı 4.937 girdide yan yana
+    çalıştırıldı: eski görüşün bozulduğu 0 durum, kuralla açıklanamayan 0
+    durum. `backend/test_dinner_suitability.py` 50 vaka
+  - [ ] Değişikliğin canlıdaki etkisini görmek için denetimi yeniden
+    çalıştırma (aşağıdaki komut)
 - [x] Mayonez, sos, salça, hamur gibi yardımcı hazırlıkları akşam yemeği
   önerilerinden çıkarma (başlık sonundaki ada göre)
 - [x] Yemek olmayan saklama/hazırlık kayıtlarını karantinaya alma

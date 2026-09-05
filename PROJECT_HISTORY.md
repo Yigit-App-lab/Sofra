@@ -419,3 +419,55 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
 - Karantina kararı: silmek yerine `recipe_exclusions`. Geri alınabilir ve
   silinen bir tarif, kullanıcının profilinde `api:<id>` olarak asılı kalır.
 - Henüz hiçbir veri değişmedi.
+
+## 2026-09-05 — Akşam yemeği sınıflandırması: Türkçe katlama ve kategori tablosu
+
+Bir önceki turda yazılan iki denetim aracı canlı veritabanında çalıştırıldı.
+Sonuçlar iki isteği birbirinden ayırdı: biri yapıldı, diğeri veriyle birlikte
+düştü.
+
+**Kopya başlıkların karantinaya alınması yapılmadı, çünkü ölçüm gereksiz
+olduğunu gösterdi.** Araç 1.357 karantinaya alınabilir tarif buldu. En büyük
+on kümenin tamamı — sütlaç, revani, ıslak kek, pankek — `dinner_category_score`
+tarafından zaten -100 alıyor, yani öneriye hiç girmiyor. Listedeki tek istisna
+limonataydı ve o da 0 alıyordu; nedeni kopya olması değil, aşağıdaki katlama
+hatasıydı. Karantina kullanıcının gördüğü hiçbir şeyi değiştirmeyecekti;
+karşılığında canlı veritabanına 1.357 satırlık bir yazma riski vardı. İstenen
+ölçüm, isteği çürüten şey oldu.
+
+**Sınıflandırma yapıldı ve asıl kazanç oradaydı.** Denetimin satırı şuydu:
+16.918 tarif (%9,7) hiçbir kurala takılmıyor, 0 puanla gerçek akşam
+yemekleriyle eşit yarışıyor.
+
+- Türkçe katlama hatası. `str.casefold()` İ harfini "i" artı birleşen nokta
+  (U+0307) yapıyor, dolayısıyla `"içecek" in "i̇çecekler"` her zaman yanlıştı.
+  2.260 içecek tarifi kendi anahtar kelimesi tabloda dururken hiç
+  reddedilmemiş. `fold_tr()` casefold'dan sonra ı'yı i'ye çeviriyor ve NFKD
+  ayrıştırmasından sonra birleşen işaretleri atıyor. Hem metin hem de dört
+  anahtar kelime tablosu bundan geçiyor, böylece aynı alfabede buluşuyorlar.
+  Tablolar içe aktarımda bir kez katlanıyor: `dinner_category_score` her aday
+  satır için çalışıyor, her çağrıda katlamak dolu bir kilerde milyonlarca
+  işlem demekti.
+- `CATEGORY_SCORES`. Denetimin listelediği kategori adları birebir eşleşme
+  tablosuna alındı. Tablo yalnızca bütün anahtar kelime kuralları 0
+  döndürdükten sonra okunuyor. Bu sıralama değişikliği eklemeli yapan şey:
+  bir kategori adı, hâlihazırda puanlanmış bir tarifi asla ters çeviremiyor.
+- Belirsiz kategoriler kasıtla dışarıda bırakıldı. "(kategorisiz)" 2.074,
+  "Diğer Tarifler" 301, "Dünya Mutfaklarından Tarifler" 118, "Pratik Yemek
+  Tarifleri" 400 — hepsi hem akşam yemeği hem tatlı barındırıyor. Adından
+  çıkarılamayan yerde tahmin, görüşsüzlükten kötüdür.
+
+Doğrulama, elle seçilmiş örneklerle yetinmedi. Kullanıcının çalıştırdığı sürüm
+ile yeni sürüm 4.937 girdide yan yana koşturuldu; girdiler dört anahtar kelime
+tablosunun tamamından, başlık sonu adlarından, denetimin kategori adlarından ve
+gerçek tarif başlıklarından üretildi. Eski kural, katlama işlevi değiştirilebilir
+biçimde yeniden yazıldı ve önce eski sürümü birebir ürettiği doğrulandı — yoksa
+karşılaştırmanın bir anlamı olmazdı. Sonuç: eski görüşün bozulduğu 0 durum,
+"katlama düzeltmesi ya da kategori tablosu" dışında açıklanamayan 0 durum.
+Değişen 916 girdinin 803'ü eskiden 0 alıyordu, 113'ü ise eski kodun kendi
+anahtar kelimesini bulamadığı durumlardı.
+
+`backend/test_dinner_suitability.py` 50 vakaya çıktı ve artık `_load_api`
+üzerinden içe aktarıyor. Eskisi `pytest.importorskip("recipe_api")`
+kullanıyordu: fastapi kurulu olmayan bir makinede sınama sessizce atlanıyordu,
+yani hiç koşmadığı halde yeşil görünüyordu.

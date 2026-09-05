@@ -200,6 +200,22 @@ def clean_ingredient_text(text):
 
 
 
+def fold_tr(value):
+    """Casefold Turkish text so that keyword matching actually matches.
+
+    Python's casefold turns İ into "i" plus a combining dot (U+0307), so
+    "içecek" never matched "İçecekler" and every drink category scored 0 —
+    2,260 recipes competing with real dinners on ranking alone. ı is mapped to
+    i as well, so one spelling of a keyword matches both.
+
+    Both the text and the keyword tables go through this, so they meet in the
+    same alphabet.
+    """
+    text = str(value or "").casefold().replace("ı", "i")
+    return "".join(ch for ch in unicodedata.normalize("NFKD", text)
+                   if not unicodedata.combining(ch))
+
+
 # A condiment, base or preparation is never an evening meal, however many
 # pantry ingredients it matches. These cannot go in the substring list below:
 # "sos" would reject "soslu makarna" and "hardal" would reject "hardallı
@@ -227,24 +243,19 @@ NOT_A_MEAL_HEADS = frozenset({
 })
 
 
+NOT_A_MEAL_HEADS = frozenset(fold_tr(word) for word in NOT_A_MEAL_HEADS)
+
+
 def title_head_word(title):
     """The last word of a title, folded. '' when there is nothing to read."""
-    words = re.findall(r"[0-9a-zçğıöşü]+", str(title or "").casefold())
+    words = re.findall(r"[0-9a-z]+", fold_tr(title))
     return words[-1] if words else ""
 
 
-def dinner_category_score(category, title=None):
-    """Dinner suitability for recommendation only. Database is untouched."""
-    if not category and not title:
-        return 0
-
-    c = f"{category or ''} {title or ''}".casefold()
-
-    if title_head_word(title) in NOT_A_MEAL_HEADS:
-        return -100
-
-    # Definitely not an evening meal recommendation.
-    reject = (
+# The keyword tables, folded once at import. dinner_category_score runs for
+# every candidate row — folding these per call would be millions of operations
+# on a well-stocked pantry.
+_REJECT = tuple(fold_tr(x) for x in (
         "tatlı", "kek", "kurabiye", "pasta",
         "dondurma", "lokum", "helva", "donut",
         "reçel", "pekmez", "şerbet",
@@ -258,13 +269,9 @@ def dinner_category_score(category, title=None):
         "takviye edici",
         "tavuk suyu yap", "et suyu yap",
         "stok hazırl", "konserve hazırl",
-    )
+))
 
-    if any(x in c for x in reject):
-        return -100
-
-    # Usually not the main evening dish.
-    weak = (
+_WEAK = tuple(fold_tr(x) for x in (
         "kahvalt", "salata", "meze", "kanepe",
         "aperatif", "atıştırmalık",
         "poğaça", "börek", "çörek",
@@ -272,13 +279,9 @@ def dinner_category_score(category, title=None):
         "simit", "tost",
         "sandviç", "pizza", "lahmacun",
         "milföy", "burger",
-    )
+))
 
-    if any(x in c for x in weak):
-        return -35
-
-    # Strong dinner/main-course categories.
-    strong = (
+_STRONG = tuple(fold_tr(x) for x in (
         "ana yemek", "akşam yemeği",
         "ev yemek", "sulu yemek",
         "et yemek", "etli yemek",
@@ -299,23 +302,79 @@ def dinner_category_score(category, title=None):
         "fırın yemek", "tava yemek",
         "kıymalı yemek",
         "hindi yemek",
-    )
+))
 
-    if any(x in c for x in strong):
-        return 30
-
-    # Valid dinner choices, but normally below a main dish.
-    medium = (
+_MEDIUM = tuple(fold_tr(x) for x in (
         "çorba", "makarna", "mantı",
         "pilav", "pizza", "pide",
         "dürüm", "hamburger",
         "yumurta yemek",
-    )
+))
 
-    if any(x in c for x in medium):
+# Exact category names, from backend/audit_dinner_classification.py run against
+# the live library. These apply ONLY where every keyword rule above returned 0,
+# so the change is purely additive: nothing already classified moves.
+#
+# Categories left out on purpose because the answer is not clear from the name:
+# "(kategorisiz)" 2,074, "Diğer Tarifler" 301, "Dünya Mutfaklarından Tarifler"
+# 118 and "Pratik Yemek Tarifleri" 400 hold both dinners and desserts, and a
+# guess there would be worse than no opinion.
+CATEGORY_SCORES = {fold_tr(name): score for name, score in {
+    # drinks and desserts — never an evening meal
+    "Soğuk İçecekler": -100,
+    "Sıcak İçecekler": -100,
+    "İçecek": -100,
+    "İçecek Tarifleri": -100,
+    "Hoşaf Tarifleri": -100,
+    "Çikolatalı Tarifler": -100,
+    "Tart Tarifleri": -100,
+    "Cheesecake Tarifleri": -100,
+    "Sos Tarifleri": -100,
+    "Süt Ürünleri": -100,
+
+    # edible, but not what anyone means by "bu akşam ne pişirelim"
+    "Hamur İşi": -35,
+    "Hamur İşi Tarifleri": -35,
+    "Tuzlu Hamur İşi Tarifleri": -35,
+    "Sizden Hamur İşi Tarifleri": -35,
+    "Kızartma Tarifleri": -35,
+    "Kiş Tarifleri": -35,
+    "Çocuklar İçin": -35,
+    "Peynirli Tarifler": -35,
+    "Yumurtalı Tarifler": -35,
+
+    # real evening food
+    "Zeytinyağlı": 30,
+    "Zeytinyağlı Tarifler": 30,
+    "Zeytinyağlı Yemek Tarifleri": 30,
+    "Sebze": 30,
+    "Et": 30,
+    "Bakliyat": 30,
+    "Hızlı Yemekler": 15,
+}.items()}
+
+
+def dinner_category_score(category, title=None):
+    """Dinner suitability for recommendation only. Database is untouched."""
+    if not category and not title:
+        return 0
+
+    c = fold_tr(f"{category or ''} {title or ''}")
+
+    if title_head_word(title) in NOT_A_MEAL_HEADS:
+        return -100
+    if any(x in c for x in _REJECT):
+        return -100
+    if any(x in c for x in _WEAK):
+        return -35
+    if any(x in c for x in _STRONG):
+        return 30
+    if any(x in c for x in _MEDIUM):
         return 15
 
-    return 0
+    # Nothing recognised the dish. Fall back to the category name itself, which
+    # is where 16,918 recipes were landing with no opinion at all.
+    return CATEGORY_SCORES.get(fold_tr(category), 0)
 
 
 DB = "/root/recipes.db"

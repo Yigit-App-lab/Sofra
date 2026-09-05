@@ -9,13 +9,23 @@ key — even promoted it, because egg is classed as a protein.
 These cases guard the head-noun rejection and, just as importantly, the dishes
 it must not touch: substring matching cannot be used here, because "sos" is
 inside "soslu makarna" and "hardal" is inside "hardallı tavuk".
+
+They also guard the two later fixes: Turkish folding, without which the scorer
+never matched its own keywords through an İ, and the category fallback, which
+is allowed to speak only where every keyword rule stayed silent.
+
+Run it anywhere — `_load_api` stubs the web framework, so no virtualenv is
+needed:
+
+    python3 -m pytest backend/test_dinner_suitability.py -q
 """
+import os
+import sys
+
 import pytest
 
-recipe_api = pytest.importorskip(
-    "recipe_api",
-    reason="recipe_api needs fastapi/pydantic; run this where the API runs",
-)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _load_api import api as recipe_api  # noqa: E402  (after the path insert)
 
 score = recipe_api.dinner_category_score
 
@@ -54,6 +64,114 @@ def test_a_salad_using_mayonnaise_is_weak_not_rejected():
 
 def test_head_word_reads_the_last_word_only():
     assert recipe_api.title_head_word("Ev Yapımı Mayonez") == "mayonez"
-    assert recipe_api.title_head_word("Mayonezli Patates Salatası") == "salatası"
+    assert recipe_api.title_head_word("Mayonezli Patates Salatası") == "salatasi"
     assert recipe_api.title_head_word("") == ""
     assert recipe_api.title_head_word(None) == ""
+
+
+# --------------------------------------------------------------------------
+# Turkish folding.
+#
+# str.casefold() turns İ into "i" plus a combining dot (U+0307), so "içecek"
+# was never inside casefold("İçecekler") and 2,260 drink recipes scored 0 —
+# competing with real dinners on ranking alone. Both the text and the keyword
+# tables now go through fold_tr, so they meet in the same alphabet.
+
+def test_fold_tr_flattens_both_turkish_i_forms():
+    assert recipe_api.fold_tr("İÇECEK") == "icecek"
+    assert recipe_api.fold_tr("Işkembe") == "iskembe"
+    assert recipe_api.fold_tr("ıspanak") == "ispanak"
+    assert recipe_api.fold_tr(None) == ""
+
+
+def test_fold_tr_leaves_no_combining_marks():
+    import unicodedata
+    for word in ("İçecek", "Şeftali", "Ğ", "Öğün", "Üzüm", "Çilek"):
+        folded = recipe_api.fold_tr(word)
+        assert not any(unicodedata.combining(ch) for ch in folded), word
+
+
+@pytest.mark.parametrize("category,title", [
+    ("Soğuk İçecekler", "Limonata"),
+    ("Sıcak İçecekler", "Salep"),
+    ("İçecek Tarifleri", "Ayran"),
+    ("İçecekler", "Şalgam suyu"),
+    # The same word written without its diacritics, as source data often does.
+    ("icecek", "Limonata"),
+])
+def test_drinks_are_rejected_through_a_capital_i(category, title):
+    assert score(category, title) == -100
+
+
+def test_a_capital_i_keyword_beats_a_dinner_word_in_the_title():
+    # "Tavuk" is a strong dinner keyword. It must not rescue a drink.
+    assert score("Sıcak İçecekler", "Tavuk suyu") == -100
+
+
+@pytest.mark.parametrize("category,title,expected", [
+    ("Sebze Yemekleri", "Ispanak Yemeği", 30),
+    ("Sebze Yemekleri", "ıspanak yemeği", 30),
+    ("Çorba Tarifleri", "Işkembe Çorbası", 15),
+])
+def test_dotless_i_dishes_still_score(category, title, expected):
+    assert score(category, title) == expected
+
+
+# --------------------------------------------------------------------------
+# The category fallback.
+#
+# 16,918 recipes (9.7% of the library) matched no keyword at all and scored 0.
+# The exact category names below come from audit_dinner_classification.py run
+# against the live library. The fallback is consulted only after every keyword
+# rule has returned 0, which is what keeps the change additive.
+
+@pytest.mark.parametrize("category,expected", [
+    ("Tart Tarifleri", -100),
+    ("Cheesecake Tarifleri", -100),
+    ("Süt Ürünleri", -100),
+    ("Hamur İşi", -35),
+    ("Kızartma Tarifleri", -35),
+    ("Çocuklar İçin", -35),
+    ("Zeytinyağlı", 30),
+    ("Zeytinyağlı Yemek Tarifleri", 30),
+    ("Sebze", 30),
+    ("Et", 30),
+    ("Bakliyat", 30),
+    ("Hızlı Yemekler", 15),
+])
+def test_category_names_speak_when_no_keyword_does(category, expected):
+    assert score(category, "Adı bilinmeyen bir tarif") == expected
+
+
+@pytest.mark.parametrize("category", [
+    "(kategorisiz)",
+    "Diğer Tarifler",
+    "Dünya Mutfaklarından Tarifler",
+    "Pratik Yemek Tarifleri",
+])
+def test_mixed_categories_keep_no_opinion(category):
+    # These hold dinners and desserts alike. A guess here would be worse than
+    # silence, so they stay out of the table on purpose.
+    assert score(category, "Adı bilinmeyen bir tarif") == 0
+
+
+@pytest.mark.parametrize("category,title,expected", [
+    # A keyword in the title always wins over the category name.
+    ("Zeytinyağlı", "Çikolatalı Kek", -100),
+    ("Sebze", "Ev Yapımı Mayonez", -100),
+    ("Et", "Kahvaltılık Poğaça", -35),
+    ("Tart Tarifleri", "Fırında Tavuk", 30),
+    ("Süt Ürünleri", "Tavuk Sote", 30),
+])
+def test_the_fallback_never_overturns_a_keyword(category, title, expected):
+    assert score(category, title) == expected
+
+
+def test_fallback_matching_ignores_case_and_diacritics():
+    assert score("ZEYTİNYAĞLI", "Adı bilinmeyen bir tarif") == 30
+    assert score("zeytinyagli", "Adı bilinmeyen bir tarif") == 30
+
+
+def test_nothing_at_all_scores_zero():
+    assert score(None, None) == 0
+    assert score("", "") == 0
