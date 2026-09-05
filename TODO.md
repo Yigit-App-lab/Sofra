@@ -106,10 +106,20 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
     sayımında görünmüyor. Kuralların sırası (reject → weak → strong →
     medium) yüzünden yeni bir strong anahtar kelimesi -100 ve -35 alan
     tarifleri hiç göremez; mümkün olan tek hareket 0 → 30 ve 15 → 30
-    - [x] Ölçüm aracı — `backend/measure_yemegi_gap.py`. Önerilen düzeltmeyi
-      (kökü `yeme`'ye kısaltmak) uygulamadan simüle ediyor ve 15 → 30
-      terfilerini ayrıca sayıyor; karar o sayıya bağlı
-    - [ ] Aracı canlı veritabanında çalıştırıp kararı verme
+    - [x] Ölçüm aracı — `backend/measure_yemegi_gap.py`. İki adayı yan yana
+      simüle ediyor ve anlamı ters okunan başlıkları ayrıca sayıyor
+    - [x] Kökü `yeme`'ye kısaltmak **ölçüldü ve reddedildi**: `yeme` aynı
+      zamanda **yemeyen** kelimesinin ön eki. "Et Yemeyen Çocuklarınız İçin"
+      bir et ana yemeği sayılıyordu; kütüphanede 4 başlık böyle ters okunuyor
+    - [x] Seçilen çözüm: anahtar kelimeyi kısaltmak yerine iyelik biçimini
+      yanına eklemek (`sebze yemek` + `sebze yemegi`). `yemegi`, `yemeyen`
+      içinde geçmiyor. 105 tarif yer değiştiriyor, ters okunan 0 başlık
+    - [x] Kuralların sırası hakkında düzeltme: `CATEGORY_SCORES` bütün
+      anahtar kelimelerden **sonra** okunuyor, dolayısıyla kategori
+      tablosundan -35 alan bir tarifi yeni bir strong anahtar kelimesi
+      hareket ettirebiliyor (7 tarif, çoğu "Kızartma Tarifleri" altındaki
+      gerçek sebze yemekleri). Erişilemeyen tek şey weak/reject **anahtar
+      kelime** katmanının kararı
 - [x] Mayonez, sos, salça, hamur gibi yardımcı hazırlıkları akşam yemeği
   önerilerinden çıkarma (başlık sonundaki ada göre)
 - [x] Yemek olmayan saklama/hazırlık kayıtlarını karantinaya alma

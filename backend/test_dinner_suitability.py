@@ -175,3 +175,68 @@ def test_fallback_matching_ignores_case_and_diacritics():
 def test_nothing_at_all_scores_zero():
     assert score(None, None) == 0
     assert score("", "") == 0
+
+
+# --------------------------------------------------------------------------
+# The possessive suffix.
+#
+# Turkish softens the k before a possessive, so "sebze yemek" becomes "sebze
+# yemeği" — folded, "sebze yemegi", which does not contain "sebze yemek". The
+# plural "yemekleri" matched all along; the singular never did, leaving 53
+# recipes in "Sizden Sebze Yemeği Tarifleri" with no score at all.
+
+@pytest.mark.parametrize("category,title,expected", [
+    ("Sizden Sebze Yemeği Tarifleri", "Beyaz Lahana Mücveri", 30),
+    ("Sebze Yemeği Tarifleri", "Yoğurtlu Köz Biber", 30),
+    ("Et Yemeği Tarifleri", "Fırında Kuzu", 30),
+    ("Bakliyat Tarifleri", "Etli Nohut Yemeği", 30),
+    ("Kızartma Tarifleri", "Domates Soslu Patlıcan Yemeği", 30),
+    ("Çocuklar İçin", "Pırasa Yemeği", 30),
+    # The plural, which worked before and must keep working.
+    ("Sebze Yemekleri", "Karnıyarık", 30),
+])
+def test_the_possessive_form_scores_like_the_plural(category, title, expected):
+    assert score(category, title) == expected
+
+
+@pytest.mark.parametrize("title", [
+    "Bu Tarif İle Kabak Yemeyen Kimse Kalmayacak",
+    # No other keyword in these titles, so 30 could only come from the suffix.
+    "Et Yemeyen Çocuklarınız İçin Sağlıklı Domates Tarifi",
+    "Ispanaklı Sufle (Ispanak Yemeyen Çocuk Kalmayacak)",
+    "Teremyağlı Civciv Omlet (Yumurta Yemeyen Çocuklara)",
+    "Sebze Yemeyen Çocuklar İçin Kolay Tarif",
+])
+def test_a_title_about_not_eating_is_not_a_main_dish(title):
+    """The reason the keyword is "yemegi" and not the stem "yeme".
+
+    Shortening "sebze yemek" to "sebze yeme" would cover every suffix in one
+    entry — and would also match "sebze yemeyen", "who does not eat vegetables".
+    Four titles in the live library invert that way, so the stem was measured
+    and rejected. These cases keep it rejected.
+    """
+    assert score("Çocuklar İçin", title) != 30
+
+
+def test_no_keyword_can_hide_inside_a_negative():
+    """The property, rather than five examples of it.
+
+    Every keyword ending in the possessive must be absent from the negative
+    forms built on the same stem. This is what the stem form failed.
+    """
+    for word in recipe_api._STRONG + recipe_api._MEDIUM:
+        if not word.endswith("yemegi"):
+            continue
+        stem = word[:-len("yemegi")] + "yeme"
+        for ending in ("yen", "yenler", "yene", "yecek", "z", "miyor"):
+            assert word not in stem + ending, f"{word!r} hides in {stem + ending!r}"
+
+
+def test_with_possessive_adds_and_never_removes():
+    words = ("sebze yemek", "tavuk", "aksam yemegi")
+    out = recipe_api.with_possessive(words)
+    assert set(words) <= set(out)
+    assert "sebze yemegi" in out
+    # A keyword that is not of the "... yemek" shape gains nothing.
+    assert sum(1 for w in out if w.startswith("tavuk")) == 1
+    assert len(out) == len(set(out))

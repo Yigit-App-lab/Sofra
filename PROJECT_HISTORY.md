@@ -471,3 +471,48 @@ anahtar kelimesini bulamadığı durumlardı.
 üzerinden içe aktarıyor. Eskisi `pytest.importorskip("recipe_api")`
 kullanıyordu: fastapi kurulu olmayan bir makinede sınama sessizce atlanıyordu,
 yani hiç koşmadığı halde yeşil görünüyordu.
+
+## 2026-09-05 — `yemeği` eki: ölçülen iki aday, seçilen biri
+
+Bir önceki turun bıraktığı açık bulgu kapatıldı. Türkçe iyelik ekinden önce k
+yumuşuyor, yani "sebze yemek" anahtar kelimesinin tekili "sebze yemeği" —
+katlanmış hâliyle "sebze yemegi", ki "sebze yemek" içermiyor. Çoğul
+"yemekleri" en başından beri eşleşiyordu, tekil hiç eşleşmedi.
+
+Görünen zarar küçüktü (0 puan alan 53 tarif), asıl zarar görünmüyordu:
+kategorisi "Sebze Yemeği" olan bir ana yemek, başlığında "çorba" geçiyorsa
+medium'a düşüp 15 alıyor. Sıralaması yanlış ama hiçbir kova sayımında
+görünmüyor.
+
+**İki aday ölçüldü, biri elendi.**
+
+Bariz çözüm anahtar kelimeyi köke kısaltmaktı: "sebze yemek" → "sebze yeme",
+tek girdiyle bütün ekleri kapsıyor. Ölçüm bunu çürüttü: `yeme` aynı zamanda
+**yemeyen** kelimesinin ön eki. "Et Yemeyen Çocuklarınız İçin" bir et ana
+yemeği, "Bu Tarif İle Kabak Yemeyen Kimse Kalmayacak" bir kabak yemeği olarak
+puanlanıyordu. Kütüphanede 4 başlık böyle ters okunuyor — sayı küçük ama hata
+türü yanlış değil, tersine çevrilmiş.
+
+Seçilen çözüm kısaltmak yerine eklemek: `sebze yemek` duruyor, yanına
+`sebze yemegi` geliyor. `yemegi`, `yemeyen` içinde geçemiyor. Tablo 37'den
+62 strong anahtar kelimeye çıktı, 105 tarif yer değiştirdi, ters okunan başlık
+sayısı 0.
+
+**Kural sırası hakkında bir düzeltme.** "Yeni bir strong anahtar kelimesi -100
+ve -35 alan tarifleri göremez" demiştim; bu yarı yanlıştı. Doğrusu: weak ve
+reject **anahtar kelime** katmanları strong'dan önce döndüğü için onların
+kararına dokunulamıyor. Ama `CATEGORY_SCORES` bütün anahtar kelimelerden
+**sonra** okunuyor, dolayısıyla kategori tablosundan -35 alan bir tarif
+hareket edebiliyor — 7 tarif böyle taşındı ve hepsi "Kızartma Tarifleri"
+altındaki gerçek sebze yemekleriydi (Şakşuka, Yoğurtlu Patlıcan Yemeği). Bu
+hatayı ölçüm aracı yakaladı, çıkarım değil: betik "olması imkânsız" dediğim
+geçişleri ayrı sayıp ekrana bastığı için görüldü.
+
+Etki toplamda 174.910 tarifin 105'i, yani %0,06. Bu değişiklik cihazda
+görünmeyecek. Yapılmasının nedeni tek tek bu 105 tarif değil, `yemek` ile
+biten her yeni anahtar kelimenin aynı körlüğü sessizce miras alacak olması.
+
+Sınama tarafında iki yeni koruma var: iyelik biçiminin çoğul gibi puanlanması,
+ve elenen kök biçiminin geri gelmemesi. İkincisi örnekle değil özellikle
+sınanıyor — iyelikle biten her anahtar kelime, aynı kökten türeyen olumsuz
+biçimlerin (`yemeyen`, `yemez`, `yemiyor` …) içinde geçmemeli.

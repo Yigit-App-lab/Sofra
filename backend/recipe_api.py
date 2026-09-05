@@ -252,6 +252,29 @@ def title_head_word(title):
     return words[-1] if words else ""
 
 
+def with_possessive(words):
+    """Add "sebze yemeği" beside "sebze yemek", for every such keyword.
+
+    Turkish softens the k before a possessive suffix, so the singular of
+    "sebze yemek" is "sebze yemeği" — folded, "sebze yemegi", which does not
+    contain "sebze yemek". The plural "yemekleri" matched all along and needs
+    no entry; the singular never matched at all, so a main dish filed under
+    "Sizden Sebze Yemeği Tarifleri" scored nothing.
+
+    Shortening the keyword to the stem "sebze yeme" would cover every suffix in
+    one entry, and was measured and rejected: "yeme" is also a prefix of
+    **yemeyen**, so "Et Yemeyen Çocuklarınız İçin" would be read as a meat main
+    dish. Four titles in the library invert that way. "yemegi" is not a prefix
+    of "yemeyen", so this form costs a longer table and nothing else.
+    """
+    out = []
+    for word in words:
+        out.append(word)
+        if word.endswith("yemek"):
+            out.append(word[:-1] + "gi")
+    return tuple(dict.fromkeys(out))
+
+
 # The keyword tables, folded once at import. dinner_category_score runs for
 # every candidate row — folding these per call would be millions of operations
 # on a well-stocked pantry.
@@ -281,7 +304,7 @@ _WEAK = tuple(fold_tr(x) for x in (
         "milföy", "burger",
 ))
 
-_STRONG = tuple(fold_tr(x) for x in (
+_STRONG = with_possessive(fold_tr(x) for x in (
         "ana yemek", "akşam yemeği",
         "ev yemek", "sulu yemek",
         "et yemek", "etli yemek",
@@ -304,7 +327,7 @@ _STRONG = tuple(fold_tr(x) for x in (
         "hindi yemek",
 ))
 
-_MEDIUM = tuple(fold_tr(x) for x in (
+_MEDIUM = with_possessive(fold_tr(x) for x in (
         "çorba", "makarna", "mantı",
         "pilav", "pizza", "pide",
         "dürüm", "hamburger",
