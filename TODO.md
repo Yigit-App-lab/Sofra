@@ -95,8 +95,21 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
   - [x] Doğrulama — eski ve yeni puanlayıcı 4.937 girdide yan yana
     çalıştırıldı: eski görüşün bozulduğu 0 durum, kuralla açıklanamayan 0
     durum. `backend/test_dinner_suitability.py` 50 vaka
-  - [ ] Değişikliğin canlıdaki etkisini görmek için denetimi yeniden
-    çalıştırma (aşağıdaki komut)
+  - [x] Değişikliğin canlıdaki etkisi ölçüldü: görüş yok kovası
+    16.918'den (%9,7) **4.775'e (%2,7)** düştü. 12.143 tarif görüş kazandı.
+    Kalanın 2.069'u `(kategorisiz)`, yani adından çıkarılamayan kısım
+  - [ ] `yemeği` eki hiçbir `... yemek` anahtar kelimesiyle eşleşmiyor.
+    Katlama `yemeği`yi `yemegi` yapıyor, bu da `yemek` içermiyor; çoğul
+    `yemekleri` eşleşiyor, tekil hiç eşleşmiyor. Asıl maliyet 0 kovasında
+    değil: kategorisi "Sebze Yemeği" olan bir ana yemek, başlığında "çorba"
+    geçiyorsa medium'a düşüp 15 alıyor — sıralaması yanlış ve hiçbir kova
+    sayımında görünmüyor. Kuralların sırası (reject → weak → strong →
+    medium) yüzünden yeni bir strong anahtar kelimesi -100 ve -35 alan
+    tarifleri hiç göremez; mümkün olan tek hareket 0 → 30 ve 15 → 30
+    - [x] Ölçüm aracı — `backend/measure_yemegi_gap.py`. Önerilen düzeltmeyi
+      (kökü `yeme`'ye kısaltmak) uygulamadan simüle ediyor ve 15 → 30
+      terfilerini ayrıca sayıyor; karar o sayıya bağlı
+    - [ ] Aracı canlı veritabanında çalıştırıp kararı verme
 - [x] Mayonez, sos, salça, hamur gibi yardımcı hazırlıkları akşam yemeği
   önerilerinden çıkarma (başlık sonundaki ada göre)
 - [x] Yemek olmayan saklama/hazırlık kayıtlarını karantinaya alma
