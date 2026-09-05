@@ -374,3 +374,48 @@ Bu dosya tüm sohbetlerin birebir kopyası değildir. Projeyi sürdürmek için 
   ("cheddar", "hindi göğsü", "zerdeçal + safran").
 - Araç fiyat üretmiyor. Fiyat gerçek dünya verisi; iskelet çıktısında `price`
   alanı boş bırakılıyor ve elle doldurulması gerekiyor.
+
+## 2026-09-05 — Kaynak veri kalitesi: ölçüm araçları
+
+- İki TODO maddesi de canlı veritabanına yazma gerektiriyor, bu yüzden önce
+  ölçüm. İkisi de kuralları kopyalamak yerine canlı kodu içe aktarıyor.
+- `backend/_load_api.py`: FastAPI ve pydantic'i taklit ederek `recipe_api`
+  modülünü içe aktarıyor. VPS'te API sanal ortamda çalışıyor, sistem python'unda
+  fastapi yok; `clean_recipe_title`, `dinner_category_score` ve
+  `NOT_A_MEAL_HEADS` her denetim betiğine kopyalansaydı bir ay içinde canlı
+  davranıştan ayrışırdı. Taklitler her yerde kullanılıyor, böylece denetim
+  VPS'te, dizüstünde ve CI'da aynı sonucu veriyor.
+- `backend/audit_duplicate_titles.py`: aynı başlığı taşıyan tarifleri malzeme
+  örtüşmesine göre kümeliyor. Sentetik sınamada ortaya çıkan iki hata
+  düzeltildi:
+  - Başlık anahtarı yalnız `clean_recipe_title` kullanıyordu; bu yalnız
+    "videolu" siliyor, dolayısıyla "Taze Fasulye Tarifi" ayrı bir başlık
+    sayılıyordu. `engine.js` içindeki gürültü listesi yansıtıldı. (Aynı listeyi
+    `clean_recipe_title` içine almak görünen başlıkları da iyileştirir; bu ayrı
+    ve kullanıcıya görünür bir değişiklik.)
+  - Sınıflandırma grup düzeyindeydi: tek bir gerçek varyant, grubun tamamını
+    "varyant" yapıp içindeki gerçek kopyaların kaçmasına yol açıyordu. Artık
+    önce kümeleme yapılıyor; bir başlık aynı anda hem kopya hem varyant
+    barındırabiliyor.
+  - Benzerlik eşiği bir bayrak, çünkü karar veriye bağlı: sınamada dört
+    malzemeden üçünü paylaşan bir tarif %75 ile %80 eşiğinin hemen altında
+    kaldı. Çıktı örneklerde örtüşme oranını yazıyor.
+- `backend/audit_dinner_classification.py`: puan kovalarını ve 0 puan alan
+  kategorileri büyüklüğüne göre listeliyor. Asıl boşluk 0 puan: anahtar
+  kelimelerin tanımadığı bir kategori, nötrmüş gibi davranıp gerçek akşam
+  yemekleriyle eşit yarışıyor.
+- Hangi kopyanın kalacağı ayrı ve ikinci bir aşama. Malzeme örtüşmesi iki
+  kaydın aynı yemek olduğuna zaten karar verdi; hangisinin kalacağına
+  **hazırlanış** karar veriyor: daha uzun ve daha adımlı olan kazanıyor.
+  Miktarlar ve üstveri yalnız eşitlik bozucu. İlk sürümde hepsi tek bir
+  puana karıştırılmıştı ve hazırlanış 4000 karakterde kesiliyordu; bu yüzden
+  iki fazla malzeme satırı olan bir kopya, on adımlık düzgün bir anlatımı
+  yenebiliyordu. Sınamada bu durum doğrulandı: dört malzeme ve on adım,
+  altı malzeme ve tek satırlık anlatımı geçiyor.
+- Hazırlanışın nerede durduğu şemadan bulunuyor: `recipes` üzerinde bir metin
+  sütunu ya da ayrı bir adım tablosu. Uzunluk ve adım sayısı SQL içinde
+  hesaplanıyor; 175 bin tarifin metnini python'a çekmek yüz megabaytı satır
+  sonu saymak için taşımak olurdu. İki şema biçimi de sınandı.
+- Karantina kararı: silmek yerine `recipe_exclusions`. Geri alınabilir ve
+  silinen bir tarif, kullanıcının profilinde `api:<id>` olarak asılı kalır.
+- Henüz hiçbir veri değişmedi.

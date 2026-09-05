@@ -58,7 +58,23 @@ Bu dosya Sofra projesinin kalıcı ana iş listesidir. Yeni işler buraya ekleni
   birebir "Taze Fasulye" başlıklı dört ayrı tarif var)
 - [x] Bir öneri listesinde aynı ana addan en fazla belirli sayıda yemek
 - [ ] Aynı adı taşıyan tarifleri kaynak veride birleştirme veya karantinaya alma
+  - [x] Ölçüm aracı — `backend/audit_duplicate_titles.py`. Aynı başlığı taşıyan
+    tarifleri malzeme örtüşmesine göre kümeliyor ve ikiye ayırıyor: aynı içe
+    aktarmanın kopyaları (karantinaya alınabilir) ile tek adın altındaki farklı
+    yemekler (zeytinyağlı ve etli taze fasulye — karantina bunları kaybettirir).
+    Kalacak kopyayı hazırlanış belirliyor: daha uzun ve daha adımlı olan
+  - [ ] Aracı canlı veritabanında çalıştırıp eşik değerini seçme
+  - [ ] Kopyaları karantinaya alan betiği yazma (kuru deneme ve yedekle;
+    silmek yerine `recipe_exclusions`, çünkü silinen tarif kullanıcının
+    beğendiklerinde `api:<id>` olarak asılı kalır)
+  - [ ] Tek adı paylaşan farklı yemekler için başlığı ayırt edilebilir kılma
 - [ ] Ana yemek, atıştırmalık ve yardımcı hazırlık sınıflandırmasını geliştirme
+  - [x] Ölçüm aracı — `backend/audit_dinner_classification.py`. Puan
+    kovalarını ve en çok tarif barındıran "görüş yok" (0 puan) kategorilerini
+    listeliyor. 0 puan alan tarif, sıralamada gerçek akşam yemekleriyle eşit
+    yarışıyor; asıl boşluk orası
+  - [ ] Aracı canlı veritabanında çalıştırıp en büyük kategorileri görme
+  - [ ] `dinner_category_score` anahtar kelimelerini sonuca göre genişletme
 - [x] Mayonez, sos, salça, hamur gibi yardımcı hazırlıkları akşam yemeği
   önerilerinden çıkarma (başlık sonundaki ada göre)
 - [x] Yemek olmayan saklama/hazırlık kayıtlarını karantinaya alma
