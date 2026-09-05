@@ -1,4 +1,6 @@
-"""Does the `yemeği` suffix cost us main dishes? Read-only. Writes nothing.
+"""Does the `yemeği` suffix cost us main dishes, and which fix is safe?
+
+Read-only. Writes nothing, to the database or to any source file.
 
 `dinner_category_score` has some two dozen strong keywords of the form
 "sebze yemek", "et yemek", "fırın yemek". Turkish softens the k before a
@@ -13,16 +15,24 @@ says "çorba" matches nothing strong, falls through to the medium rule and
 scores 15. It is not unranked, it is **mis-ranked**, and no bucket count will
 ever show it.
 
-So this measures the proposed fix instead of assuming it. The fix shortens
-every "... yemek" keyword to "... yeme", which is a prefix of yemek, yemeği,
-yemekleri and yemeğe alike.
+Two fixes are possible, and they are not equally safe:
 
-Unlike the category table added on 2026-09-05, this is NOT purely additive, and
-it is worth being exact about why. The rules run reject → weak → strong →
-medium, so a new strong keyword can never touch a recipe that already scored
--100 or -35: those return before the strong test. The only reachable moves are
-0 → 30 and 15 → 30. The second is a real reshuffle — a soup promoted to main
-dish — so the count of it is the number this script exists to produce.
+  stem    "sebze yemek" -> "sebze yeme", one keyword covering every suffix.
+          But "yeme" is also a prefix of **yemeyen** — "who does not eat" — so
+          "Et Yemeyen Çocuklar İçin" is read as a meat main dish. The stem
+          inverts the meaning of the title it matches.
+
+  yemegi  keep "sebze yemek" and add "sebze yemegi" beside it. Longer table,
+          same coverage of the possessive, and "yemegi" is not a prefix of
+          "yemeyen".
+
+Both are measured here against the live library so the choice rests on counts
+rather than on which one sounds tidier.
+
+One thing to know when reading the transitions: `CATEGORY_SCORES` is consulted
+**after** every keyword rule, so a recipe scoring -35 from the category table
+can be moved by a new strong keyword. Only a -35 from the weak *keyword* tier
+is out of reach, because that tier returns before the strong test.
 
     python3 backend/measure_yemegi_gap.py
     python3 backend/measure_yemegi_gap.py --samples 8
@@ -36,10 +46,38 @@ from _load_api import api
 
 DB_PATH = "/root/recipes.db"
 
+# Titles that say someone will not eat the thing. A rule that promotes these to
+# a main dish of that very ingredient has read the title backwards.
+NEGATIVES = ("yemeyen", "yemeyene", "yemez", "yemiyor", "sevmeyen")
 
-def proposed(words):
-    """Every '... yemek' keyword shortened to its stem. The rest unchanged."""
+
+def by_stem(words):
+    """'sebze yemek' -> 'sebze yeme'. Covers every suffix, and yemeyen too."""
     return tuple(w[:-1] if w.endswith("yemek") else w for w in words)
+
+
+def by_possessive(words):
+    """'sebze yemek' -> 'sebze yemek', 'sebze yemegi'. Nothing is replaced."""
+    out = []
+    for w in words:
+        out.append(w)
+        if w.endswith("yemek"):
+            # "yemekleri" needs no entry: it already contains "yemek".
+            out.append(w[:-1] + "gi")
+    return tuple(dict.fromkeys(out))
+
+
+STRATEGIES = (
+    ("stem", by_stem, "one keyword per dish, shortened"),
+    ("yemegi", by_possessive, "keep the keyword, add the possessive beside it"),
+)
+
+
+def score_all(rows, strong, medium):
+    """Score every recipe with the given tables, then restore nothing here."""
+    api._STRONG, api._MEDIUM = strong, medium
+    return [api.dinner_category_score(category, title)
+            for _, title, category in rows]
 
 
 def main():
@@ -50,17 +88,10 @@ def main():
     args = parser.parse_args()
 
     live_strong, live_medium = api._STRONG, api._MEDIUM
-    new_strong, new_medium = proposed(live_strong), proposed(live_medium)
-
-    changed = [(a, b) for a, b in zip(live_strong + live_medium,
-                                      new_strong + new_medium) if a != b]
-    print(f"keywords shortened: {len(changed)}")
-    for before, after in changed:
-        print(f"    {before!r} -> {after!r}")
 
     db = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
     db.row_factory = sqlite3.Row
-    rows = db.execute("""
+    raw = db.execute("""
         SELECT r.id, r.title, r.category
         FROM recipes r
         WHERE NOT EXISTS (
@@ -68,70 +99,81 @@ def main():
             WHERE rex.recipe_id = r.id AND rex.active = 1
         )
     """).fetchall()
+    db.close()
 
-    # How many recipes are even in reach of this, however they score.
-    holding_singular = 0
-    transitions = collections.Counter()
-    samples = collections.defaultdict(list)
-    by_category = collections.defaultdict(collections.Counter)
-
-    for row in rows:
-        title = api.clean_recipe_title(row["title"])
-        text = api.fold_tr(f"{row['category'] or ''} {title or ''}")
-        if "yemegi" in text or "yemege" in text or "yemegin" in text:
-            holding_singular += 1
-
-        api._STRONG, api._MEDIUM = live_strong, live_medium
-        before = api.dinner_category_score(row["category"], title)
-
-        api._STRONG, api._MEDIUM = new_strong, new_medium
-        after = api.dinner_category_score(row["category"], title)
-
-        if before != after:
-            transitions[(before, after)] += 1
-            by_category[(before, after)][row["category"] or "(kategorisiz)"] += 1
-            if len(samples[(before, after)]) < args.samples:
-                samples[(before, after)].append(
-                    (row["category"] or "(kategorisiz)", title))
-
-    api._STRONG, api._MEDIUM = live_strong, live_medium  # leave it as we found it
+    rows = [(row["id"], api.clean_recipe_title(row["title"]), row["category"])
+            for row in raw]
+    folded = [api.fold_tr(f"{category or ''} {title or ''}")
+              for _, title, category in rows]
 
     total = len(rows)
-    moved = sum(transitions.values())
-    print(f"\nrecipes considered:        {total:>8,}")
-    print(f"holding a singular form:   {holding_singular:>8,}  "
-          f"({100.0 * holding_singular / max(1, total):.1f}%)")
-    print(f"scores that would change:  {moved:>8,}  "
-          f"({100.0 * moved / max(1, total):.1f}%)")
+    holding = sum(1 for text in folded if "yemegi" in text or "yemege" in text)
+    negatives = sum(1 for text in folded if any(n in text for n in NEGATIVES))
+    print(f"recipes considered:            {total:>8,}")
+    print(f"holding a possessive form:     {holding:>8,}  "
+          f"({100.0 * holding / max(1, total):.1f}%)")
+    print(f"saying someone will not eat:   {negatives:>8,}")
 
-    if not transitions:
-        print("\nNothing moves. The suffix is not costing anything measurable.")
-        db.close()
-        return 0
+    try:
+        base = score_all(rows, live_strong, live_medium)
 
-    print(f"\n{'from':>6} {'to':>6} {'recipes':>10}  reading")
-    print("-" * 78)
-    for (before, after), n in sorted(transitions.items(), key=lambda kv: -kv[1]):
-        if before == 0:
-            reading = "gains an opinion — additive, no reshuffle"
-        elif before == 15 and after == 30:
-            reading = "PROMOTED over dishes it used to sit below"
-        else:
-            reading = "unexpected: the rule order should make this impossible"
-        print(f"{before:>6} {after:>6} {n:>10,}  {reading}")
+        for name, build, blurb in STRATEGIES:
+            strong, medium = build(live_strong), build(live_medium)
+            after = score_all(rows, strong, medium)
 
-    for key in sorted(transitions, key=lambda k: -transitions[k]):
-        before, after = key
-        print(f"\n--- {before} -> {after} ({transitions[key]:,} recipes) ---")
-        print("  top categories:")
-        for category, n in by_category[key].most_common(6):
-            print(f"    {n:>6,}  {category}")
-        print("  examples:")
-        for category, title in samples[key]:
-            print(f"    {str(category)[:34]:34}  {title[:44]}")
+            transitions = collections.Counter()
+            samples = collections.defaultdict(list)
+            by_category = collections.defaultdict(collections.Counter)
+            inverted = []
 
-    print("\nNothing was changed. This only reports what the change would do.")
-    db.close()
+            for (recipe_id, title, category), b, a in zip(rows, base, after):
+                if b == a:
+                    continue
+                transitions[(b, a)] += 1
+                by_category[(b, a)][category or "(kategorisiz)"] += 1
+                if len(samples[(b, a)]) < args.samples:
+                    samples[(b, a)].append((category or "(kategorisiz)", title))
+                text = api.fold_tr(f"{category or ''} {title or ''}")
+                if any(n in text for n in NEGATIVES):
+                    inverted.append((category or "(kategorisiz)", title))
+
+            moved = sum(transitions.values())
+            print(f"\n{'=' * 78}\n{name}  —  {blurb}")
+            print(f"keyword table: {len(live_strong)} -> {len(strong)} strong, "
+                  f"{len(live_medium)} -> {len(medium)} medium")
+            print(f"scores that would change: {moved:,} "
+                  f"({100.0 * moved / max(1, total):.2f}%)")
+            print(f"of those, titles saying someone will NOT eat it: "
+                  f"{len(inverted):,}")
+
+            print(f"\n{'from':>6} {'to':>6} {'recipes':>10}  reading")
+            print("-" * 78)
+            for (b, a), n in sorted(transitions.items(), key=lambda kv: -kv[1]):
+                if b == 0:
+                    reading = "gains an opinion — nothing is reshuffled"
+                elif b in (-35, -100):
+                    reading = "was scored by the category table, now by a keyword"
+                else:
+                    reading = "PROMOTED over dishes it used to sit below"
+                print(f"{b:>6} {a:>6} {n:>10,}  {reading}")
+
+            if inverted:
+                print(f"\n  !! titles the change reads backwards:")
+                for category, title in inverted[:args.samples * 2]:
+                    print(f"    {str(category)[:30]:30}  {title[:44]}")
+
+            for key in sorted(transitions, key=lambda k: -transitions[k]):
+                b, a = key
+                print(f"\n  --- {b} -> {a} ({transitions[key]:,}) ---")
+                for category, n in by_category[key].most_common(5):
+                    print(f"    {n:>6,}  {category}")
+                for category, title in samples[key][:args.samples]:
+                    print(f"      · {str(category)[:30]:30}  {title[:42]}")
+    finally:
+        # Whatever happened above, the process must not carry a patched table.
+        api._STRONG, api._MEDIUM = live_strong, live_medium
+
+    print("\nNothing was changed. This only reports what each change would do.")
     return 0
 
 
